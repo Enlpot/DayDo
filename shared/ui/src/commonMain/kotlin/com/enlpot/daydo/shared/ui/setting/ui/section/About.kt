@@ -93,7 +93,7 @@ fun About(versionName: String, onNavigateBack: () -> Unit, modifier: Modifier = 
                     FilledTonalIconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = vectorResource(Res.drawable.nav_arrow_back),
-                            contentDescription = "Navigate Back",
+                            contentDescription = "返回",
                         )
                     }
                 },
@@ -174,7 +174,7 @@ private fun LazyListScope.engagementLinks(uriHandler: UriHandler) {
                         contentDescription = null,
                     )
                 },
-                headlineContent = { Text(text = "GitHub Sponsors") },
+                headlineContent = { Text(text = "GitHub 赞助") },
                 supportingContent = { Text(text = "Support me through GitHub") },
                 modifier =
                     Modifier.clip(middleItemShape()).clickable {

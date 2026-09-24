@@ -49,7 +49,7 @@ actual fun LazyListScope.languagePicker(onClick: () -> Unit) {
                 trailingContent = {
                     Icon(
                         painter = painterResource(Res.drawable.arrow_forward),
-                        contentDescription = "Navigate",
+                        contentDescription = "导航",
                     )
                 },
                 modifier = Modifier.clip(detachedItemShape()).clickable { onClick() },

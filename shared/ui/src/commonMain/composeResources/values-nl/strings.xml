@@ -21,5 +21,5 @@
     <string name="select_seed">Selecteer basis kleur</string>
     <string name="select_seed_desc">Selecteer kleur om pallet mee te genereren</string>
     <string name="palette_style">Pallet stijl</string>
-    <string name="backup">Backup</string>
+    <string name="backup">备份</string>
 </resources>

@@ -97,7 +97,7 @@ fun HabitsList(
                         reorderHandle = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.drag_indicator),
-                                contentDescription = "Drag Indicator",
+                                contentDescription = "拖动手柄",
                                 modifier =
                                     Modifier.draggableHandle(
                                         onDragStopped = { onAction(HabitsAction.ReorderHabits) }

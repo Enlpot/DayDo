@@ -89,7 +89,7 @@ fun RootPage(
             contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 60.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Grit Plus
+            // DayDo Plus
             item {
                 ListItem(
                     headlineContent = { Text(text = stringResource(Res.string.grit_plus)) },
@@ -99,7 +99,7 @@ fun RootPage(
                     trailingContent = {
                         Icon(
                             imageVector = vectorResource(Res.drawable.arrow_forward),
-                            contentDescription = "Grit Plus",
+                            contentDescription = "DayDo Plus",
                         )
                     },
                     leadingContent = {
@@ -244,13 +244,13 @@ fun RootPage(
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "Navigate",
+                                contentDescription = "导航",
                             )
                         },
                         leadingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.palette),
-                                contentDescription = "Navigate",
+                                contentDescription = "导航",
                             )
                         },
                         colors = listItemColors(),
@@ -264,13 +264,13 @@ fun RootPage(
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "Navigate",
+                                contentDescription = "导航",
                             )
                         },
                         leadingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.download),
-                                contentDescription = "Backup",
+                                contentDescription = "备份",
                             )
                         },
                     )
@@ -289,12 +289,12 @@ fun RootPage(
                             )
                         },
                         supportingContent = {
-                            Text(text = "Grit ${state.currentVersion ?: "x.x.x"}")
+                            Text(text = "DayDo ${state.currentVersion ?: "x.x.x"}")
                         },
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "Navigate",
+                                contentDescription = "导航",
                             )
                         },
                         headlineContent = { Text(text = stringResource(Res.string.about)) },
@@ -313,7 +313,7 @@ fun RootPage(
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "Navigate",
+                                contentDescription = "导航",
                             )
                         },
                         headlineContent = { Text(text = stringResource(Res.string.changelog)) },

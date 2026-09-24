@@ -258,7 +258,7 @@ private fun Content(
                                     )
 
                                     Text(
-                                        text = "Current Streak",
+                                        text = "当前连续",
                                         maxLines = 1,
                                         style =
                                             TextStyle(
@@ -283,7 +283,7 @@ private fun Content(
                                     )
 
                                     Text(
-                                        text = "Current Streak",
+                                        text = "当前连续",
                                         maxLines = 1,
                                         style =
                                             TextStyle(
@@ -337,7 +337,7 @@ private fun Content(
                                     )
 
                                     Text(
-                                        text = "Best Streak",
+                                        text = "最佳连续",
                                         maxLines = 1,
                                         style =
                                             TextStyle(
@@ -362,7 +362,7 @@ private fun Content(
                                     )
 
                                     Text(
-                                        text = "Best Streak",
+                                        text = "最佳连续",
                                         maxLines = 1,
                                         style =
                                             TextStyle(
@@ -416,7 +416,7 @@ private fun Content(
                                     )
 
                                     Text(
-                                        text = "Days Ago",
+                                        text = "天前",
                                         maxLines = 1,
                                         style =
                                             TextStyle(
@@ -441,7 +441,7 @@ private fun Content(
                                     )
 
                                     Text(
-                                        text = "Days Ago",
+                                        text = "天前",
                                         maxLines = 1,
                                         style =
                                             TextStyle(
@@ -462,7 +462,7 @@ private fun Content(
         } else {
             Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "Nothing to show",
+                    text = "暂无数据",
                     style = TextStyle(color = GlanceTheme.colors.onSurface),
                 )
             }

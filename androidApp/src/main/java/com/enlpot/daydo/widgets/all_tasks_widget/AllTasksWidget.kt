@@ -163,7 +163,7 @@ private fun Content(
     ) {
         TitleBar(
             startIcon = ImageProvider(R.drawable.check_list),
-            title = "Tasks",
+            title = "任务",
             actions = {
                 if (size.width >= WidgetSize.Width4) {
                     Box(GlanceModifier.padding(horizontal = 16.dp)) {

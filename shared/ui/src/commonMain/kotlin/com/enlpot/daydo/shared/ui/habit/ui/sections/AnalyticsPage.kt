@@ -150,7 +150,7 @@ fun AnalyticsPage(
                 FilledTonalIconButton(onClick = onNavigateBack) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.nav_arrow_back),
-                        contentDescription = "Navigate Back",
+                        contentDescription = "返回",
                     )
                 }
             },
@@ -261,7 +261,7 @@ fun AnalyticsPage(
                 ) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.warning),
-                        contentDescription = "Warning",
+                        contentDescription = "警告",
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }

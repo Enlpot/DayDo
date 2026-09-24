@@ -30,7 +30,7 @@
     <string name="select_seed_desc">Seleziona il colore da cui generare la palette</string>
     <string name="palette_style">Stile Palette</string>
     <string name="look_and_feel_desc">Personalizza l\u0027app in molti modi</string>
-    <string name="backup">Backup</string>
+    <string name="backup">备份</string>
     <string name="backup_desc">Esporta o Reimposta le tue task e abitudini</string>
     <string name="export">Esporta dati</string>
     <string name="export_desc">Dati completamente esportati in Download/Grit</string>
@@ -63,7 +63,7 @@
     <string name="overall_analytics">Statistiche Generali</string>
     <string name="unlock_more_plus">Sblocca di più con Plus</string>
     <string name="unlock_plus">Sblocca con Plus</string>
-    <string name="grit_plus">Grit Plus</string>
+    <string name="grit_plus">DayDo Plus</string>
     <string name="monthly_progress">Progresso Mensile</string>
     <string name="week_breakdown">Ripartizione nella Settimana</string>
     <string name="foss">Stai usando la variante FOSS</string>

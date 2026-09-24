@@ -177,7 +177,7 @@ private fun Content(
     ) {
         TitleBar(
             startIcon = ImageProvider(R.drawable.alarm),
-            title = "Habits",
+            title = "习惯",
             actions = {
                 Text(
                     text = "${habitsWithStatus.count { it.second }}/${habitsWithStatus.size}",

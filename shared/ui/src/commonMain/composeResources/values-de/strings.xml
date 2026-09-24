@@ -24,7 +24,7 @@
     <string name="add">Füge etwas hinzu</string>
     <string name="use_amoled_desc">Funktioniert am besten auf AMOLED Displays</string>
     <string name="select_seed_desc">Wähle Farbe zum Generieren der Palette</string>
-    <string name="backup">Backup</string>
+    <string name="backup">备份</string>
     <string name="backup_desc">Exportiere oder stelle deine Aufgaben und Gewohnheiten wieder her</string>
     <string name="export">Exportiere Daten</string>
     <string name="export_desc">Alle Daten nach Downloads/Grit exportiert</string>
@@ -65,7 +65,7 @@
     <string name="overall_analytics">Generelle Analytik</string>
     <string name="unlock_more_plus">Schalte mehr mit plus frei</string>
     <string name="unlock_plus">Mit plus freischalten</string>
-    <string name="grit_plus">Grit Plus</string>
+    <string name="grit_plus">DayDo Plus</string>
     <string name="monthly_progress">Monatlicher Fortschritt</string>
     <string name="week_breakdown">Wochentagsübersicht</string>
     <string name="foss">Du benutzt die Freie und quelloffene Software</string>

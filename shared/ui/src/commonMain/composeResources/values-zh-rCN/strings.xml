@@ -79,10 +79,10 @@
     <string name="select_days">选择日期</string>
     <string name="whats_changed">更新内容</string>
     <string name="bmc_desc">捐助我以示支持</string>
-    <string name="translate_desc">将 Grit 翻译成您的语言</string>
+    <string name="translate_desc">将 DayDo 翻译成您的语言</string>
     <string name="language">语言</string>
     <string name="about">关于</string>
-    <string name="grit_plus">Grit Plus</string>
+    <string name="grit_plus">DayDo Plus</string>
     <string name="system_default">系统默认</string>
     <string name="consistency">连贯性</string>
     <string name="calendar">日历</string>

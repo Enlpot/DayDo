@@ -74,8 +74,8 @@
     <string name="started_on">הותחל בתאריך</string>
     <string name="weekly_graph">השוואה שבועית</string>
     <string name="completed">הושלם היום</string>
-    <string name="bmc">‏Buy me a coffee</string>
-    <string name="grit_plus">מינוי „Grit Plus”</string>
+    <string name="bmc">‏请我喝咖啡</string>
+    <string name="grit_plus">מינוי „DayDo Plus”</string>
     <string name="foss_desc">כל התכונות פתוחות. מהדורה זו של היישום אינה תומכת ברכישות בתוך היישום. אם היישום הזה הוסיף ערך לחייך, אפשר לתמוך בי בעזרת תרומה דרך</string>
     <string name="reorder_tasks_desc">סידור מחדש של המשימות בעת סימונן ככאלה שהושלמו</string>
     <string name="habit_map">מפת להיטות להרגל</string>

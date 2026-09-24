@@ -31,7 +31,7 @@
     <string name="select_seed_desc">Select color to generate palette from</string>
     <string name="palette_style">Palette Style</string>
     <string name="look_and_feel_desc">Customise the app in various ways</string>
-    <string name="backup">Backup</string>
+    <string name="backup">备份</string>
     <string name="backup_desc">Export or Restore your tasks and habits</string>
     <string name="export">Export data</string>
     <string name="export_desc">Choose directory to export data</string>
@@ -60,13 +60,13 @@
     <string name="font">Font</string>
     <string name="biometric_lock">Biometric Lock</string>
     <string name="biometric_lock_desc">Use biometric authentication to unlock app</string>
-    <string name="bmc">Buy me a coffee</string>
+    <string name="bmc">请我喝咖啡</string>
     <string name="bmc_desc">Support me by making a small donation</string>
     <string name="weekly_progress">Weekly Progress</string>
     <string name="overall_analytics">Overall Analytics</string>
     <string name="unlock_more_plus">Unlock more with plus</string>
     <string name="unlock_plus">Unlock with plus</string>
-    <string name="grit_plus">Grit Plus</string>
+    <string name="grit_plus">DayDo Plus</string>
     <string name="monthly_progress">Monthly Progress</string>
     <string name="week_breakdown">Week Day Breakdown</string>
     <string name="foss">You are using the FOSS variant</string>
@@ -77,7 +77,7 @@
     <string name="reorder_tasks">Reorder tasks</string>
     <string name="reorder_tasks_desc">Reorder tasks when marked as completed</string>
     <string name="translate">Translate</string>
-    <string name="translate_desc">Translate Grit in your language</string>
+    <string name="translate_desc">Translate DayDo in your language</string>
     <string name="changelog">Changelog</string>
     <string name="whats_changed">What\u0027s Changed</string>
     <string name="select_days">Select Days</string>

@@ -75,7 +75,7 @@ fun FossPaywall(modifier: Modifier = Modifier) {
                 ) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.warning),
-                        contentDescription = "Warning",
+                        contentDescription = "警告",
                         modifier = Modifier.size(50.dp),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
@@ -110,7 +110,7 @@ fun FossPaywall(modifier: Modifier = Modifier) {
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.buymeacoffee),
-                            contentDescription = "Buy me a coffee",
+                            contentDescription = "请我喝咖啡",
                             modifier = Modifier.size(ButtonDefaults.MediumIconSize),
                         )
 
@@ -131,14 +131,14 @@ fun FossPaywall(modifier: Modifier = Modifier) {
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.github),
-                            contentDescription = "GitHub Sponsors",
+                            contentDescription = "GitHub 赞助",
                             modifier = Modifier.size(ButtonDefaults.MediumIconSize),
                         )
 
                         Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
 
                         Text(
-                            text = "GitHub Sponsors",
+                            text = "GitHub 赞助",
                             style =
                                 ButtonDefaults.textStyleFor(ButtonDefaults.MediumContainerHeight),
                         )

@@ -884,7 +884,7 @@ private fun DeleteTasksDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
             ) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.warning),
-                    contentDescription = "Warning",
+                    contentDescription = "警告",
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
             }

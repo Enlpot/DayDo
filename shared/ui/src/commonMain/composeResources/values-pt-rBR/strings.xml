@@ -30,7 +30,7 @@
     <string name="select_seed_desc">Selecione a cor para gerar a paleta</string>
     <string name="palette_style">Estilo da Paleta</string>
     <string name="look_and_feel_desc">Personalize o app de várias formas</string>
-    <string name="backup">Backup</string>
+    <string name="backup">备份</string>
     <string name="backup_desc">Exporte ou restaure suas tarefas e hábitos</string>
     <string name="export">Exportar dados</string>
     <string name="export_desc">Escolha uma pasta para exportar seus dados</string>
@@ -64,7 +64,7 @@
     <string name="overall_analytics">Análise geral</string>
     <string name="unlock_more_plus">Tenha mais com o plano Plus</string>
     <string name="unlock_plus">Desbloqueie com o Plus</string>
-    <string name="grit_plus">Grit Plus</string>
+    <string name="grit_plus">DayDo Plus</string>
     <string name="monthly_progress">Progresso mensal</string>
     <string name="week_breakdown">Resumo por dia da semana</string>
     <string name="foss">Você está usando a variante FOSS</string>

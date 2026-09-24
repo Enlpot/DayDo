@@ -276,7 +276,7 @@ private fun Content(
         } else {
             Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "Nothing to show",
+                    text = "暂无数据",
                     style = TextStyle(color = GlanceTheme.colors.onSurface),
                 )
             }

@@ -97,7 +97,7 @@ fun Calendar(
                 FilledTonalIconButton(onClick = onNavigateBack) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.nav_arrow_back),
-                        contentDescription = "Navigate Back",
+                        contentDescription = "返回",
                     )
                 }
             },
