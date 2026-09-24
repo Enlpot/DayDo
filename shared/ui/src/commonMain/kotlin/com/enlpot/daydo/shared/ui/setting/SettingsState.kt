@@ -49,7 +49,7 @@ data class SettingsState(
     val hapticFeedback: Boolean = true,
     val cardHeight: CardHeight = CardHeight.NORMAL,
     val hapticStrength: Int = 50,
-    val hapticSound: HapticSound = HapticSound.CHIME,
+    val hapticSound: HapticSound = HapticSound.DING,
 )
 
 @Stable

@@ -151,8 +151,8 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override fun getHapticSoundPref(): Flow<HapticSound> =
         datastore.data.map { prefs ->
-            val raw = prefs[hapticSoundKey] ?: HapticSound.CHIME.name
-            return@map runCatching { HapticSound.valueOf(raw) }.getOrDefault(HapticSound.CHIME)
+            val raw = prefs[hapticSoundKey] ?: HapticSound.DING.name
+            return@map runCatching { HapticSound.valueOf(raw) }.getOrDefault(HapticSound.DING)
         }
 
     override suspend fun setHapticSound(sound: HapticSound) {

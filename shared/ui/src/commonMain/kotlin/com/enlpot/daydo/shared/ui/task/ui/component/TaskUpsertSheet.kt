@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -176,18 +177,21 @@ fun TaskUpsertSheetContent(
                     text =
                         stringResource(if (isEditSheet) Res.string.edit_task else Res.string.add_task),
                     style = MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
-                    modifier = Modifier.weight(1f),
                 )
 
                 if (isEditSheet && newTask.recurrence != null && newTask.seriesId != null && onOpenStats != null) {
+                    Spacer(modifier = Modifier.width(4.dp))
                     IconButton(onClick = onOpenStats) {
                         Icon(
                             imageVector = vectorResource(Res.drawable.pie_chart),
                             contentDescription = "统计",
+                            modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
 
