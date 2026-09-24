@@ -93,6 +93,8 @@ fun LookAndFeelPage(
 ) {
     var colorPickerDialog by remember { mutableStateOf(false) }
     var showMaterialYouDialog by rememberSaveable { mutableStateOf(false) }
+    var showAppThemeDialog by rememberSaveable { mutableStateOf(false) }
+    var showFontDialog by rememberSaveable { mutableStateOf(false) }
     var showAmoledDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -202,35 +204,21 @@ fun LookAndFeelPage(
                                 )
                             },
                             headlineContent = { Text(text = stringResource(Res.string.app_theme)) },
-                            supportingContent = { Text(text = "选择应用主题") },
+                            supportingContent = {
+                                Text(text = stringResource(state.theme.appTheme.toDisplayString()))
+                            },
+                            trailingContent = {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.arrow_forward),
+                                    contentDescription = null,
+                                )
+                            },
                             colors = listItemColors(),
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable { showAppThemeDialog = true },
                         )
 
-                        Row(
-                            horizontalArrangement =
-                                Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                            modifier =
-                                Modifier.fillParentMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 52.dp, end = 16.dp, bottom = 8.dp),
-                        ) {
-                            AppTheme.entries.forEach { appTheme ->
-                                ToggleButton(
-                                    checked = appTheme == state.theme.appTheme,
-                                    onCheckedChange = {
-                                        onAction(SettingsAction.ChangeAppTheme(appTheme))
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    colors =
-                                        ToggleButtonDefaults.toggleButtonColors(
-                                            containerColor =
-                                                MaterialTheme.colorScheme.surfaceContainerLow
-                                        ),
-                                ) {
-                                    Text(text = stringResource(appTheme.toDisplayString()))
-                                }
-                            }
-                        }
                     }
 
                     ListItem(
@@ -287,44 +275,25 @@ fun LookAndFeelPage(
                     ) {
                         ListItem(
                             headlineContent = { Text(text = stringResource(Res.string.font)) },
-                            supportingContent = { Text(text = "选择界面字体") },
+                            supportingContent = { Text(text = state.theme.font.toDisplayString()) },
                             leadingContent = {
                                 Icon(
                                     imageVector = vectorResource(Res.drawable.font),
                                     contentDescription = null,
                                 )
                             },
+                            trailingContent = {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.arrow_forward),
+                                    contentDescription = null,
+                                )
+                            },
                             colors = listItemColors(),
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable { showFontDialog = true },
                         )
 
-                        FlowRow(
-                            modifier =
-                                Modifier.fillParentMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 52.dp, end = 16.dp, bottom = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Fonts.entries.forEach { font ->
-                                ToggleButton(
-                                    checked = state.theme.font == font,
-                                    onCheckedChange = {
-                                        onAction(SettingsAction.ChangeFontPref(font))
-                                    },
-                                                colors =
-                                        ToggleButtonDefaults.toggleButtonColors(
-                                            containerColor =
-                                                MaterialTheme.colorScheme.surfaceContainerLow
-                                        ),
-                                ) {
-                                    Text(
-                                        text = font.toDisplayString(),
-                                        fontFamily =
-                                            font.toFontRes()?.let { FontFamily(Font(it)) }
-                                                ?: FontFamily.Default,
-                                    )
-                                }
-                            }
-                        }
                     }
 
                     if (!state.theme.isMaterialYou) {
@@ -454,6 +423,77 @@ fun LookAndFeelPage(
                                 },
                         trailingContent = {
                             if (state.theme.isAmoled == on) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.check),
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
+    if (showAppThemeDialog) {
+        GritDialog(onDismissRequest = { showAppThemeDialog = false }) {
+            Text(
+                text = "应用主题",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                text = "选择应用主题",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                AppTheme.entries.forEach { appTheme ->
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(appTheme.toDisplayString())) },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable {
+                                    onAction(SettingsAction.ChangeAppTheme(appTheme))
+                                    showAppThemeDialog = false
+                                },
+                        trailingContent = {
+                            if (state.theme.appTheme == appTheme) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.check),
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    if (showFontDialog) {
+        GritDialog(onDismissRequest = { showFontDialog = false }) {
+            Text(
+                text = "字体",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                text = "选择界面字体",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Fonts.entries.forEach { font ->
+                    ListItem(
+                        headlineContent = { Text(text = font.toDisplayString()) },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable {
+                                    onAction(SettingsAction.ChangeFontPref(font))
+                                    showFontDialog = false
+                                },
+                        trailingContent = {
+                            if (state.theme.font == font) {
                                 Icon(
                                     imageVector = vectorResource(Res.drawable.check),
                                     contentDescription = null,

@@ -69,8 +69,6 @@ fun RootPage(
     onNavigateToLookAndFeel: () -> Unit,
     onNavigateToBackup: () -> Unit,
     onNavigateToPaywall: () -> Unit,
-    onNavigateToChangelog: () -> Unit,
-    onNavigateToAppInfo: () -> Unit,
 ) {
     var showLocalePicker by rememberSaveable { mutableStateOf(false) }
     var showSmartViewsDialog by rememberSaveable { mutableStateOf(false) }
@@ -257,55 +255,7 @@ fun RootPage(
                 }
             }
 
-            // Changelogs
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    ListItem(
-                        colors = listItemColors(),
-                        leadingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.info),
-                                contentDescription = null,
-                            )
-                        },
-                        supportingContent = {
-                            Text(text = "DayDo ${state.currentVersion ?: "x.x.x"}")
-                        },
-                        trailingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "导航",
-                            )
-                        },
-                        headlineContent = { Text(text = stringResource(Res.string.about)) },
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { onNavigateToAppInfo() },
-                    )
 
-                    ListItem(
-                        colors = listItemColors(),
-                        leadingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.check_list),
-                                contentDescription = null,
-                            )
-                        },
-                        trailingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "导航",
-                            )
-                        },
-                        headlineContent = { Text(text = stringResource(Res.string.changelog)) },
-                        supportingContent = { Text(text = "查看各版本更新内容") },
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { onNavigateToChangelog() },
-                    )
-                }
-            }
-
-            // language picker
-            languagePicker(onClick = { showLocalePicker = true })
         }
 
         if (showSmartViewsDialog) {
@@ -512,7 +462,5 @@ private fun Preview() {
         onNavigateToLookAndFeel = {},
         onNavigateToBackup = {},
         onNavigateToPaywall = {},
-        onNavigateToChangelog = {},
-        onNavigateToAppInfo = {},
     )
 }

@@ -34,6 +34,9 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Companion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -72,18 +75,21 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
             },
         )
 
+    var settingsSubPage by remember { mutableStateOf(false) }
     CompositionLocalProvider(LocalCardCornerRadius provides state.cornerRadius) {
     when (windowSizeClass.widthSizeClass) {
         Compact -> {
             Scaffold(
                 bottomBar = {
-                    AppNavBar(
+                    if (!settingsSubPage) {
+                        AppNavBar(
                         currentRoute = appBackStack.last(),
                         onNavigate = { route ->
                             appBackStack.removeAll { true }
                             appBackStack.add(route)
                         },
                     )
+                    }
                 }
             ) { padding ->
                 NavDisplay(
@@ -127,6 +133,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                     onAction = svm::onAction,
                                     isUserSubscribed = state.isUserSubscribed,
                                     onNavigateToPaywall = onNavigateToPaywall,
+                                    onSubPageChange = { settingsSubPage = it },
                                 )
                             }
 
@@ -148,6 +155,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
 
         else -> {
             Row(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+                if (!settingsSubPage) {
                 AppNavRail(
                     currentRoute = appBackStack.last(),
                     onNavigate = { route ->
@@ -155,6 +163,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                         appBackStack.add(route)
                     },
                 )
+                }
 
                 NavDisplay(
                     modifier =
@@ -193,6 +202,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                     onAction = svm::onAction,
                                     isUserSubscribed = state.isUserSubscribed,
                                     onNavigateToPaywall = onNavigateToPaywall,
+                                    onSubPageChange = { settingsSubPage = it },
                                 )
                             }
 

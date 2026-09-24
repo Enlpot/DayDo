@@ -76,12 +76,15 @@ fun SettingsGraph(
     onAction: (SettingsAction) -> Unit,
     isUserSubscribed: Boolean,
     onNavigateToPaywall: () -> Unit,
+    onSubPageChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) =
     PageFill(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
         val backStack = rememberNavBackStack(configuration, SettingsRoutes.Root)
 
         LaunchedEffect(Unit) { onAction(SettingsAction.OnSettingsOpened) }
+
+        LaunchedEffect(backStack.size) { onSubPageChange(backStack.size > 1) }
 
         NavDisplay(
             modifier = Modifier.widthIn(max = 600.dp).fillMaxSize(),
@@ -95,8 +98,6 @@ fun SettingsGraph(
                             onNavigateToLookAndFeel = { backStack.add(SettingsRoutes.LookAndFeel) },
                             onNavigateToBackup = { backStack.add(SettingsRoutes.Backup) },
                             onNavigateToPaywall = onNavigateToPaywall,
-                            onNavigateToChangelog = { backStack.add(SettingsRoutes.Changelog) },
-                            onNavigateToAppInfo = { backStack.add(SettingsRoutes.About) },
                         )
                     }
 
