@@ -65,6 +65,7 @@ fun RootPage(
     state: SettingsState,
     onAction: (SettingsAction) -> Unit,
     onNavigateToLookAndFeel: () -> Unit,
+    onNavigateToHaptics: () -> Unit,
     onNavigateToBackup: () -> Unit,
     onNavigateToPaywall: () -> Unit,
 ) {
@@ -74,8 +75,6 @@ fun RootPage(
     var showStartOfWeekDialog by rememberSaveable { mutableStateOf(false) }
     var show24HrDialog by rememberSaveable { mutableStateOf(false) }
     var showBiometricDialog by rememberSaveable { mutableStateOf(false) }
-    var showHapticsDialog by rememberSaveable { mutableStateOf(false) }
-    var showCardHeightDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).fillMaxSize()) {
@@ -160,29 +159,6 @@ fun RootPage(
                                 .clickable { showStartOfWeekDialog = true },
                     )
 
-                    ListItem(
-                        headlineContent = { Text(text = "卡片高度") },
-                        supportingContent = {
-                            Text(
-                                text =
-                                    when (state.cardHeight) {
-                                        CardHeight.COMPACT -> "紧凑"
-                                        CardHeight.NORMAL -> "常规"
-                                        CardHeight.COMFORTABLE -> "宽松"
-                                    }
-                            )
-                        },
-                        trailingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = null,
-                            )
-                        },
-                        colors = listItemColors(),
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable { showCardHeightDialog = true },
-                    )
 
                     ListItem(
                         headlineContent = { Text(text = "触感反馈") },
@@ -198,7 +174,7 @@ fun RootPage(
                         colors = listItemColors(),
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable { showHapticsDialog = true },
+                                .clickable { onNavigateToHaptics() },
                     )
 
                     if (state.isBiometricLockAvailable) {
@@ -299,81 +275,6 @@ fun RootPage(
 
         }
 
-        if (showCardHeightDialog) {
-            GritBottomSheet(onDismissRequest = { showCardHeightDialog = false }) {
-                Text(
-                    text = "卡片高度",
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-                Text(
-                    text = "调整任务卡片的高度",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    listOf(
-                        CardHeight.COMPACT to "紧凑",
-                        CardHeight.NORMAL to "常规",
-                        CardHeight.COMFORTABLE to "宽松",
-                    ).forEach { (value, label) ->
-                        ListItem(
-                            headlineContent = { Text(text = label) },
-                            colors = listItemColors(),
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                    .clickable {
-                                        onAction(SettingsAction.ChangeCardHeight(value))
-                                        showCardHeightDialog = false
-                                    },
-                            trailingContent = {
-                                if (state.cardHeight == value) {
-                                    Icon(
-                                        imageVector = vectorResource(Res.drawable.check),
-                                        contentDescription = null,
-                                    )
-                                }
-                            },
-                        )
-                    }
-                }
-            }
-        }
-
-        if (showHapticsDialog) {
-            GritBottomSheet(onDismissRequest = { showHapticsDialog = false }) {
-                Text(
-                    text = "触感反馈",
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-                Text(
-                    text = "完成任务震动、拖动排序震动",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    listOf(true to "开启", false to "关闭").forEach { (value, label) ->
-                        ListItem(
-                            headlineContent = { Text(text = label) },
-                            colors = listItemColors(),
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                    .clickable {
-                                        onAction(SettingsAction.ChangeHapticFeedback(value))
-                                        showHapticsDialog = false
-                                    },
-                            trailingContent = {
-                                if (state.hapticFeedback == value) {
-                                    Icon(
-                                        imageVector = vectorResource(Res.drawable.check),
-                                        contentDescription = null,
-                                    )
-                                }
-                            },
-                        )
-                    }
-                }
-            }
-        }
 
         if (showSmartViewsDialog) {
             GritBottomSheet(onDismissRequest = { showSmartViewsDialog = false }) {
@@ -587,6 +488,7 @@ private fun Preview() {
         state = SettingsState(),
         onAction = {},
         onNavigateToLookAndFeel = {},
+        onNavigateToHaptics = {},
         onNavigateToBackup = {},
         onNavigateToPaywall = {},
     )

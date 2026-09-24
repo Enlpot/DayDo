@@ -62,12 +62,14 @@ class MainActivity : FragmentActivity() {
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
 
+            val state by mainViewModel.state.collectAsStateWithLifecycle()
+
             CompositionLocalProvider(
                 LocalWindowSizeClass provides windowSizeClass,
-                LocalHapticPerformer provides { kind -> performAndroidHaptic(this@MainActivity, kind) },
+                LocalHapticPerformer provides { kind ->
+                    performAndroidHaptic(this@MainActivity, kind, state.hapticStrength, state.hapticSound)
+                },
             ) {
-                val state by mainViewModel.state.collectAsStateWithLifecycle()
-
                 var showContent by remember { mutableStateOf(false) }
 
                 LaunchedEffect(state.isAppUnlocked, state.isBiometricLockOn) {

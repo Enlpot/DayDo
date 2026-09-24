@@ -21,24 +21,48 @@ import android.media.AudioManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.view.SoundEffectConstants
 
-/** Android implementation of haptic feedback: vibration + system click sound. */
-fun performAndroidHaptic(context: Context, kind: HapticKind) {
+import com.enlpot.daydo.core.settings.HapticSound
+import kotlin.math.roundToInt
+
+/**
+ * Android implementation of haptic feedback: vibration with user-configured
+ * strength plus a built-in system sound. [strength] is 0-100 percent.
+ */
+fun performAndroidHaptic(context: Context, kind: HapticKind, strength: Int, sound: HapticSound) {
     val vibrator =
         (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)
             ?.defaultVibrator
             ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
 
+    val amplitude = (strength.coerceIn(0, 100) / 100f * 255).roundToInt().coerceIn(1, 255)
+
     when (kind) {
         HapticKind.COMPLETE -> {
-            vibrator?.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
-            (context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager)
-                ?.playSoundEffect(SoundEffectConstants.CLICK)
+            if (strength > 0) {
+                vibrator?.vibrate(VibrationEffect.createOneShot(40, amplitude))
+            }
+            playSound(context, sound)
         }
 
         HapticKind.DRAG_START -> {
-            vibrator?.vibrate(VibrationEffect.createOneShot(15, 90))
+            if (strength > 0) {
+                vibrator?.vibrate(VibrationEffect.createOneShot(15, (amplitude * 0.6).roundToInt()))
+            }
         }
     }
+}
+
+private fun playSound(context: Context, sound: HapticSound) {
+    if (sound == HapticSound.NONE) return
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+    val effect =
+        when (sound) {
+            HapticSound.NONE -> return
+            HapticSound.CLICK -> AudioManager.FX_KEY_CLICK
+            HapticSound.KEYPRESS -> AudioManager.FX_KEYPRESS_RETURN
+            HapticSound.TOUCH -> AudioManager.FX_FOCUS_NAVIGATION_UP
+            HapticSound.NAVIGATION -> AudioManager.FX_FOCUS_NAVIGATION_DOWN
+        }
+    audioManager.playSoundEffect(effect)
 }

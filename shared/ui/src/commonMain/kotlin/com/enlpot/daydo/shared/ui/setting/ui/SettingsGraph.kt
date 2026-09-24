@@ -39,6 +39,7 @@ import com.enlpot.daydo.shared.ui.setting.SettingsState
 import com.enlpot.daydo.shared.ui.setting.ui.section.About
 import com.enlpot.daydo.shared.ui.setting.ui.section.BackupPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.Changelog
+import com.enlpot.daydo.shared.ui.setting.ui.section.HapticsPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.LookAndFeelPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.RootPage
 import kotlinx.serialization.Serializable
@@ -53,6 +54,8 @@ private sealed interface SettingsRoutes : NavKey {
 
     @Serializable data object Backup : SettingsRoutes
 
+    @Serializable data object Haptics : SettingsRoutes
+
     @Serializable data object Changelog : SettingsRoutes
 
     @Serializable data object About : SettingsRoutes
@@ -64,6 +67,7 @@ private val configuration = SavedStateConfiguration {
             subclass(SettingsRoutes.Root::class, SettingsRoutes.Root.serializer())
             subclass(SettingsRoutes.LookAndFeel::class, SettingsRoutes.LookAndFeel.serializer())
             subclass(SettingsRoutes.Backup::class, SettingsRoutes.Backup.serializer())
+            subclass(SettingsRoutes.Haptics::class, SettingsRoutes.Haptics.serializer())
             subclass(SettingsRoutes.Changelog::class, SettingsRoutes.Changelog.serializer())
             subclass(SettingsRoutes.About::class, SettingsRoutes.About.serializer())
         }
@@ -97,6 +101,7 @@ fun SettingsGraph(
                             onAction = onAction,
                             onNavigateToLookAndFeel = { backStack.add(SettingsRoutes.LookAndFeel) },
                             onNavigateToBackup = { backStack.add(SettingsRoutes.Backup) },
+                            onNavigateToHaptics = { backStack.add(SettingsRoutes.Haptics) },
                             onNavigateToPaywall = onNavigateToPaywall,
                         )
                     }
@@ -107,6 +112,16 @@ fun SettingsGraph(
                             onAction = onAction,
                             isUserSubscribed = isUserSubscribed,
                             onNavigateToPaywall = onNavigateToPaywall,
+                            onNavigateBack = {
+                                if (backStack.size != 1) backStack.removeLastOrNull()
+                            },
+                        )
+                    }
+
+                    entry<SettingsRoutes.Haptics>(metadata = horizontalTransitionMetadata()) {
+                        HapticsPage(
+                            state = state,
+                            onAction = onAction,
                             onNavigateBack = {
                                 if (backStack.size != 1) backStack.removeLastOrNull()
                             },

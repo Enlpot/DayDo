@@ -20,6 +20,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.enlpot.daydo.core.app.Changelog
 import com.enlpot.daydo.core.settings.CardHeight
+import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.settings.backup.ExportState
 import com.enlpot.daydo.core.settings.backup.RestoreState
@@ -47,6 +48,8 @@ data class SettingsState(
     val cornerRadius: Int = 20,
     val hapticFeedback: Boolean = true,
     val cardHeight: CardHeight = CardHeight.NORMAL,
+    val hapticStrength: Int = 50,
+    val hapticSound: HapticSound = HapticSound.CLICK,
 )
 
 @Stable

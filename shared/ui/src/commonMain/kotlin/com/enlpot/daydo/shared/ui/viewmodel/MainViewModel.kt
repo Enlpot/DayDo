@@ -127,6 +127,15 @@ class MainViewModel(
                     .getCardHeightPref()
                     .onEach { pref -> _state.update { it.copy(cardHeight = pref) } }
                     .launchIn(this)
+
+                settingsDatastore
+                    .getHapticStrengthPref()
+                    .onEach { pref -> _state.update { it.copy(hapticStrength = pref) } }
+                    .launchIn(this)
+                settingsDatastore
+                    .getHapticSoundPref()
+                    .onEach { pref -> _state.update { it.copy(hapticSound = pref) } }
+                    .launchIn(this)
                 settingsDatastore
                     .getBiometricLockPref()
                     .onEach { pref -> _state.update { it.copy(isBiometricLockOn = pref) } }

@@ -24,6 +24,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.settings.CardHeight
+import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import kotlinx.coroutines.flow.Flow
@@ -46,6 +47,8 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val cornerRadiusKey = intPreferencesKey("corner_radius")
         private val hapticFeedbackKey = booleanPreferencesKey("haptic_feedback")
         private val cardHeightKey = stringPreferencesKey("card_height")
+        private val hapticStrengthKey = intPreferencesKey("haptic_strength")
+        private val hapticSoundKey = stringPreferencesKey("haptic_sound")
     }
 
     override fun getStartOfTheWeekPref(): Flow<DayOfWeek> =
@@ -137,5 +140,22 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override suspend fun setCardHeight(height: CardHeight) {
         datastore.edit { prefs -> prefs[cardHeightKey] = height.name }
+    }
+
+    override fun getHapticStrengthPref(): Flow<Int> =
+        datastore.data.map { prefs -> prefs[hapticStrengthKey] ?: 50 }
+
+    override suspend fun setHapticStrength(strength: Int) {
+        datastore.edit { prefs -> prefs[hapticStrengthKey] = strength }
+    }
+
+    override fun getHapticSoundPref(): Flow<HapticSound> =
+        datastore.data.map { prefs ->
+            val raw = prefs[hapticSoundKey] ?: HapticSound.CLICK.name
+            return@map runCatching { HapticSound.valueOf(raw) }.getOrDefault(HapticSound.CLICK)
+        }
+
+    override suspend fun setHapticSound(sound: HapticSound) {
+        datastore.edit { prefs -> prefs[hapticSoundKey] = sound.name }
     }
 }
