@@ -31,9 +31,9 @@ jobs:
           cp androidApp/build/outputs/apk/foss/release/androidApp-foss-release.apk DayDo-${GITHUB_REF_NAME#v}.apk
           echo "apk_name=DayDo-${GITHUB_REF_NAME#v}.apk" >> "$GITHUB_ENV"
 
-      - name: Extract release notes from README
+      - name: Extract release notes from CHANGELOG
         run: |
-          awk '/^### v[0-9]/{if (found) exit; found=1} found' README.md | head -n 60 > RELEASE_NOTES.md
+          awk '/^## v[0-9]/{if (found) exit; found=1} found' CHANGELOG.md | head -n 60 > RELEASE_NOTES.md
           echo "release notes lines: $(wc -l < RELEASE_NOTES.md)"
 
       - name: Upload APK to Release
