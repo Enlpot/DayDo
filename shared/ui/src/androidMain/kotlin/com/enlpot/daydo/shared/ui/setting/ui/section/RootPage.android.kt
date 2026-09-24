@@ -27,7 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalLocale
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.listItemColors
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 

@@ -106,8 +106,8 @@ import com.enlpot.daydo.shared.ui.task.ui.component.TaskCard
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskUpsertSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
-import grit.shared.ui.generated.resources.*
-import grit.shared.ui.generated.resources.add
+import daydo.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.add
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import sh.calvin.reorderable.ReorderableItem

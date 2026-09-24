@@ -25,7 +25,7 @@ import com.enlpot.daydo.core.habits.StreakPosition
 import com.enlpot.daydo.core.theme.AppTheme
 import com.enlpot.daydo.core.theme.Fonts
 import com.enlpot.daydo.core.theme.PaletteStyle
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.FontResource
 import org.jetbrains.compose.resources.StringResource
 

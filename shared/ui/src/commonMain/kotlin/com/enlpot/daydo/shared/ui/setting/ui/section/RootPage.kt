@@ -53,7 +53,7 @@ import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
 import com.enlpot.daydo.shared.ui.setting.ui.component.LocalePickerSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource

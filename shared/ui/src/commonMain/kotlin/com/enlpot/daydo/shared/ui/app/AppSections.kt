@@ -18,7 +18,7 @@ package com.enlpot.daydo.shared.ui.app
 
 import androidx.navigation3.runtime.NavKey
 import androidx.savedstate.serialization.SavedStateConfiguration
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic

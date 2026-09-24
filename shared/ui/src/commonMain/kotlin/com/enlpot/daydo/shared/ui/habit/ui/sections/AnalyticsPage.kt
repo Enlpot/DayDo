@@ -76,7 +76,7 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeeklyActivity
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeeklyBooleanHeatMap
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.YearMonth
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource

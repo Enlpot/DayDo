@@ -48,7 +48,7 @@ import com.enlpot.daydo.shared.ui.components.middleItemShape
 import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 

@@ -76,7 +76,7 @@ import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.genericSaver
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 import kotlinx.coroutines.delay

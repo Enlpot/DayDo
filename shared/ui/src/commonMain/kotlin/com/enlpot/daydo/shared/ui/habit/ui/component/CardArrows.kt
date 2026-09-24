@@ -24,7 +24,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 
 @Composable

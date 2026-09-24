@@ -62,7 +62,7 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.YearlyCalendarDayContent
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import com.enlpot.daydo.shared.ui.toStringRes
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month

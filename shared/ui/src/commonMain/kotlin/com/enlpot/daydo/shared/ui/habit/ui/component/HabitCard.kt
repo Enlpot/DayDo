@@ -60,7 +60,7 @@ import com.enlpot.daydo.core.habits.HabitWithAnalytics
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate

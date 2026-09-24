@@ -50,7 +50,7 @@ import com.enlpot.daydo.shared.ui.habit.daysStartingFrom
 import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.CardArrows
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlin.collections.forEachIndexed
 import kotlin.random.Random
 import kotlinx.coroutines.launch

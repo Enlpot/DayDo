@@ -49,7 +49,7 @@ import com.enlpot.daydo.shared.ui.components.endItemShape
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.middleItemShape
 import com.enlpot.daydo.shared.ui.toMPaletteStyle
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 

@@ -47,7 +47,7 @@ import com.enlpot.daydo.core.habits.WeekDayFrequencyData
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.NotEnoughData
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlin.random.Random
 import kotlin.random.nextInt
 import kotlinx.datetime.format.DayOfWeekNames

@@ -47,7 +47,7 @@ import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlin.math.roundToInt
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource

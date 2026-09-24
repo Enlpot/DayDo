@@ -55,7 +55,7 @@ import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.genericSaver
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource

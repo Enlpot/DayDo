@@ -63,7 +63,7 @@ import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.ui.component.CategoryUpsertSheet
 import com.enlpot.daydo.shared.ui.task.ui.section.TaskList
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import sh.calvin.reorderable.ReorderableItem

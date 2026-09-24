@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.toFormattedString
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.vectorResource
 
 @Composable

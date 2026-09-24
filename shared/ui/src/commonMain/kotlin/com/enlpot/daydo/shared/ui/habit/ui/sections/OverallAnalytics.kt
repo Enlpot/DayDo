@@ -54,7 +54,7 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.stats.HabitHeatMap
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeekDayBreakdown
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlin.math.roundToInt
 import kotlinx.datetime.YearMonth
 import org.jetbrains.compose.resources.stringResource

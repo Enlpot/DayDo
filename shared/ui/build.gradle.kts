@@ -93,3 +93,7 @@ androidComponents {
         variant.sources.res?.addStaticSourceDirectory("src/commonMain/composeResources")
     }
 }
+
+compose.resources {
+    packageOfResClass = "daydo.shared.ui.generated.resources"
+}

@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
 import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 

@@ -56,7 +56,7 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.CardArrows
 import com.enlpot.daydo.shared.ui.heatMapStreakShape
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek

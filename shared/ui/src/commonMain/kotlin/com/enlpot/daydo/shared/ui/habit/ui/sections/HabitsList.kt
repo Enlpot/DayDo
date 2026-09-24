@@ -42,7 +42,7 @@ import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import com.enlpot.daydo.shared.ui.habit.ui.component.HabitCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.HabitUpsertSheet
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.resources.vectorResource

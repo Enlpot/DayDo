@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.segmentedListItemShapes
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import java.util.Locale
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource

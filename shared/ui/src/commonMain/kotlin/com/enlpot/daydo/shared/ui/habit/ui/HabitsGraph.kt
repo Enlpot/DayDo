@@ -65,7 +65,7 @@ import com.enlpot.daydo.shared.ui.navigation.horizontalTransitionMetadata
 import com.enlpot.daydo.shared.ui.navigation.verticalTransitionMetadata
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
-import grit.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
