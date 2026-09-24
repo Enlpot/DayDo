@@ -65,10 +65,25 @@ android {
         androidResources { generateLocaleConfig = true }
     }
 
+val keystoreFileEnv = System.getenv("KEYSTORE_FILE")
+signingConfigs {
+    create("release") {
+        if (keystoreFileEnv != null && File(keystoreFileEnv).exists()) {
+            storeFile = file(keystoreFileEnv)
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS") ?: "daydo"
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
+    }
+}
     buildTypes {
         release {
             resValue("string", "app_name", appName)
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig =
+                if (keystoreFileEnv != null && File(keystoreFileEnv).exists())
+                    signingConfigs.getByName("release")
+                else
+                    signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
