@@ -180,10 +180,13 @@ fun TaskUpsertSheetContent(
                 )
 
                 if (isEditSheet && newTask.recurrence != null && newTask.seriesId != null && onOpenStats != null) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    IconButton(onClick = onOpenStats) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    IconButton(
+                        onClick = onOpenStats,
+                        modifier = Modifier.size(36.dp),
+                    ) {
                         Icon(
-                            imageVector = vectorResource(Res.drawable.pie_chart),
+                            imageVector = vectorResource(Res.drawable.analytics),
                             contentDescription = "统计",
                             modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
