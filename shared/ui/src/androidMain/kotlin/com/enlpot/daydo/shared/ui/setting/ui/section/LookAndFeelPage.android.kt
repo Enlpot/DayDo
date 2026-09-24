@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialShapes
@@ -45,9 +46,8 @@ import com.materialkolor.rememberDynamicColorScheme
 import com.enlpot.daydo.core.theme.AppTheme
 import com.enlpot.daydo.core.theme.PaletteStyle
 import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
-import com.enlpot.daydo.shared.ui.components.endItemShape
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
-import com.enlpot.daydo.shared.ui.components.middleItemShape
 import com.enlpot.daydo.shared.ui.toMPaletteStyle
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -67,7 +67,7 @@ actual fun MaterialYouToggle(
                 ExpressiveSwitch(checked = isMaterialYou, onCheckedChange = onClick)
             },
             colors = listItemColors(),
-            modifier = Modifier.clip(if (isUserSubscribed) middleItemShape() else endItemShape()),
+            modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
         )
     }
 }
@@ -82,7 +82,7 @@ actual fun PaletteStylePicker(
     isUserSubscribed: Boolean,
     onClick: (PaletteStyle) -> Unit,
 ) {
-    Column(modifier = Modifier.clip(endItemShape())) {
+    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
         ListItem(
             headlineContent = { Text(text = stringResource(Res.string.palette_style)) },
             colors = listItemColors(),

@@ -69,7 +69,7 @@ import com.enlpot.daydo.core.theme.Fonts
 import com.enlpot.daydo.core.theme.PaletteStyle
 import com.enlpot.daydo.core.theme.Theme
 import com.enlpot.daydo.shared.ui.components.ColorPickerDialog
-import com.enlpot.daydo.shared.ui.components.GritDialog
+import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
@@ -129,7 +129,10 @@ fun LookAndFeelPage(
             item {
                 // appTheme picker
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
+                    Column(
+                        modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
                     // corner radius picker
                     var sliderValue by
                         remember(state.cornerRadius) { mutableFloatStateOf(state.cornerRadius.toFloat()) }
@@ -165,7 +168,7 @@ fun LookAndFeelPage(
                             modifier =
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
-                                    .padding(start = 52.dp, end = 16.dp, bottom = 16.dp),
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                         ) {
                             Box(
                                 modifier =
@@ -364,7 +367,7 @@ fun LookAndFeelPage(
     }
 
     if (showMaterialYouDialog) {
-        GritDialog(onDismissRequest = { showMaterialYouDialog = false }) {
+        GritBottomSheet(onDismissRequest = { showMaterialYouDialog = false }) {
             Text(
                 text = "Material You 主题",
                 style = MaterialTheme.typography.headlineSmall,
@@ -400,7 +403,7 @@ fun LookAndFeelPage(
     }
 
     if (showAmoledDialog) {
-        GritDialog(onDismissRequest = { showAmoledDialog = false }) {
+        GritBottomSheet(onDismissRequest = { showAmoledDialog = false }) {
             Text(
                 text = "Amoled 调色板",
                 style = MaterialTheme.typography.headlineSmall,
@@ -435,7 +438,7 @@ fun LookAndFeelPage(
         }
     }
     if (showAppThemeDialog) {
-        GritDialog(onDismissRequest = { showAppThemeDialog = false }) {
+        GritBottomSheet(onDismissRequest = { showAppThemeDialog = false }) {
             Text(
                 text = "应用主题",
                 style = MaterialTheme.typography.headlineSmall,
@@ -471,7 +474,7 @@ fun LookAndFeelPage(
     }
 
     if (showFontDialog) {
-        GritDialog(onDismissRequest = { showFontDialog = false }) {
+        GritBottomSheet(onDismissRequest = { showFontDialog = false }) {
             Text(
                 text = "字体",
                 style = MaterialTheme.typography.headlineSmall,

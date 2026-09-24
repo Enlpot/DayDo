@@ -48,7 +48,7 @@ import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
-import com.enlpot.daydo.shared.ui.components.GritDialog
+import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
@@ -259,7 +259,7 @@ fun RootPage(
         }
 
         if (showSmartViewsDialog) {
-            GritDialog(onDismissRequest = { showSmartViewsDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showSmartViewsDialog = false }) {
                 Text(
                     text = "智能分类",
                     style = MaterialTheme.typography.headlineSmall,
@@ -285,7 +285,7 @@ fun RootPage(
         }
 
         if (showStartingPageDialog) {
-            GritDialog(onDismissRequest = { showStartingPageDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showStartingPageDialog = false }) {
                 Text(
                     text = "默认起始页面",
                     style = MaterialTheme.typography.headlineSmall,
@@ -326,7 +326,7 @@ fun RootPage(
             }
         }
         if (showStartOfWeekDialog) {
-            GritDialog(onDismissRequest = { showStartOfWeekDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showStartOfWeekDialog = false }) {
                 Text(
                     text = "周起始日",
                     style = MaterialTheme.typography.headlineSmall,
@@ -362,7 +362,7 @@ fun RootPage(
         }
 
         if (show24HrDialog) {
-            GritDialog(onDismissRequest = { show24HrDialog = false }) {
+            GritBottomSheet(onDismissRequest = { show24HrDialog = false }) {
                 Text(
                     text = "时间格式",
                     style = MaterialTheme.typography.headlineSmall,
@@ -398,7 +398,7 @@ fun RootPage(
         }
 
         if (showBiometricDialog) {
-            GritDialog(onDismissRequest = { showBiometricDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showBiometricDialog = false }) {
                 Text(
                     text = "生物识别锁",
                     style = MaterialTheme.typography.headlineSmall,
