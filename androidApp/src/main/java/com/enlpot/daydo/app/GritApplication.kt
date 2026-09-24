@@ -16,21 +16,12 @@
  */
 package com.enlpot.daydo.app
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.os.Build
-import android.util.Log
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import com.enlpot.daydo.analytics.AnalyticsInitializer
 import com.enlpot.daydo.billing.BillingInitializer
 import com.enlpot.daydo.core.data.notification.GritNotificationManager
 import com.enlpot.daydo.di.GritModules
-import com.enlpot.daydo.widgets.all_tasks_widget.AllTasksWidgetReceiver
-import com.enlpot.daydo.widgets.habit_overview_widget.HabitOverviewWidgetReceiver
-import com.enlpot.daydo.widgets.habit_streak_widget.HabitStreakWidgetReceiver
-import com.enlpot.daydo.widgets.habit_week_chart_widget.HabitWeekChartWidgetReceiver
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.plugin.module.dsl.startKoin
@@ -50,20 +41,6 @@ class GritApplication : Application() {
         BillingInitializer().initialize(this)
         AnalyticsInitializer().setup(this)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            val manager = GlanceAppWidgetManager(applicationContext)
 
-            @SuppressLint("CheckResult")
-            MainScope().launch {
-                try {
-                    manager.setWidgetPreviews(HabitOverviewWidgetReceiver::class)
-                    manager.setWidgetPreviews(HabitStreakWidgetReceiver::class)
-                    manager.setWidgetPreviews(AllTasksWidgetReceiver::class)
-                    manager.setWidgetPreviews(HabitWeekChartWidgetReceiver::class)
-                } catch (e: Exception) {
-                    Log.e("GritApplication", "Error while setting up widget previews", e)
-                }
-            }
-        }
     }
 }

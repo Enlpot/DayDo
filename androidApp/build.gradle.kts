@@ -43,8 +43,8 @@ plugins {
 }
 
 val appName = "DayDo"
-val appVersionCode = 3
-val appVersionName = "1.0.3"
+val appVersionCode = 4
+val appVersionName = "1.0.4"
 
 val gitHash = execute("git", "rev-parse", "HEAD").take(7)
 
@@ -204,10 +204,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
 
-    implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.glance.material3)
-    implementation(libs.androidx.glance.appwidget.preview)
-    implementation(libs.androidx.glance.preview)
 
     implementation(libs.androidx.datastore.preferences.core)
     implementation(libs.androidx.biometric)
