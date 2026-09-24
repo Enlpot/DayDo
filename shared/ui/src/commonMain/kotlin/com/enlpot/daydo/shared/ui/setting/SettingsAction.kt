@@ -17,6 +17,7 @@
 package com.enlpot.daydo.shared.ui.setting
 
 import androidx.compose.ui.graphics.Color
+import com.enlpot.daydo.core.settings.CardHeight
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.theme.AppTheme
@@ -44,6 +45,8 @@ sealed interface SettingsAction {
     data class ChangeCornerRadius(val radius: Int) : SettingsAction
 
     data class ChangeHapticFeedback(val pref: Boolean) : SettingsAction
+
+    data class ChangeCardHeight(val height: CardHeight) : SettingsAction
 
     data class ChangeAppTheme(val appTheme: AppTheme) : SettingsAction
 

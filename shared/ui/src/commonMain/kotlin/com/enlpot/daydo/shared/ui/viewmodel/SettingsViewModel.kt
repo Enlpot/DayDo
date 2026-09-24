@@ -214,6 +214,10 @@ class SettingsViewModel(
                 is ChangeHapticFeedback -> {
                     settingsDatastore.setHapticFeedback(action.pref)
                 }
+
+                is ChangeCardHeight -> {
+                    settingsDatastore.setCardHeight(action.height)
+                }
                 is ChangeReorderTasks -> {
                     analytics.trackEvent(
                         AnalyticsWrapper.Companion.AnalyticsEvent.SETTINGS_UPDATED.name,
@@ -356,6 +360,10 @@ class SettingsViewModel(
                 settingsDatastore
                     .getHapticFeedbackPref()
                     .onEach { flow -> _state.update { it.copy(hapticFeedback = flow) } }
+                    .launchIn(this)
+                settingsDatastore
+                    .getCardHeightPref()
+                    .onEach { flow -> _state.update { it.copy(cardHeight = flow) } }
                     .launchIn(this)
 
                 settingsDatastore

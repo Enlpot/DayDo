@@ -16,6 +16,7 @@
  */
 package com.enlpot.daydo.core.interfaces
 
+import com.enlpot.daydo.core.settings.CardHeight
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import kotlinx.coroutines.flow.Flow
@@ -61,4 +62,8 @@ interface SettingsDatastore {
     fun getHapticFeedbackPref(): Flow<Boolean>
 
     suspend fun setHapticFeedback(pref: Boolean)
+
+    fun getCardHeightPref(): Flow<CardHeight>
+
+    suspend fun setCardHeight(height: CardHeight)
 }

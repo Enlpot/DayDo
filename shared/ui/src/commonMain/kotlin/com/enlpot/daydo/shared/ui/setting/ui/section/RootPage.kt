@@ -43,6 +43,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
+import com.enlpot.daydo.core.settings.CardHeight
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
@@ -74,6 +75,7 @@ fun RootPage(
     var show24HrDialog by rememberSaveable { mutableStateOf(false) }
     var showBiometricDialog by rememberSaveable { mutableStateOf(false) }
     var showHapticsDialog by rememberSaveable { mutableStateOf(false) }
+    var showCardHeightDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).fillMaxSize()) {
@@ -156,6 +158,30 @@ fun RootPage(
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
                                 .clickable { showStartOfWeekDialog = true },
+                    )
+
+                    ListItem(
+                        headlineContent = { Text(text = "卡片高度") },
+                        supportingContent = {
+                            Text(
+                                text =
+                                    when (state.cardHeight) {
+                                        CardHeight.COMPACT -> "紧凑"
+                                        CardHeight.NORMAL -> "常规"
+                                        CardHeight.COMFORTABLE -> "宽松"
+                                    }
+                            )
+                        },
+                        trailingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = null,
+                            )
+                        },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable { showCardHeightDialog = true },
                     )
 
                     ListItem(
@@ -271,6 +297,46 @@ fun RootPage(
             }
 
 
+        }
+
+        if (showCardHeightDialog) {
+            GritBottomSheet(onDismissRequest = { showCardHeightDialog = false }) {
+                Text(
+                    text = "卡片高度",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text(
+                    text = "调整任务卡片的高度",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    listOf(
+                        CardHeight.COMPACT to "紧凑",
+                        CardHeight.NORMAL to "常规",
+                        CardHeight.COMFORTABLE to "宽松",
+                    ).forEach { (value, label) ->
+                        ListItem(
+                            headlineContent = { Text(text = label) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable {
+                                        onAction(SettingsAction.ChangeCardHeight(value))
+                                        showCardHeightDialog = false
+                                    },
+                            trailingContent = {
+                                if (state.cardHeight == value) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
+            }
         }
 
         if (showHapticsDialog) {

@@ -18,6 +18,7 @@ package com.enlpot.daydo.shared.ui.app
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.enlpot.daydo.core.settings.CardHeight
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.theme.Theme
 
@@ -30,6 +31,7 @@ data class MainAppState(
     val startingSection: Sections = Sections.Tasks,
     val cornerRadius: Int = 20,
     val hapticFeedback: Boolean = true,
+    val cardHeight: CardHeight = CardHeight.NORMAL,
     val theme: Theme = Theme(),
     val isFoss: Boolean = false,
 )

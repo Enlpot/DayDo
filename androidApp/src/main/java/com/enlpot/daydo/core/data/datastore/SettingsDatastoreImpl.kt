@@ -23,6 +23,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
+import com.enlpot.daydo.core.settings.CardHeight
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import kotlinx.coroutines.flow.Flow
@@ -44,6 +45,7 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val hiddenSmartViewsKey = stringPreferencesKey("hidden_smart_views")
         private val cornerRadiusKey = intPreferencesKey("corner_radius")
         private val hapticFeedbackKey = booleanPreferencesKey("haptic_feedback")
+        private val cardHeightKey = stringPreferencesKey("card_height")
     }
 
     override fun getStartOfTheWeekPref(): Flow<DayOfWeek> =
@@ -125,5 +127,15 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override suspend fun setHapticFeedback(pref: Boolean) {
         datastore.edit { prefs -> prefs[hapticFeedbackKey] = pref }
+    }
+
+    override fun getCardHeightPref(): Flow<CardHeight> =
+        datastore.data.map { prefs ->
+            val raw = prefs[cardHeightKey] ?: CardHeight.NORMAL.name
+            return@map runCatching { CardHeight.valueOf(raw) }.getOrDefault(CardHeight.NORMAL)
+        }
+
+    override suspend fun setCardHeight(height: CardHeight) {
+        datastore.edit { prefs -> prefs[cardHeightKey] = height.name }
     }
 }

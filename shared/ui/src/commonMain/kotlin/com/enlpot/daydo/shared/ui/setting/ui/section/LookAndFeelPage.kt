@@ -186,7 +186,7 @@ fun LookAndFeelPage(
                                     Box(
                                         modifier =
                                             Modifier
-                                                .size(16.dp)
+                                                .size(20.dp)
                                                 .clip(CircleShape)
                                                 .background(MaterialTheme.colorScheme.primary),
                                     )
