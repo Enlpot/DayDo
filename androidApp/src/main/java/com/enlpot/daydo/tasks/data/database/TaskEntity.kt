@@ -50,4 +50,6 @@ data class TaskEntity(
     @ColumnInfo(name = "dueTime", defaultValue = "NULL") val dueTime: LocalTime? = null,
     @ColumnInfo(name = "recurrence", defaultValue = "NULL") val recurrence: Recurrence? = null,
     @ColumnInfo(name = "deletedAt", defaultValue = "NULL") val deletedAt: Long? = null,
+    @ColumnInfo(name = "seriesId", defaultValue = "NULL") val seriesId: Long? = null,
+    @ColumnInfo(name = "completedAt", defaultValue = "NULL") val completedAt: LocalDateTime? = null,
 )

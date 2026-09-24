@@ -35,6 +35,7 @@ actual fun TaskUpsertSheet(
     is24Hr: Boolean,
     modifier: Modifier,
     isEditSheet: Boolean,
+    onOpenStats: (() -> Unit)?,
 ) {
     var showDateTimePicker by rememberSaveable { mutableStateOf(false) }
 
@@ -51,5 +52,6 @@ actual fun TaskUpsertSheet(
         updateDateTimePickerVisibility = { showDateTimePicker = it },
         onPermissionRequest = {},
         modifier = modifier,
+        onOpenStats = onOpenStats,
     )
 }

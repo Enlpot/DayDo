@@ -33,6 +33,8 @@ fun Task.toTaskEntity(): TaskEntity {
         dueTime = dueTime,
         recurrence = recurrence,
         deletedAt = deletedAt,
+        seriesId = seriesId,
+        completedAt = completedAt,
     )
 }
 
@@ -48,6 +50,8 @@ fun TaskEntity.toTask(): Task {
         dueTime = dueTime,
         recurrence = recurrence,
         deletedAt = deletedAt,
+        seriesId = seriesId,
+        completedAt = completedAt,
     )
 }
 

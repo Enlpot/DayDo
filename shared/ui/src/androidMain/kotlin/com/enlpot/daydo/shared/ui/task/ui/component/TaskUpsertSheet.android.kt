@@ -43,6 +43,7 @@ actual fun TaskUpsertSheet(
     is24Hr: Boolean,
     modifier: Modifier,
     isEditSheet: Boolean,
+    onOpenStats: (() -> Unit)?,
 ) {
     val context = LocalContext.current
 
@@ -85,5 +86,6 @@ actual fun TaskUpsertSheet(
             }
         },
         modifier = modifier,
+        onOpenStats = onOpenStats,
     )
 }

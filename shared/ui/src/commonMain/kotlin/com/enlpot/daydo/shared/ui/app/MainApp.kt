@@ -53,7 +53,7 @@ import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.habit.ui.HabitsGraph
 import com.enlpot.daydo.shared.ui.navigation.fadeTransitionMetadata
 import com.enlpot.daydo.shared.ui.setting.ui.SettingsGraph
-import com.enlpot.daydo.shared.ui.task.ui.TasksPage
+import com.enlpot.daydo.shared.ui.task.ui.TaskGraph
 import com.enlpot.daydo.shared.ui.viewmodel.HabitViewModel
 import com.enlpot.daydo.shared.ui.viewmodel.SettingsViewModel
 import com.enlpot.daydo.shared.ui.viewmodel.TasksViewModel
@@ -75,7 +75,8 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
             },
         )
 
-    var settingsSubPage by remember { mutableStateOf(false) }
+    var subPage by remember { mutableStateOf(false) }
+    var taskStatsSeriesId by remember { mutableStateOf<Long?>(null) }
     CompositionLocalProvider(
         LocalCardCornerRadius provides state.cornerRadius,
     ) {
@@ -83,7 +84,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
         Compact -> {
             Scaffold(
                 bottomBar = {
-                    if (!settingsSubPage) {
+                    if (!subPage) {
                         AppNavBar(
                         currentRoute = appBackStack.last(),
                         onNavigate = { route ->
@@ -116,6 +117,13 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                     habitState = habitState,
                                     onTaskAction = tvm::onAction,
                                     onHabitAction = hvm::onAction,
+                                    onOpenTaskStats = { task ->
+                                        if (task.seriesId != null) {
+                                            taskStatsSeriesId = task.seriesId
+                                            appBackStack.removeAll { true }
+                                            appBackStack.add(AppSections.TaskPages)
+                                        }
+                                    },
                                 )
                             }
 
@@ -123,7 +131,13 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                 val tvm: TasksViewModel = koinViewModel()
                                 val taskPageState by tvm.state.collectAsStateWithLifecycle()
 
-                                TasksPage(state = taskPageState, onAction = tvm::onAction)
+                                TaskGraph(
+                                    state = taskPageState,
+                                    onAction = tvm::onAction,
+                                    onSubPageChange = { subPage = it },
+                                    initialStatsSeriesId = taskStatsSeriesId,
+                                    onInitialStatsHandled = { taskStatsSeriesId = null },
+                                )
                             }
 
                             entry<AppSections.SettingsPages>(metadata = fadeTransitionMetadata()) {
@@ -135,7 +149,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                     onAction = svm::onAction,
                                     isUserSubscribed = state.isUserSubscribed,
                                     onNavigateToPaywall = onNavigateToPaywall,
-                                    onSubPageChange = { settingsSubPage = it },
+                                    onSubPageChange = { subPage = it },
                                 )
                             }
 
@@ -157,7 +171,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
 
         else -> {
             Row(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
-                if (!settingsSubPage) {
+                if (!subPage) {
                 AppNavRail(
                     currentRoute = appBackStack.last(),
                     onNavigate = { route ->
@@ -185,6 +199,13 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                     habitState = habitState,
                                     onTaskAction = tvm::onAction,
                                     onHabitAction = hvm::onAction,
+                                    onOpenTaskStats = { task ->
+                                        if (task.seriesId != null) {
+                                            taskStatsSeriesId = task.seriesId
+                                            appBackStack.removeAll { true }
+                                            appBackStack.add(AppSections.TaskPages)
+                                        }
+                                    },
                                 )
                             }
 
@@ -192,7 +213,13 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                 val tvm: TasksViewModel = koinViewModel()
                                 val taskPageState by tvm.state.collectAsStateWithLifecycle()
 
-                                TasksPage(state = taskPageState, onAction = tvm::onAction)
+                                TaskGraph(
+                                    state = taskPageState,
+                                    onAction = tvm::onAction,
+                                    onSubPageChange = { subPage = it },
+                                    initialStatsSeriesId = taskStatsSeriesId,
+                                    onInitialStatsHandled = { taskStatsSeriesId = null },
+                                )
                             }
 
                             entry<AppSections.SettingsPages>(metadata = fadeTransitionMetadata()) {
@@ -204,7 +231,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                     onAction = svm::onAction,
                                     isUserSubscribed = state.isUserSubscribed,
                                     onNavigateToPaywall = onNavigateToPaywall,
-                                    onSubPageChange = { settingsSubPage = it },
+                                    onSubPageChange = { subPage = it },
                                 )
                             }
 

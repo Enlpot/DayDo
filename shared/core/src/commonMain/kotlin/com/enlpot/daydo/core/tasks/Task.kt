@@ -33,6 +33,10 @@ data class Task(
     val reminder: LocalDateTime? = null,
     val recurrence: Recurrence? = null,
     val deletedAt: Long? = null,
+    /** 重复任务系列 ID：同一重复任务的所有周期记录共享，用于统计 */
+    val seriesId: Long? = null,
+    /** 完成时间戳：勾选完成时记录，取消勾选时清空 */
+    val completedAt: LocalDateTime? = null,
 )
 
 /** Convenience accessor: full due date-time, or null when no due date set */

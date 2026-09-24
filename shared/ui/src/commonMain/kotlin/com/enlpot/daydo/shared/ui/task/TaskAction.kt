@@ -59,4 +59,10 @@ sealed interface TaskAction {
     data object OnTaskCategorySheetOpened : TaskAction
 
     data object OnTaskCategorySheetDismissed : TaskAction
+
+    /** 打开重复任务统计页 */
+    data class OpenTaskStats(val seriesId: Long) : TaskAction
+
+    /** 关闭重复任务统计页 */
+    data object ClearTaskStats : TaskAction
 }

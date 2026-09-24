@@ -104,6 +104,7 @@ expect fun TaskUpsertSheet(
     is24Hr: Boolean,
     modifier: Modifier = Modifier,
     isEditSheet: Boolean = false,
+    onOpenStats: (() -> Unit)? = null,
 )
 
 @Composable
@@ -120,6 +121,7 @@ fun TaskUpsertSheetContent(
     updateDateTimePickerVisibility: (Boolean) -> Unit,
     onPermissionRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenStats: (() -> Unit)? = null,
 ) {
     var newTask by remember { mutableStateOf(task) }
 
@@ -166,11 +168,27 @@ fun TaskUpsertSheetContent(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         ) {
 
-            Text(
-                text =
-                    stringResource(if (isEditSheet) Res.string.edit_task else Res.string.add_task),
-                style = MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text =
+                        stringResource(if (isEditSheet) Res.string.edit_task else Res.string.add_task),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
+                    modifier = Modifier.weight(1f),
+                )
+
+                if (isEditSheet && newTask.recurrence != null && newTask.seriesId != null && onOpenStats != null) {
+                    IconButton(onClick = onOpenStats) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.pie_chart),
+                            contentDescription = "统计",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
         }
 
         LazyColumn(

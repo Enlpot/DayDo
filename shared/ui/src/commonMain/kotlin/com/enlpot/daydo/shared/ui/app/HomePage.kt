@@ -97,6 +97,7 @@ fun HomePage(
     habitState: HabitState,
     onTaskAction: (TaskAction) -> Unit,
     onHabitAction: (HabitsAction) -> Unit,
+    onOpenTaskStats: ((Task) -> Unit)? = null,
 ) = PageFill {
     val today = LocalDate.now()
     val todayTasks =
@@ -269,6 +270,12 @@ fun HomePage(
             onDismissRequest = { editTask = null },
             isEditSheet = true,
             is24Hr = taskState.is24Hour,
+                        onOpenStats =
+                if (onOpenTaskStats != null) {
+                    { onOpenTaskStats(editTask!!) }
+                } else {
+                    null
+                },
             onUpsert = {
                 onTaskAction(TaskAction.UpsertTask(it))
                 editTask = null

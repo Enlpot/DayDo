@@ -43,4 +43,8 @@ data class TaskState(
     val is24Hour: Boolean = false,
     val reorderTasks: Boolean = true,
     val hapticFeedback: Boolean = true,
+    /** 当前查看统计的重复任务系列 ID */
+    val statsSeriesId: Long? = null,
+    /** 该系列的所有周期记录（含已完成与待做） */
+    val seriesTasks: List<Task> = emptyList(),
 )

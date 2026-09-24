@@ -34,6 +34,7 @@ import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.TaskView
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -93,6 +94,23 @@ class TasksViewModel(
                         }
                     )
                 }
+
+                is OpenTaskStats -> {
+                    val s = _state.value
+                    _state.update {
+                        it.copy(
+                            statsSeriesId = action.seriesId,
+                            seriesTasks = s.allTasks.filter { task ->
+                                task.seriesId == action.seriesId && task.deletedAt == null
+                            },
+                        )
+                    }
+                }
+
+                ClearTaskStats ->
+                    _state.update {
+                        it.copy(statsSeriesId = null, seriesTasks = emptyList())
+                    }
 
                 DeleteTasks -> deleteCompletedTasks()
 
@@ -251,13 +269,20 @@ class TasksViewModel(
                 AnalyticsWrapper.Companion.AnalyticsEvent.TASK_COMPLETED.name,
                 mapOf("has_reminder" to (task.reminder != null)),
             )
-            repo.upsertTask(task.copy(reminder = null))
+            // 老数据（无 seriesId）首次完成时初始化系列，后续周期继承
+            val seriesTask =
+                if (task.recurrence != null && task.seriesId == null) {
+                    task.copy(seriesId = Random.nextLong())
+                } else {
+                    task
+                }
+            repo.upsertTask(seriesTask.copy(reminder = null, completedAt = LocalDateTime.now()))
 
             // Recurring task: backfill missed occurrences and schedule the next one
-            task.recurrence?.let { recurrence ->
+            seriesTask.recurrence?.let { recurrence ->
                 val today = LocalDate.now()
-                val base = task.dueDate ?: today
-                val offset = task.reminderOffsetMinutes()
+                val base = seriesTask.dueDate ?: today
+                val offset = seriesTask.reminderOffsetMinutes()
 
                 val tasksToCreate = mutableListOf<Task>()
                 var cursor = recurrence.nextDateAfter(base, base)
@@ -265,7 +290,7 @@ class TasksViewModel(
                 // 补做：base 之后到今天（含）之间错过的所有周期
                 while (cursor <= today && guard < 60) {
                     tasksToCreate +=
-                        task.copy(
+                        seriesTask.copy(
                             id = 0L,
                             status = false,
                             deletedAt = null,
@@ -278,12 +303,12 @@ class TasksViewModel(
                 // 未来下一次：大于今天的第一周期
                 if (guard < 60) {
                     tasksToCreate +=
-                        task.copy(
+                        seriesTask.copy(
                             id = 0L,
                             status = false,
                             deletedAt = null,
                             dueDate = cursor,
-                            reminder = reminderFor(task.dueDateTimeFor(cursor), offset),
+                            reminder = reminderFor(seriesTask.dueDateTimeFor(cursor), offset),
                         )
                 }
 
@@ -304,9 +329,17 @@ class TasksViewModel(
                     mapOf("has_reminder" to (task.reminder != null)),
                 )
             }
-            val newId = repo.upsertTask(task)
+            val baseTask =
+                if (task.recurrence != null && task.seriesId == null) {
+                    task.copy(seriesId = Random.nextLong())
+                } else if (task.completedAt != null) {
+                    task.copy(completedAt = null)
+                } else {
+                    task
+                }
+            val newId = repo.upsertTask(baseTask)
 
-            scheduler.schedule(task.copy(id = newId))
+            scheduler.schedule(baseTask.copy(id = newId))
         }
     }
 

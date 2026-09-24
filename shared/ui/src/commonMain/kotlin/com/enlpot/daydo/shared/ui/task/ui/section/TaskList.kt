@@ -114,7 +114,7 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
-fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories: () -> Unit) =
+fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories: () -> Unit, onOpenStats: ((Task) -> Unit)? = null) =
     PageFill {
         val windowSizeClass = LocalWindowSizeClass.current
 
@@ -267,6 +267,12 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                 },
                 isEditSheet = true,
                 is24Hr = state.is24Hour,
+                onOpenStats =
+                    if (onOpenStats != null) {
+                        { onOpenStats(editTask!!) }
+                    } else {
+                        null
+                    },
                 onUpsert = {
                     onAction(TaskAction.UpsertTask(it))
                     onAction(TaskAction.OnTaskSheetDismissed)

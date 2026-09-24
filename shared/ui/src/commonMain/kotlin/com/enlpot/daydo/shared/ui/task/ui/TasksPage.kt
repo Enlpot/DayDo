@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.endItemShape
@@ -70,7 +71,7 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
-fun TasksPage(state: TaskState, onAction: (TaskAction) -> Unit) {
+fun TasksPage(state: TaskState, onAction: (TaskAction) -> Unit, onOpenStats: ((Long) -> Unit)? = null) {
     LaunchedEffect(Unit) { onAction(TaskAction.OnTasksOpened) }
 
     var showCategoryEditor by rememberSaveable { mutableStateOf(false) }
@@ -82,6 +83,12 @@ fun TasksPage(state: TaskState, onAction: (TaskAction) -> Unit) {
             onAction(TaskAction.OnTaskCategorySheetOpened)
             showCategoryEditor = true
         },
+        onOpenStats =
+            if (onOpenStats != null) {
+                { task -> onOpenStats(task.seriesId ?: 0L) }
+            } else {
+                null
+            },
     )
 
     if (showCategoryEditor) {
