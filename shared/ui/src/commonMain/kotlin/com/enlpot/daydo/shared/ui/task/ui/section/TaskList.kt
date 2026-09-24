@@ -49,12 +49,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonShapes
-import androidx.compose.material3.IconToggleButtonShapes
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -146,7 +144,6 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                 state = state,
                 scrollBehavior = scrollBehavior,
                 isReorderMode = editState,
-                onReorderToggle = { editState = it },
                 onDeleteClick = { showDeleteDialog = true },
                 isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded,
                 multiSelect = multiSelect,
@@ -315,7 +312,6 @@ private fun TaskListTopBar(
     state: TaskState,
     scrollBehavior: TopAppBarScrollBehavior,
     isReorderMode: Boolean,
-    onReorderToggle: (Boolean) -> Unit,
     onDeleteClick: () -> Unit,
     isExpanded: Boolean,
     multiSelect: Boolean,
@@ -385,28 +381,7 @@ private fun TaskListTopBar(
                 }
             }
 
-            AnimatedVisibility(
-                visible = state.tasks.values.isNotEmpty() && !isExpanded,
-                enter = fadeIn(motionScheme.fastEffectsSpec()),
-                exit = fadeOut(motionScheme.fastEffectsSpec()),
-            ) {
-                FilledTonalIconToggleButton(
-                    checked = isReorderMode,
-                    shapes =
-                        IconToggleButtonShapes(
-                            shape = CircleShape,
-                            checkedShape = MaterialTheme.shapes.small,
-                            pressedShape = MaterialTheme.shapes.extraSmall,
-                        ),
-                    onCheckedChange = onReorderToggle,
-                    enabled = state.displayTasks.size > 1,
-                ) {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.reorder),
-                        contentDescription = null,
-                    )
-                }
-            }
+
         },
     )
 }
@@ -550,7 +525,7 @@ private fun TaskItemsSection(
 
                             TaskCard(
                                 task = task,
-                                dragState = isReorderMode,
+                                dragState = isReorderMode || multiSelect,
                                 reorderIcon = {
                                     Icon(
                                         imageVector = vectorResource(Res.drawable.drag_indicator),

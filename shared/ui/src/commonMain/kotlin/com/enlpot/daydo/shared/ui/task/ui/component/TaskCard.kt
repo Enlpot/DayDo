@@ -104,7 +104,7 @@ fun TaskCard(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            if (!dragState) {
+            if (!dragState || selectionMode) {
                 Checkbox(
                     checked = if (selectionMode) selected else task.status,
                     onCheckedChange = { onCheck() },
@@ -117,7 +117,7 @@ fun TaskCard(
                     Modifier.weight(1f)
                         .clip(shape)
                         .combinedClickable(
-                            enabled = !dragState,
+                            enabled = !dragState || selectionMode,
                             onClick = { onClick() },
                             onLongClick = onLongClick,
                         )
