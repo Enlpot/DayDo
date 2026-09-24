@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -67,6 +68,7 @@ import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.Empty
 import com.enlpot.daydo.shared.ui.components.PageFill
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
+import com.enlpot.daydo.shared.ui.components.taskItemShape
 import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import com.enlpot.daydo.shared.ui.habit.ui.component.HabitCard
@@ -84,6 +86,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 /** 首页：今天待办 + 今天习惯，主标题下方双 tab 可左右滑动切换 */
 @Composable
@@ -256,6 +260,7 @@ fun HomePage(
                     index = todayTasks.size,
                     status = false,
                     reminder = null,
+                    dueDate = today,
                 ),
             is24Hr = taskState.is24Hour,
             categories = taskState.tasks.keys.toList(),
@@ -298,41 +303,78 @@ private fun TodayTasksSection(
     onExitMultiSelect: () -> Unit,
     onEditTask: (Task) -> Unit,
 ) {
-    val active = remember(todayTasks) { todayTasks.filter { !it.status } }
     val completed = remember(todayTasks) { todayTasks.filter { it.status } }
+
+    val lazyListState = rememberLazyListState()
+    var reorderableTasks by
+        remember(todayTasks) {
+            mutableStateOf(todayTasks.filter { !it.status }.sortedBy { it.index })
+        }
+    val reorderableListState =
+        rememberReorderableLazyListState(lazyListState) { from, to ->
+            reorderableTasks =
+                reorderableTasks.toMutableList().apply {
+                    add(to.index, removeAt(from.index))
+                }
+            if (multiSelect) {
+                onAction(
+                    TaskAction.ReorderTasks(
+                        reorderableTasks.mapIndexed { i, t -> i to t }
+                    )
+                )
+            }
+        }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        state = lazyListState,
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        itemsIndexed(items = active, key = { _, it -> it.id }) { index, task ->
-            val cardShape = detachedItemShape(radius = 28)
-            TaskCard(
-                task = task,
-                dragState = false,
-                reorderIcon = {},
-                is24Hr = state.is24Hour,
-                shape = cardShape,
-                modifier = Modifier.fillMaxWidth().clip(cardShape),
-                selectionMode = multiSelect,
-                selected = task.id in selectedTaskIds,
-                onLongClick = { onToggleSelect(task) },
-                onCheck = {
-                    if (multiSelect) onToggleSelect(task)
-                    else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
-                },
-                onClick = {
-                    if (multiSelect) onToggleSelect(task)
-                    else onEditTask(task)
-                },
-            )
+        itemsIndexed(items = reorderableTasks, key = { _, it -> it.id }) { index, task ->
+            ReorderableItem(reorderableListState, key = task.id) {
+                val cardShape = taskItemShape(index, reorderableTasks.size)
+                TaskCard(
+                    task = task,
+                    dragState = multiSelect,
+                    reorderIcon = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.drag_indicator),
+                            contentDescription = null,
+                            modifier =
+                                Modifier.draggableHandle(
+                                    onDragStopped = {
+                                        onAction(
+                                            TaskAction.ReorderTasks(
+                                                reorderableTasks.mapIndexed { i, t -> i to t }
+                                            )
+                                        )
+                                    }
+                                ),
+                        )
+                    },
+                    is24Hr = state.is24Hour,
+                    shape = cardShape,
+                    modifier = Modifier.fillMaxWidth().clip(cardShape),
+                    selectionMode = multiSelect,
+                    selected = task.id in selectedTaskIds,
+                    onLongClick = { onToggleSelect(task) },
+                    onCheck = {
+                        if (multiSelect) onToggleSelect(task)
+                        else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
+                    },
+                    onClick = {
+                        if (multiSelect) onToggleSelect(task)
+                        else onEditTask(task)
+                    },
+                )
+            }
         }
 
         if (completed.isNotEmpty()) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
             itemsIndexed(items = completed, key = { _, it -> it.id }) { index, task ->
-                val cardShape = detachedItemShape(radius = 28)
+                val cardShape = taskItemShape(index, completed.size)
                 TaskCard(
                     task = task,
                     dragState = false,

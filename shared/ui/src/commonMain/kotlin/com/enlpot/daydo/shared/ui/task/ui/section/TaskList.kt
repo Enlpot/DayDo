@@ -96,6 +96,7 @@ import com.enlpot.daydo.shared.ui.components.genericSaver
 import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.middleItemShape
+import com.enlpot.daydo.shared.ui.components.taskItemShape
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.TaskView
@@ -506,7 +507,7 @@ private fun TaskItemsSection(
             ) {
                 if (isDeletedView) {
                     itemsIndexed(items = state.displayTasks, key = { _, it -> it.id }) { index, task ->
-                        val cardShape = itemShape(index, state.displayTasks.size)
+                        val cardShape = taskItemShape(index, state.displayTasks.size)
                         DeletedTaskCard(
                             task = task,
                             shape = cardShape,
@@ -521,7 +522,7 @@ private fun TaskItemsSection(
                 } else {
                     itemsIndexed(items = reorderableTasks, key = { _, it -> it.id }) { index, task ->
                         ReorderableItem(reorderableListState, key = task.id) {
-                            val cardShape = itemShape(index, reorderableTasks.size)
+                            val cardShape = taskItemShape(index, reorderableTasks.size)
 
                             TaskCard(
                                 task = task,
@@ -571,7 +572,7 @@ private fun TaskItemsSection(
                             items = completedTasks,
                             key = { _, it -> "completed_task_${it.id}" },
                         ) { index, task ->
-                            val cardShape = itemShape(index, completedTasks.size)
+                            val cardShape = taskItemShape(index, completedTasks.size)
 
                             TaskCard(
                                 task = task,
@@ -633,36 +634,6 @@ private fun DeletedTaskCard(
             }
         },
     )
-}
-
-private fun itemShape(index: Int, size: Int): RoundedCornerShape {
-    return when {
-        size == 1 ->
-            RoundedCornerShape(
-                topStart = 20.dp,
-                topEnd = 20.dp,
-                bottomStart = 20.dp,
-                bottomEnd = 20.dp,
-            )
-
-        index == 0 ->
-            RoundedCornerShape(
-                topStart = 20.dp,
-                topEnd = 20.dp,
-                bottomStart = 4.dp,
-                bottomEnd = 4.dp,
-            )
-
-        index == size - 1 ->
-            RoundedCornerShape(
-                topStart = 4.dp,
-                topEnd = 4.dp,
-                bottomStart = 20.dp,
-                bottomEnd = 20.dp,
-            )
-
-        else -> RoundedCornerShape(4.dp)
-    }
 }
 
 private fun SmartCategory.label(): String {
