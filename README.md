@@ -1,70 +1,61 @@
-> [!CAUTION]
-> ## [Keep Android Open](https://keepandroidopen.org/)
-> ###  Your phone is about to stop being yours.
-> Starting September 2026, a silent update, nonconsensually pushed by Google, will block every
-> Android app whose developer hasn't registered with Google, signed their contract, paid up, and
-> handed over government ID.
-> **Every app and every device, worldwide, with no opt-out.**
+# DayDo
 
-![](fastlane/metadata/android/en-US/images/featureGraphic.png)
+待办与习惯管理应用（Android 原生，全中文界面）。基于开源项目 [Grit](https://github.com/shub39/Grit)（GPL-3.0）二次开发，离线优先，数据保存在本地。
 
-[<img alt="Try web Demo" src="badges/webDemo.png" width="180px">](https://shub39.github.io/Grit)
-[<img alt="Get it on Google Play" src="badges/playstore.png" width="180px">](https://play.google.com/store/apps/details?id=com.enlpot.daydo)
-[<img alt="Get it on github" src="badges/github.png" width="180px">](https://github.com/shub39/Grit/releases)
-[<img alt="Get it on izzyondroid" src="badges/izzyondroid.png" width="180px">](https://apt.izzysoft.de/fdroid/index/apk/com.enlpot.daydo)
-[<img alt="Get it on fdroid" src="badges/fdroid.png" width="180px">](https://f-droid.org/en/packages/com.enlpot.daydo/)
+## 功能特性
 
-# Screenshots
+- **首页看板**：今日任务 + 今日习惯，页内双 tab 左右滑动切换
+- **待办管理**：
+  - 智能分类：所有 / 今天 / 明天 / 最近 7 天 / 已完成 / 已删除 / 收集箱（分类可在设置中隐藏）
+  - 任务卡：勾选完成、点击卡片编辑详情、长按进入多选（全选 / 拖动排序 / 删除，删除二次确认）
+  - 任务设置：时间、提醒、重复（每天 / 每周 / 每月 / 每年 / 自定义每 N 天·周·月·年）
+  - 重复任务显示重复图标，未设置时间默认当天全天任务
+- **习惯打卡**：习惯卡打卡记录
+- **中文体验**：界面与日期时间均为中文（如 2026.9.24 周四 17:34），12 / 24 小时制可切换
+- **默认起始页面**：可自定义启动时进入首页 / 任务 / 习惯
+- **设置中心**：
+  - 外观与风格：全局卡片圆角大小（带实时预览）、卡片高度（紧凑 / 常规 / 宽松）、应用主题、Material You、Amoled 调色板、调色板风格
+  - 触感反馈：总开关、震动强度（0-100%）、内置提示音（系统点击 / 按键音 / 触碰音 / 导航音）
+  - 数据备份：导出 / 恢复任务和习惯数据
 
-| ![Image 1](fastlane/metadata/android/en-US/images/phoneScreenshots/1.png) | ![Image 2](fastlane/metadata/android/en-US/images/phoneScreenshots/2.png) |
-|:-------------------------------------------------------------------------:|:-------------------------------------------------------------------------:|
-| ![Image 3](fastlane/metadata/android/en-US/images/phoneScreenshots/3.png) | ![Image 4](fastlane/metadata/android/en-US/images/phoneScreenshots/4.png) |
-| ![Image 5](fastlane/metadata/android/en-US/images/phoneScreenshots/5.png) | ![Image 6](fastlane/metadata/android/en-US/images/phoneScreenshots/6.png) |
+## 下载
 
-# Features
+从 [GitHub Releases](https://github.com/Enlpot/DayDo/releases) 下载最新 APK（debug 包，可直接安装到 Android 手机）。
 
-- [x] Todo List with reminders
-- [x] Daily Habit Tracking
-- [x] Analytics with Habit Maps
-- [x] Notification Reminders
-- [x] Widgets
+## 构建
 
-Check out planned changes in [RoadMap](https://github.com/shub39/Grit/discussions/66)
+环境要求：JDK 17+，Android SDK。
 
-# Motivation 
+```bash
+# Linux / macOS
+./gradlew :androidApp:assembleFossDebug
 
-There are plenty of todo list and habit tracker apps for android. Some have the features I love while some have good UI design.
-While learning android I made this app for myself that brings together all the features that I like keeping everything simple. 
-I eventually want to turn this app into a productivity hub with many social features like progress sharing in the form of beautiful cards.
-
-# Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/shub39/Grit.svg?background=%23282828&axis=%23f2dfd3&line=%23ffb780)](https://starchart.cc/shub39/Grit)
-
-## Translations
-
-Translations are done via weblate, you can contribute there!
-[<img src="https://hosted.weblate.org/widget/grit/multi-auto.svg" alt="Translation status" />](https://hosted.weblate.org/engage/grit/)
-[<img src="https://hosted.weblate.org/widget/grit/287x66-grey.png" alt="Translation status" />](https://hosted.weblate.org/engage/grit/)
-
-# Inspiration and Tech used
-
-- [Loop Habit Tracker](https://github.com/iSoron/uhabits)
-- Kotlin and Jetpack Compose 🖤
-- Compose Multiplatform and Kotlin wasm for the Web Demo
-- [Compose Reorderable](https://github.com/Calvin-LL/Reorderable)
-- [MaterialKolor](https://github.com/jordond/MaterialKolor)
-- [ColorPicker Compose](https://github.com/skydoves/colorpicker-compose)
-- [Compose Calendar](https://github.com/boguszpawlowski/ComposeCalendar)
-- [Revenuecat Android SDK](https://github.com/RevenueCat/purchases-android)
-
-# Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests.
-
-# Security
-
-SHA-256 fingerprint for the signing certificate used for github releases
-```text
-0F:E1:B9:F4:4A:4D:B9:7E:C5:09:48:F5:18:9F:6B:43:00:71:6C:C6:D4:84:3F:56:98:D6:14:A2:15:2E:21:88
+# Windows
+.\gradlew.bat :androidApp:assembleFossDebug
 ```
+
+产物路径：`androidApp/build/outputs/apk/foss/debug/androidApp-foss-debug.apk`
+
+## 更新日志
+
+### v1.0.0（2026-09-24）
+
+首个正式版本，基于 Grit 二次开发并深度定制：
+
+- 全中文界面与日期时间显示（周起始日可配置，12/24 小时制可切换）
+- 首页看板：今日任务 + 今日习惯双 tab
+- 任务功能：智能分类、任务卡勾选 / 编辑 / 长按多选（全选、拖动排序、删除二次确认）、多选模式返回键优先退出多选
+- 任务设置：时间、提醒、重复（每天 / 每周 / 每月 / 每年 / 自定义周期），重复任务显示重复图标，未设时间默认当天全天
+- 设置中心重构：全部卡片主副标题 + 圆角矩形；弹窗统一底部弹出；外观与风格、数据备份、触感反馈为二级页面（无底部导航）
+- 外观与风格：全局圆角大小（默认 20dp，实时预览）、卡片高度（紧凑 / 常规 / 宽松）、应用主题、Material You、Amoled、调色板风格
+- 触感反馈：总开关、震动强度自定义（0-100%）、内置提示音（5 种）
+- 默认起始页面可自定义；主界面返回键直接返回桌面
+- 移除字体选项、DayDo Plus、暂停通知、重新排序等无关功能
+
+## 许可证
+
+[GPL-3.0](LICENSE)。本应用保留 Grit 原作者版权声明，详情见 LICENSE 文件。
+
+## 致谢
+
+[Grit](https://github.com/shub39/Grit) — 原作者 Shubham Gorai，本项目的脚手架来源。

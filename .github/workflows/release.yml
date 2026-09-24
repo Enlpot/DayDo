@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :androidApp:assembleFossDebug --console=plain
+
+      - name: Extract release notes from README
+        run: |
+          awk '/^### v[0-9]/{if (found) exit; found=1} found' README.md | head -n 60 > RELEASE_NOTES.md
+          echo "release notes lines: $(wc -l < RELEASE_NOTES.md)"
+
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: androidApp/build/outputs/apk/foss/debug/androidApp-foss-debug.apk
+          name: DayDo ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
