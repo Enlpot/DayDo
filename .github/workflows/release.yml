@@ -29,6 +29,7 @@ jobs:
           chmod +x gradlew
           ./gradlew :androidApp:assembleFossRelease --console=plain
           cp androidApp/build/outputs/apk/foss/release/androidApp-foss-release.apk DayDo-${GITHUB_REF_NAME#v}.apk
+          echo "apk_name=DayDo-${GITHUB_REF_NAME#v}.apk" >> "$GITHUB_ENV"
 
       - name: Extract release notes from README
         run: |
@@ -38,7 +39,7 @@ jobs:
       - name: Upload APK to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: DayDo-${GITHUB_REF_NAME#v}.apk
+          files: ${{ env.apk_name }}
           name: DayDo ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
           draft: false
