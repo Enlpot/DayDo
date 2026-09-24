@@ -263,12 +263,13 @@ fun TaskUpsertSheetContent(
                         Text(
                             text = newTask.dueDateTimeText(is24Hr),
                             color =
-                                if (newTask.dueDate != null) MaterialTheme.colorScheme.onSurface
+                                if (newTask.dueDate != null || newTask.recurrence != null)
+                                    MaterialTheme.colorScheme.onSurface
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     },
                     trailingContent = {
-                        if (newTask.dueDate != null) {
+                        if (newTask.dueDate != null && newTask.recurrence == null) {
                             IconButton(
                                 onClick = {
                                     newTask =
@@ -522,7 +523,8 @@ fun TaskUpsertSheetContent(
 }
 
 private fun Task.dueDateTimeText(is24Hr: Boolean): String {
-    val date = dueDate ?: return "无"
+    // 重复任务未设置日期时，默认当天（全天）作为锚点日期
+    val date = dueDate ?: if (recurrence != null) LocalDate.now() else return "无"
     val dateText = date.toFormattedString()
     return if (dueTime != null) {
         "$dateText ${dueTime!!.toFormattedString(is24Hr)}"

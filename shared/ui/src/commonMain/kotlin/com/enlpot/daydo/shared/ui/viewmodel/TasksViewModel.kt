@@ -82,7 +82,17 @@ class TasksViewModel(
     fun onAction(action: TaskAction) {
         viewModelScope.launch {
             when (action) {
-                is UpsertTask -> handleUpsertTask(action.task)
+                is UpsertTask -> {
+                    // 重复任务未设置日期时，默认锚点日期=今天（当天全天任务），避免落入收集箱
+                    val task = action.task
+                    handleUpsertTask(
+                        if (task.recurrence != null && task.dueDate == null) {
+                            task.copy(dueDate = LocalDate.now())
+                        } else {
+                            task
+                        }
+                    )
+                }
 
                 DeleteTasks -> deleteCompletedTasks()
 
