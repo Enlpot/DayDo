@@ -260,7 +260,7 @@ class TasksViewModel(
                             status = false,
                             deletedAt = null,
                             dueDate = cursor,
-                            reminder = reminderFor(task.dueDateTimeFor(cursor), offset),
+                            reminder = null,
                         )
                     cursor = recurrence.nextDateAfter(cursor, base)
                     guard++

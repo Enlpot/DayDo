@@ -21,7 +21,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,15 +46,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Task
-import com.enlpot.daydo.core.tasks.nextDateAfter
-import com.enlpot.daydo.core.tasks.occursOn
 import com.enlpot.daydo.core.toFormattedString
 import daydo.shared.ui.generated.resources.*
-import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.vectorResource
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TaskCard(
     task: Task,
@@ -64,12 +62,16 @@ fun TaskCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(4.dp),
+    selectionMode: Boolean = false,
+    selected: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
 ) {
     val cardContent by
         animateColorAsState(
             targetValue =
-                when (task.status) {
-                    true -> MaterialTheme.colorScheme.onSurface
+                when {
+                    selectionMode && selected -> MaterialTheme.colorScheme.onPrimaryContainer
+                    task.status -> MaterialTheme.colorScheme.onSurface
                     else -> MaterialTheme.colorScheme.onSecondaryContainer
                 },
             animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
@@ -78,8 +80,9 @@ fun TaskCard(
     val cardContainer by
         animateColorAsState(
             targetValue =
-                when (task.status) {
-                    true -> MaterialTheme.colorScheme.surfaceContainerHighest
+                when {
+                    selectionMode && selected -> MaterialTheme.colorScheme.primaryContainer
+                    task.status -> MaterialTheme.colorScheme.surfaceContainerHighest
                     else -> MaterialTheme.colorScheme.secondaryContainer
                 },
             animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
@@ -103,7 +106,7 @@ fun TaskCard(
         ) {
             if (!dragState) {
                 Checkbox(
-                    checked = task.status,
+                    checked = if (selectionMode) selected else task.status,
                     onCheckedChange = { onCheck() },
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
@@ -113,7 +116,11 @@ fun TaskCard(
                 modifier =
                     Modifier.weight(1f)
                         .clip(shape)
-                        .clickable(enabled = !dragState) { onClick() }
+                        .combinedClickable(
+                            enabled = !dragState,
+                            onClick = { onClick() },
+                            onLongClick = onLongClick,
+                        )
                         .padding(horizontal = 8.dp, vertical = 12.dp),
             ) {
                 Text(
@@ -129,32 +136,15 @@ fun TaskCard(
 
                 when {
                     task.recurrence != null -> {
-                        val rec = task.recurrence!!
-                        val today = LocalDate.now()
-                        val anchor = task.dueDate ?: today
-                        val occursToday = rec.occursOn(today, anchor)
-                        val nextDate = if (occursToday) today else rec.nextDateAfter(today, anchor)
-                        val dateText =
-                            if (nextDate == today) "今天" else nextDate.toFormattedString()
-                        val timeText =
-                            task.dueTime?.let { " " + it.toFormattedString(is24Hr) }.orEmpty()
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Icon(
-                                imageVector = vectorResource(Res.drawable.schedule),
+                                imageVector = vectorResource(Res.drawable.sync),
                                 contentDescription = null,
-                                modifier = Modifier.size(12.dp),
-                            )
-
-                            Text(
-                                text = "下次 $dateText$timeText",
-                                style =
-                                    MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Light,
-                                    ),
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
                         }
                     }

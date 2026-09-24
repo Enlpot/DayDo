@@ -52,6 +52,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonShapes
 import androidx.compose.material3.IconToggleButtonShapes
 import androidx.compose.material3.LargeFlexibleTopAppBar
@@ -121,6 +122,13 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
         var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
         var editState by rememberSaveable { mutableStateOf(false) }
         var editTask by remember { mutableStateOf<Task?>(null) }
+        var multiSelect by rememberSaveable { mutableStateOf(false) }
+        var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
+
+        fun exitMultiSelect() {
+            multiSelect = false
+            selectedTaskIds = emptySet()
+        }
 
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -141,6 +149,18 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                 onReorderToggle = { editState = it },
                 onDeleteClick = { showDeleteDialog = true },
                 isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded,
+                multiSelect = multiSelect,
+                selectedCount = selectedTaskIds.size,
+                onSelectAll = {
+                    selectedTaskIds = (state.displayTasks + state.displayCompletedTasks).map { it.id }.toSet()
+                },
+                onDeleteSelected = {
+                    (state.displayTasks + state.displayCompletedTasks)
+                        .filter { it.id in selectedTaskIds }
+                        .forEach { onAction(TaskAction.SoftDeleteTask(it)) }
+                    exitMultiSelect()
+                },
+                onExitMultiSelect = ::exitMultiSelect,
             )
 
             CategorySelector(
@@ -161,6 +181,15 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                 onAction = onAction,
                 onEditTask = { editTask = it },
                 isDeletedView = isDeletedView,
+                multiSelect = multiSelect,
+                selectedTaskIds = selectedTaskIds,
+                onToggleSelect = { task ->
+                    if (!multiSelect) multiSelect = true
+                    selectedTaskIds =
+                        if (task.id in selectedTaskIds) selectedTaskIds - task.id
+                        else selectedTaskIds + task.id
+                },
+                onExitMultiSelect = ::exitMultiSelect,
             )
         }
 
@@ -177,7 +206,7 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                         else Modifier.navigationBarsPadding()
                     )
                     .animateFloatingActionButton(
-                        visible = !editState && !isDeletedView,
+                        visible = !editState && !isDeletedView && !multiSelect,
                         alignment = Alignment.BottomEnd,
                         scaleAnimationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
                         alphaAnimationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
@@ -289,6 +318,11 @@ private fun TaskListTopBar(
     onReorderToggle: (Boolean) -> Unit,
     onDeleteClick: () -> Unit,
     isExpanded: Boolean,
+    multiSelect: Boolean,
+    selectedCount: Int,
+    onSelectAll: () -> Unit,
+    onDeleteSelected: () -> Unit,
+    onExitMultiSelect: () -> Unit,
 ) {
     LargeFlexibleTopAppBar(
         colors =
@@ -296,14 +330,40 @@ private fun TaskListTopBar(
                 scrolledContainerColor = MaterialTheme.colorScheme.surface
             ),
         scrollBehavior = scrollBehavior,
-        title = { Text(text = stringResource(Res.string.tasks), fontFamily = flexFontEmphasis()) },
+        title = {
+            if (multiSelect) {
+                Text(text = "已选 $selectedCount 项", fontFamily = flexFontEmphasis())
+            } else {
+                Text(text = stringResource(Res.string.tasks), fontFamily = flexFontEmphasis())
+            }
+        },
         subtitle = {
-            Text(
-                text = "${state.completedTasks.size} " + stringResource(Res.string.items_completed),
-                fontFamily = flexFontRounded(),
-            )
+            if (!multiSelect) {
+                Text(
+                    text = "${state.completedTasks.size} " + stringResource(Res.string.items_completed),
+                    fontFamily = flexFontRounded(),
+                )
+            }
         },
         actions = {
+            if (multiSelect) {
+                TextButton(onClick = onSelectAll) {
+                    Text(text = "全选")
+                }
+                IconButton(onClick = onDeleteSelected) {
+                    Icon(
+                        imageVector = vectorResource(Res.drawable.delete),
+                        contentDescription = null,
+                    )
+                }
+                IconButton(onClick = onExitMultiSelect) {
+                    Icon(
+                        imageVector = vectorResource(Res.drawable.close),
+                        contentDescription = null,
+                    )
+                }
+                return@LargeFlexibleTopAppBar
+            }
             val motionScheme = MaterialTheme.motionScheme
             AnimatedVisibility(
                 visible = state.completedTasks.isNotEmpty() && !isExpanded,
@@ -422,6 +482,10 @@ private fun TaskItemsSection(
     onAction: (TaskAction) -> Unit,
     onEditTask: (Task) -> Unit,
     isDeletedView: Boolean,
+    multiSelect: Boolean,
+    selectedTaskIds: Set<Long>,
+    onToggleSelect: (Task) -> Unit,
+    onExitMultiSelect: () -> Unit,
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -450,6 +514,13 @@ private fun TaskItemsSection(
                         reorderableTasks.toMutableList().apply {
                             add(to.index, removeAt(from.index))
                         }
+                    if (multiSelect) {
+                        onAction(
+                            TaskAction.ReorderTasks(
+                                reorderableTasks.mapIndexed { i, t -> i to t }
+                            )
+                        )
+                    }
                 }
 
             LazyColumn(
@@ -501,11 +572,16 @@ private fun TaskItemsSection(
                                 is24Hr = state.is24Hour,
                                 shape = cardShape,
                                 modifier = Modifier.fillMaxWidth().clip(cardShape),
+                                selectionMode = multiSelect,
+                                selected = task.id in selectedTaskIds,
+                                onLongClick = { onToggleSelect(task) },
                                 onCheck = {
-                                    onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
+                                    if (multiSelect) onToggleSelect(task)
+                                    else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
                                 },
                                 onClick = {
-                                    if (!isReorderMode) onEditTask(task)
+                                    if (multiSelect) onToggleSelect(task)
+                                    else if (!isReorderMode) onEditTask(task)
                                 },
                             )
                         }
@@ -529,11 +605,16 @@ private fun TaskItemsSection(
                                 is24Hr = state.is24Hour,
                                 shape = cardShape,
                                 modifier = Modifier.fillMaxWidth().clip(cardShape),
+                                selectionMode = multiSelect,
+                                selected = task.id in selectedTaskIds,
+                                onLongClick = { onToggleSelect(task) },
                                 onCheck = {
-                                    onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
+                                    if (multiSelect) onToggleSelect(task)
+                                    else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
                                 },
                                 onClick = {
-                                    if (!isReorderMode) onEditTask(task)
+                                    if (multiSelect) onToggleSelect(task)
+                                    else if (!isReorderMode) onEditTask(task)
                                 },
                             )
                         }
