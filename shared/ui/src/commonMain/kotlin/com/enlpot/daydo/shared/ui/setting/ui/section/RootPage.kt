@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
-import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.listItemColors
@@ -76,6 +75,9 @@ fun RootPage(
     var showLocalePicker by rememberSaveable { mutableStateOf(false) }
     var showSmartViewsDialog by rememberSaveable { mutableStateOf(false) }
     var showStartingPageDialog by rememberSaveable { mutableStateOf(false) }
+    var showStartOfWeekDialog by rememberSaveable { mutableStateOf(false) }
+    var show24HrDialog by rememberSaveable { mutableStateOf(false) }
+    var showBiometricDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).fillMaxSize()) {
@@ -140,21 +142,24 @@ fun RootPage(
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { showStartingPageDialog = true },
                     )
                     ListItem(
-                        headlineContent = { Text(text = stringResource(Res.string.staring_day)) },
+                        headlineContent = { Text(text = "周起始日") },
+                        supportingContent = {
+                            Text(
+                                text =
+                                    if (state.startOfTheWeek == DayOfWeek.SUNDAY) "周日"
+                                    else "周一"
+                            )
+                        },
                         trailingContent = {
-                            ExpressiveSwitch(
-                                checked = state.startOfTheWeek == DayOfWeek.SUNDAY,
-                                onCheckedChange = {
-                                    onAction(
-                                        SettingsAction.ChangeStartOfTheWeek(
-                                            if (it) DayOfWeek.SUNDAY else DayOfWeek.MONDAY
-                                        )
-                                    )
-                                },
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = null,
                             )
                         },
                         colors = listItemColors(),
-                        modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable { showStartOfWeekDialog = true },
                     )
 
                     if (state.isBiometricLockAvailable) {
@@ -163,34 +168,43 @@ fun RootPage(
                                 Text(text = stringResource(Res.string.biometric_lock))
                             },
                             supportingContent = {
-                                Text(text = stringResource(Res.string.biometric_lock_desc))
+                                Text(
+                                    text =
+                                        if (state.isBiometricLockOn == true) "开启"
+                                        else "关闭"
+                                )
                             },
                             trailingContent = {
-                                ExpressiveSwitch(
-                                    checked = state.isBiometricLockOn == true,
-                                    onCheckedChange = {
-                                        onAction(SettingsAction.ChangeBiometricLock(it))
-                                    },
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.arrow_forward),
+                                    contentDescription = null,
                                 )
                             },
                             colors = listItemColors(),
-                            modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable { showBiometricDialog = true },
                         )
                     }
 
                     ListItem(
-                        headlineContent = { Text(text = stringResource(Res.string.use_24Hr)) },
+                        headlineContent = { Text(text = "时间格式") },
                         supportingContent = {
-                            Text(text = stringResource(Res.string.use_24Hr_desc))
+                            Text(
+                                text =
+                                    if (state.is24Hr) "24小时制" else "12小时制"
+                            )
                         },
                         trailingContent = {
-                            ExpressiveSwitch(
-                                checked = state.is24Hr,
-                                onCheckedChange = { onAction(SettingsAction.ChangeIs24Hr(it)) },
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = null,
                             )
                         },
                         colors = listItemColors(),
-                        modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable { show24HrDialog = true },
                     )
                 }
             }
@@ -283,6 +297,7 @@ fun RootPage(
                             )
                         },
                         headlineContent = { Text(text = stringResource(Res.string.changelog)) },
+                        supportingContent = { Text(text = "查看各版本更新内容") },
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { onNavigateToChangelog() },
                     )
@@ -349,6 +364,113 @@ fun RootPage(
                                     },
                             trailingContent = {
                                 if (state.startingPage == section) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+        }
+        if (showStartOfWeekDialog) {
+            GritDialog(onDismissRequest = { showStartOfWeekDialog = false }) {
+                Text(
+                    text = "周起始日",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text(
+                    text = "选择一周从哪天开始",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    listOf(DayOfWeek.MONDAY to "周一", DayOfWeek.SUNDAY to "周日").forEach { (day, label) ->
+                        ListItem(
+                            headlineContent = { Text(text = label) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable {
+                                        onAction(SettingsAction.ChangeStartOfTheWeek(day))
+                                        showStartOfWeekDialog = false
+                                    },
+                            trailingContent = {
+                                if (state.startOfTheWeek == day) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+        }
+
+        if (show24HrDialog) {
+            GritDialog(onDismissRequest = { show24HrDialog = false }) {
+                Text(
+                    text = "时间格式",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text(
+                    text = "选择时间的显示方式",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    listOf(false to "12小时制", true to "24小时制").forEach { (is24, label) ->
+                        ListItem(
+                            headlineContent = { Text(text = label) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable {
+                                        onAction(SettingsAction.ChangeIs24Hr(is24))
+                                        show24HrDialog = false
+                                    },
+                            trailingContent = {
+                                if (state.is24Hr == is24) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+        }
+
+        if (showBiometricDialog) {
+            GritDialog(onDismissRequest = { showBiometricDialog = false }) {
+                Text(
+                    text = "生物识别锁",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text(
+                    text = "开启后需验证指纹等才能进入",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    listOf(false to "关闭", true to "开启").forEach { (on, label) ->
+                        ListItem(
+                            headlineContent = { Text(text = label) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable {
+                                        onAction(SettingsAction.ChangeBiometricLock(on))
+                                        showBiometricDialog = false
+                                    },
+                            trailingContent = {
+                                if ((state.isBiometricLockOn == true) == on) {
                                     Icon(
                                         imageVector = vectorResource(Res.drawable.check),
                                         contentDescription = null,

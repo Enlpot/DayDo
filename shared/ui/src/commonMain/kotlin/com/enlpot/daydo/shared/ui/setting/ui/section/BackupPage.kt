@@ -17,6 +17,7 @@
 package com.enlpot.daydo.shared.ui.setting.ui.section
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -47,8 +48,7 @@ import com.enlpot.daydo.core.settings.backup.ExportState
 import com.enlpot.daydo.core.settings.backup.RestoreState
 import com.enlpot.daydo.core.theme.AppTheme
 import com.enlpot.daydo.core.theme.Theme
-import com.enlpot.daydo.shared.ui.components.endItemShape
-import com.enlpot.daydo.shared.ui.components.leadingItemShape
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
@@ -95,7 +95,7 @@ fun BackupPage(
         ) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Column(modifier = Modifier.clip(leadingItemShape())) {
+                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
                         ListItem(
                             headlineContent = { Text(text = stringResource(Res.string.export)) },
                             leadingContent = {
@@ -141,7 +141,7 @@ fun BackupPage(
                         }
                     }
 
-                    Column(modifier = Modifier.clip(endItemShape())) {
+                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
                         ListItem(
                             colors = listItemColors(),
                             leadingContent = {

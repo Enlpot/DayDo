@@ -17,6 +17,7 @@
 package com.enlpot.daydo.shared.ui.setting.ui.section
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -50,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
@@ -66,7 +69,7 @@ import com.enlpot.daydo.core.theme.Fonts
 import com.enlpot.daydo.core.theme.PaletteStyle
 import com.enlpot.daydo.core.theme.Theme
 import com.enlpot.daydo.shared.ui.components.ColorPickerDialog
-import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
+import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
@@ -89,6 +92,8 @@ fun LookAndFeelPage(
     onNavigateBack: () -> Unit,
 ) {
     var colorPickerDialog by remember { mutableStateOf(false) }
+    var showMaterialYouDialog by rememberSaveable { mutableStateOf(false) }
+    var showAmoledDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(
@@ -162,7 +167,7 @@ fun LookAndFeelPage(
                         ) {
                             Box(
                                 modifier =
-                                    Modifier.fillParentMaxWidth()
+                                    Modifier.fillMaxWidth()
                                         .height(64.dp)
                                         .clip(RoundedCornerShape(sliderValue.roundToInt().dp))
                                         .background(MaterialTheme.colorScheme.primaryContainer)
@@ -197,6 +202,7 @@ fun LookAndFeelPage(
                                 )
                             },
                             headlineContent = { Text(text = stringResource(Res.string.app_theme)) },
+                            supportingContent = { Text(text = "选择应用主题") },
                             colors = listItemColors(),
                         )
 
@@ -227,10 +233,25 @@ fun LookAndFeelPage(
                         }
                     }
 
-                    MaterialYouToggle(
-                        isUserSubscribed = isUserSubscribed,
-                        isMaterialYou = state.theme.isMaterialYou,
-                        onClick = { onAction(SettingsAction.ChangeMaterialYou(it)) },
+                    ListItem(
+                        headlineContent = { Text(text = "Material You 主题") },
+                        supportingContent = {
+                            Text(
+                                text =
+                                    if (state.theme.isMaterialYou) "开启"
+                                    else "关闭"
+                            )
+                        },
+                        trailingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = null,
+                            )
+                        },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable { showMaterialYouDialog = true },
                     )
 
                     // plus redirect
@@ -266,6 +287,7 @@ fun LookAndFeelPage(
                     ) {
                         ListItem(
                             headlineContent = { Text(text = stringResource(Res.string.font)) },
+                            supportingContent = { Text(text = "选择界面字体") },
                             leadingContent = {
                                 Icon(
                                     imageVector = vectorResource(Res.drawable.font),
@@ -288,8 +310,7 @@ fun LookAndFeelPage(
                                     onCheckedChange = {
                                         onAction(SettingsAction.ChangeFontPref(font))
                                     },
-                                    enabled = isUserSubscribed,
-                                    colors =
+                                                colors =
                                         ToggleButtonDefaults.toggleButtonColors(
                                             containerColor =
                                                 MaterialTheme.colorScheme.surfaceContainerLow
@@ -309,21 +330,24 @@ fun LookAndFeelPage(
                     if (!state.theme.isMaterialYou) {
                         // amoled toggle
                         ListItem(
-                            headlineContent = {
-                                Text(text = stringResource(Res.string.use_amoled))
-                            },
+                            headlineContent = { Text(text = "Amoled 调色板") },
                             supportingContent = {
-                                Text(text = stringResource(Res.string.use_amoled_desc))
+                                Text(
+                                    text =
+                                        if (state.theme.isAmoled) "开启"
+                                        else "关闭"
+                                )
                             },
                             trailingContent = {
-                                ExpressiveSwitch(
-                                    checked = state.theme.isAmoled,
-                                    enabled = isUserSubscribed,
-                                    onCheckedChange = { onAction(SettingsAction.ChangeAmoled(it)) },
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.arrow_forward),
+                                    contentDescription = null,
                                 )
                             },
                             colors = listItemColors(),
-                            modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable { showAmoledDialog = true },
                         )
 
                         // seed color picker
@@ -343,8 +367,7 @@ fun LookAndFeelPage(
                                             contentColor =
                                                 contentColorFor(Color(state.theme.seedColor)),
                                         ),
-                                    enabled = isUserSubscribed,
-                                ) {
+                                            ) {
                                     Icon(
                                         imageVector = vectorResource(Res.drawable.edit),
                                         contentDescription = "Select Color",
@@ -371,6 +394,77 @@ fun LookAndFeelPage(
         }
     }
 
+    if (showMaterialYouDialog) {
+        GritDialog(onDismissRequest = { showMaterialYouDialog = false }) {
+            Text(
+                text = "Material You 主题",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                text = "基于壁纸生成配色方案",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                listOf(false to "关闭", true to "开启").forEach { (on, label) ->
+                    ListItem(
+                        headlineContent = { Text(text = label) },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable {
+                                    onAction(SettingsAction.ChangeMaterialYou(on))
+                                    showMaterialYouDialog = false
+                                },
+                        trailingContent = {
+                            if (state.theme.isMaterialYou == on) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.check),
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    if (showAmoledDialog) {
+        GritDialog(onDismissRequest = { showAmoledDialog = false }) {
+            Text(
+                text = "Amoled 调色板",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                text = "在 AMOLED 屏幕上效果最佳",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                listOf(false to "关闭", true to "开启").forEach { (on, label) ->
+                    ListItem(
+                        headlineContent = { Text(text = label) },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable {
+                                    onAction(SettingsAction.ChangeAmoled(on))
+                                    showAmoledDialog = false
+                                },
+                        trailingContent = {
+                            if (state.theme.isAmoled == on) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.check),
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
     if (colorPickerDialog) {
         ColorPickerDialog(
             initialColor = Color(state.theme.seedColor),

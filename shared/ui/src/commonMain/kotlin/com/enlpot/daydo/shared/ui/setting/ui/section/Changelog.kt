@@ -16,6 +16,7 @@
  */
 package com.enlpot.daydo.shared.ui.setting.ui.section
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -40,11 +41,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.app.Changelog
 import com.enlpot.daydo.core.app.VersionEntry
-import com.enlpot.daydo.shared.ui.components.detachedItemShape
-import com.enlpot.daydo.shared.ui.components.endItemShape
-import com.enlpot.daydo.shared.ui.components.leadingItemShape
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
-import com.enlpot.daydo.shared.ui.components.middleItemShape
 import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
@@ -104,10 +102,10 @@ fun Changelog(modifier: Modifier = Modifier, changelog: Changelog, onNavigateBac
                 itemsIndexed(versionEntry.changes) { index, change ->
                     val shape =
                         when {
-                            versionEntry.changes.size == 1 -> detachedItemShape()
-                            index == 0 -> leadingItemShape()
-                            index == versionEntry.changes.size - 1 -> endItemShape()
-                            else -> middleItemShape()
+                            versionEntry.changes.size == 1 -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
+                            index == 0 -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
+                            index == versionEntry.changes.size - 1 -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
+                            else -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
                         }
 
                     ListItem(

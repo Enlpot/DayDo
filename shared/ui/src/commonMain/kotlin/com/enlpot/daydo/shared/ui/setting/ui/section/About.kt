@@ -18,6 +18,7 @@ package com.enlpot.daydo.shared.ui.setting.ui.section
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,11 +58,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.unit.dp
-import com.enlpot.daydo.shared.ui.components.detachedItemShape
-import com.enlpot.daydo.shared.ui.components.endItemShape
-import com.enlpot.daydo.shared.ui.components.leadingItemShape
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
-import com.enlpot.daydo.shared.ui.components.middleItemShape
 import com.enlpot.daydo.shared.ui.setting.ui.component.LicenseBottomSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
@@ -125,7 +123,7 @@ fun About(versionName: String, onNavigateBack: () -> Unit, modifier: Modifier = 
                     headlineContent = { Text(text = "License") },
                     supportingContent = { Text(text = "GPL-3.0 License") },
                     modifier =
-                        Modifier.clip(detachedItemShape()).clickable {
+                        Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable {
                             showLicenseBottomSheet = true
                         },
                 )
@@ -155,7 +153,7 @@ private fun LazyListScope.engagementLinks(uriHandler: UriHandler) {
                 headlineContent = { Text(text = stringResource(Res.string.bmc)) },
                 supportingContent = { Text(text = stringResource(Res.string.bmc_desc)) },
                 modifier =
-                    Modifier.clip(leadingItemShape()).clickable {
+                    Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable {
                         uriHandler.openUri("https://buymeacoffee.com/shub39")
                     },
             )
@@ -177,7 +175,7 @@ private fun LazyListScope.engagementLinks(uriHandler: UriHandler) {
                 headlineContent = { Text(text = "GitHub 赞助") },
                 supportingContent = { Text(text = "Support me through GitHub") },
                 modifier =
-                    Modifier.clip(middleItemShape()).clickable {
+                    Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable {
                         uriHandler.openUri("https://github.com/sponsors/shub39")
                     },
             )
@@ -199,7 +197,7 @@ private fun LazyListScope.engagementLinks(uriHandler: UriHandler) {
                 headlineContent = { Text(text = stringResource(Res.string.translate)) },
                 supportingContent = { Text(text = stringResource(Res.string.translate_desc)) },
                 modifier =
-                    Modifier.clip(endItemShape()).clickable {
+                    Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable {
                         uriHandler.openUri("https://hosted.weblate.org/engage/grit/")
                     },
             )
@@ -211,7 +209,7 @@ private fun LazyListScope.aboutApp(versionName: String, uriHandler: UriHandler) 
     item {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             // App card
-            Card(shape = leadingItemShape()) {
+            Card(shape = RoundedCornerShape(LocalCardCornerRadius.current.dp)) {
                 Row(
                     modifier = Modifier.padding(16.dp).fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -276,7 +274,7 @@ private fun LazyListScope.aboutApp(versionName: String, uriHandler: UriHandler) 
             }
 
             // dev card
-            Card(shape = endItemShape()) {
+            Card(shape = RoundedCornerShape(LocalCardCornerRadius.current.dp)) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
