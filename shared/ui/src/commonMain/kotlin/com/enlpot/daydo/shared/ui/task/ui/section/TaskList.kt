@@ -502,7 +502,7 @@ private fun TaskItemsSection(
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 state = lazyListState,
-                contentPadding = PaddingValues(8.dp),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 if (isDeletedView) {

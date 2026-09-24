@@ -19,33 +19,10 @@ package com.enlpot.daydo.shared.ui.components
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 
-/** 任务卡片连续列表圆角（首/中/尾/单张），任务页与首页共用，改一处全局同步 */
+/**
+ * 任务卡片统一圆角矩形样式，任务页与首页共用，改一处全局同步。
+ * index/size 参数保留以兼容调用处；样式统一为独立圆角矩形。
+ */
 fun taskItemShape(index: Int, size: Int): RoundedCornerShape {
-    return when {
-        size == 1 ->
-            RoundedCornerShape(
-                topStart = 20.dp,
-                topEnd = 20.dp,
-                bottomStart = 20.dp,
-                bottomEnd = 20.dp,
-            )
-
-        index == 0 ->
-            RoundedCornerShape(
-                topStart = 20.dp,
-                topEnd = 20.dp,
-                bottomStart = 4.dp,
-                bottomEnd = 4.dp,
-            )
-
-        index == size - 1 ->
-            RoundedCornerShape(
-                topStart = 4.dp,
-                topEnd = 4.dp,
-                bottomStart = 20.dp,
-                bottomEnd = 20.dp,
-            )
-
-        else -> RoundedCornerShape(4.dp)
-    }
+    return RoundedCornerShape(28.dp)
 }
