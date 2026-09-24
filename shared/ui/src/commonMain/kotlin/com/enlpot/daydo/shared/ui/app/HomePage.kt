@@ -40,7 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumFloatingActionButton
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -217,7 +217,7 @@ fun HomePage(
     }
 
     // 新建入口：任务 tab 新建任务、习惯 tab 新建习惯
-    MediumFloatingActionButton(
+    SmallFloatingActionButton(
         onClick = {
             if (pagerState.currentPage == 0) showTaskAddSheet = true
             else onHabitAction(HabitsAction.OnAddHabitClicked)
@@ -232,26 +232,11 @@ fun HomePage(
                     alignment = Alignment.BottomEnd,
                 ),
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = vectorResource(Res.drawable.add),
-                contentDescription = null,
-                modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize),
-            )
-            AnimatedVisibility(
-                visible = pagerState.currentPage == 0 && todayTasks.isEmpty(),
-                enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
-                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
-            ) {
-                Text(
-                    text = stringResource(Res.string.add_task),
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
-        }
+        Icon(
+            imageVector = vectorResource(Res.drawable.add),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+        )
     }
 
     if (showTaskAddSheet) {
