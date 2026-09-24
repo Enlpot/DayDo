@@ -75,7 +75,6 @@ import com.enlpot.daydo.core.tasks.dueDateTime
 import com.enlpot.daydo.core.tasks.reminderFor
 import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
 import com.enlpot.daydo.core.toFormattedString
-import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.GritTimePicker
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
@@ -296,8 +295,16 @@ fun TaskUpsertSheetContent(
                 ListItem(
                     modifier =
                         Modifier.clip(detachedItemShape())
-                            .clickable(enabled = newTask.reminder != null) {
-                                if (newTask.reminder != null) showReminderPicker = true
+                            .clickable {
+                                if (notificationPermission) {
+                                    if (newTask.dueDateTime != null) {
+                                        showReminderPicker = true
+                                    } else {
+                                        updateDateTimePickerVisibility(true)
+                                    }
+                                } else {
+                                    onPermissionRequest()
+                                }
                             },
                     colors = listItemColors(),
                     leadingContent = {
@@ -329,26 +336,6 @@ fun TaskUpsertSheetContent(
                             }
                         }
                     },
-                    trailingContent = {
-                        ExpressiveSwitch(
-                            checked = newTask.reminder != null,
-                            onCheckedChange = { checked ->
-                                if (checked) {
-                                    if (notificationPermission) {
-                                        if (newTask.dueDateTime != null) {
-                                            showReminderPicker = true
-                                        } else {
-                                            updateDateTimePickerVisibility(true)
-                                        }
-                                    } else {
-                                        onPermissionRequest()
-                                    }
-                                } else {
-                                    newTask = newTask.copy(reminder = null)
-                                }
-                            },
-                        )
-                    },
                 )
             }
 
@@ -356,9 +343,7 @@ fun TaskUpsertSheetContent(
                 ListItem(
                     modifier =
                         Modifier.clip(detachedItemShape())
-                            .clickable(enabled = newTask.recurrence != null) {
-                                if (newTask.recurrence != null) showRecurrencePicker = true
-                            },
+                            .clickable { showRecurrencePicker = true },
                     colors = listItemColors(),
                     leadingContent = {
                         Icon(
@@ -373,18 +358,6 @@ fun TaskUpsertSheetContent(
                             color =
                                 if (newTask.recurrence != null) MaterialTheme.colorScheme.onSurface
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                    trailingContent = {
-                        ExpressiveSwitch(
-                            checked = newTask.recurrence != null,
-                            onCheckedChange = { checked ->
-                                if (checked) {
-                                    showRecurrencePicker = true
-                                } else {
-                                    newTask = newTask.copy(recurrence = null)
-                                }
-                            },
                         )
                     },
                 )
@@ -528,6 +501,10 @@ fun TaskUpsertSheetContent(
             onDismissRequest = { showRecurrencePicker = false },
             onConfirm = { recurrence ->
                 newTask = newTask.copy(recurrence = recurrence)
+                showRecurrencePicker = false
+            },
+            onRemove = {
+                newTask = newTask.copy(recurrence = null)
                 showRecurrencePicker = false
             },
         )

@@ -58,6 +58,41 @@ fun Recurrence.nextDateAfter(from: LocalDate, base: LocalDate): LocalDate {
     }
 }
 
+/**
+ * Whether this recurrence produces an occurrence on [date], anchored on [anchor].
+ * Dates before the anchor never occur.
+ */
+fun Recurrence.occursOn(date: LocalDate, anchor: LocalDate): Boolean {
+    if (date.toEpochDays() < anchor.toEpochDays()) return false
+    return when (this) {
+        Recurrence.Daily -> true
+        is Recurrence.EveryNDays ->
+            (date.toEpochDays() - anchor.toEpochDays()) % interval.coerceAtLeast(1).toLong() == 0L
+
+        is Recurrence.Weekly -> {
+            val weekDays = days.ifEmpty { setOf(anchor.dayOfWeek.toIso()) }
+            val weeksDiff = (date.toEpochDays() - anchor.toEpochDays()) / 7
+            date.dayOfWeek.toIso() in weekDays && weeksDiff % interval.coerceAtLeast(1).toLong() == 0L
+        }
+
+        is Recurrence.Monthly -> {
+            val monthDays = days.ifEmpty { setOf(anchor.dayOfMonth) }
+            val monthDiff = date.monthOrdinal() - anchor.monthOrdinal()
+            date.dayOfMonth in monthDays && monthDiff >= 0 && monthDiff % interval.coerceAtLeast(1) == 0
+        }
+
+        is Recurrence.Yearly -> {
+            val months = months.ifEmpty { setOf(anchor.month.ordinal + 1) }
+            val monthDays = days.ifEmpty { setOf(anchor.dayOfMonth) }
+            val yearDiff = date.year - anchor.year
+            date.month.ordinal + 1 in months &&
+                date.dayOfMonth in monthDays &&
+                yearDiff >= 0 &&
+                yearDiff % interval.coerceAtLeast(1) == 0
+        }
+    }
+}
+
 private fun Recurrence.Weekly.nextWeekly(from: LocalDate, base: LocalDate): LocalDate {
     val interval = interval.coerceAtLeast(1)
     val weekDays = days.ifEmpty { setOf(base.dayOfWeek.toIso()) }

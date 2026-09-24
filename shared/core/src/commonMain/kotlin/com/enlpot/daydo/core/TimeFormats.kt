@@ -16,62 +16,36 @@
  */
 package com.enlpot.daydo.core
 
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.YearMonth
-import kotlinx.datetime.format
-import kotlinx.datetime.format.MonthNames
-import kotlinx.datetime.format.char
+
+private val WEEKDAY_CN =
+    arrayOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
+
+private val DayOfWeek.cnLabel: String
+    get() = WEEKDAY_CN[ordinal]
 
 fun LocalDateTime.toFormattedString(is24Hr: Boolean): String {
-    return this.format(
-        LocalDateTime.Format {
-            day()
-            char(' ')
-            monthName(MonthNames.ENGLISH_ABBREVIATED)
-            char(' ')
-            year()
-            chars(" @ ")
-            if (is24Hr) hour() else amPmHour()
-            char(':')
-            minute()
-            char(' ')
-            if (!is24Hr) amPmMarker(am = "AM", pm = "PM")
-        }
-    )
+    return "${date.toFormattedString()} ${time.toFormattedString(is24Hr)}"
 }
 
 fun LocalDate.toFormattedString(): String {
-    return this.format(
-        LocalDate.Format {
-            day()
-            char(' ')
-            monthName(MonthNames.ENGLISH_ABBREVIATED)
-            char(' ')
-            year()
-        }
-    )
+    return "${year}年${month.ordinal + 1}月${dayOfMonth}日 ${dayOfWeek.cnLabel}"
 }
 
 fun LocalTime.toFormattedString(is24Hr: Boolean): String {
-    return this.format(
-        LocalTime.Format {
-            if (is24Hr) hour() else amPmHour()
-            char(':')
-            minute()
-            char(' ')
-            if (!is24Hr) amPmMarker(am = "AM", pm = "PM")
-        }
-    )
+    val minuteText = minute.toString().padStart(2, '0')
+    return if (is24Hr) {
+        "${hour.toString().padStart(2, '0')}:$minuteText"
+    } else {
+        val h = (hour % 12).let { if (it == 0) 12 else it }
+        "${if (hour < 12) "上午" else "下午"} $h:$minuteText"
+    }
 }
 
 fun YearMonth.toFormattedString(): String {
-    return this.format(
-        YearMonth.Format {
-            monthName(MonthNames.ENGLISH_ABBREVIATED)
-            chars(" ")
-            year()
-        }
-    )
+    return "${year}年${month.ordinal + 1}月"
 }

@@ -28,6 +28,7 @@ import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.tasks.TaskRepo
 import com.enlpot.daydo.core.tasks.nextDateAfter
+import com.enlpot.daydo.core.tasks.occursOn
 import com.enlpot.daydo.core.tasks.reminderFor
 import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
 import com.enlpot.daydo.shared.ui.task.TaskAction
@@ -405,29 +406,29 @@ class TasksViewModel(
                 when (view.category) {
                     SmartCategory.ALL -> active to completed
 
-                    SmartCategory.TODAY -> {
-                        val todayDays = today.toEpochDays()
-                        active.filter { it.dueDate?.toEpochDays() == todayDays } to
-                            completed.filter { it.dueDate?.toEpochDays() == todayDays }
-                    }
+                    SmartCategory.TODAY ->
+                        active.filter { taskOccursOn(it, today, today) } to
+                            completed.filter { taskOccursOn(it, today, today) }
 
                     SmartCategory.TOMORROW -> {
-                        val tomorrowDays = today.toEpochDays() + 1
-                        active.filter { it.dueDate?.toEpochDays() == tomorrowDays } to
-                            completed.filter { it.dueDate?.toEpochDays() == tomorrowDays }
+                        val tomorrow = today.plusDaysSafe(1)
+                        active.filter { taskOccursOn(it, tomorrow, today) } to
+                            completed.filter { taskOccursOn(it, tomorrow, today) }
                     }
 
                     SmartCategory.NEXT_7_DAYS -> {
                         val startDays = today.toEpochDays()
                         val endDays = startDays + 7
-                        active.filter {
-                            val due = it.dueDate?.toEpochDays()
-                            due != null && due in startDays..endDays
-                        } to
-                            completed.filter {
-                                val due = it.dueDate?.toEpochDays()
-                                due != null && due in startDays..endDays
+                        fun occursWithin(task: Task): Boolean {
+                            var d = startDays
+                            while (d <= endDays) {
+                                if (taskOccursOn(task, LocalDate.fromEpochDays(d), today)) return true
+                                d++
                             }
+                            return false
+                        }
+                        active.filter { occursWithin(it) } to
+                            completed.filter { occursWithin(it) }
                     }
 
                     SmartCategory.COMPLETED -> completed to emptyList()
@@ -455,4 +456,16 @@ class TasksViewModel(
 
 private fun Task.dueDateTimeFor(date: LocalDate): LocalDateTime? {
     return LocalDateTime(date = date, time = dueTime ?: LocalTime(0, 0))
+}
+
+private fun LocalDate.plusDaysSafe(days: Long): LocalDate =
+    LocalDate.fromEpochDays(toEpochDays() + days)
+
+private fun taskOccursOn(task: Task, date: LocalDate, today: LocalDate): Boolean {
+    val rec = task.recurrence
+    return if (rec == null) {
+        task.dueDate == date
+    } else {
+        rec.occursOn(date, task.dueDate ?: today)
+    }
 }

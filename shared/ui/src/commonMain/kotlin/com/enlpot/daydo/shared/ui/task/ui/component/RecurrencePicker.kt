@@ -26,9 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonShapes
@@ -37,6 +35,7 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.toShape
@@ -57,26 +56,39 @@ import org.jetbrains.compose.resources.vectorResource
 
 private enum class RecurrenceType { DAILY, WEEKLY, MONTHLY, YEARLY, CUSTOM }
 
+private enum class CustomUnit { DAY, WEEK, MONTH, YEAR }
+
 @Composable
 fun RecurrencePickerSheet(
     initial: Recurrence?,
     onDismissRequest: () -> Unit,
     onConfirm: (Recurrence) -> Unit,
+    onRemove: () -> Unit,
 ) {
     var type by remember { mutableStateOf(initial?.toType() ?: RecurrenceType.DAILY) }
-    var interval by remember {
-        mutableStateOf(
-            when (initial) {
-                is Recurrence.EveryNDays -> initial.interval
-                is Recurrence.Weekly -> initial.interval
-                is Recurrence.Monthly -> initial.interval
-                is Recurrence.Yearly -> initial.interval
-                else -> 1
-            }
-        )
-    }
-    var days by remember { mutableStateOf((initial as? Recurrence.Weekly)?.days ?: (initial as? Recurrence.Monthly)?.days ?: (initial as? Recurrence.Yearly)?.days ?: emptySet()) }
+    var interval by
+        remember {
+            mutableStateOf(
+                when (initial) {
+                    is Recurrence.EveryNDays -> initial.interval
+                    is Recurrence.Weekly -> initial.interval
+                    is Recurrence.Monthly -> initial.interval
+                    is Recurrence.Yearly -> initial.interval
+                    else -> 1
+                }
+            )
+        }
+    var days by
+        remember {
+            mutableStateOf(
+                (initial as? Recurrence.Weekly)?.days
+                    ?: (initial as? Recurrence.Monthly)?.days
+                    ?: (initial as? Recurrence.Yearly)?.days
+                    ?: emptySet()
+            )
+        }
     var months by remember { mutableStateOf((initial as? Recurrence.Yearly)?.months ?: emptySet()) }
+    var customUnit by remember { mutableStateOf(initial.customUnit()) }
 
     val intervalText = interval
 
@@ -131,11 +143,53 @@ fun RecurrencePickerSheet(
                 RecurrenceType.DAILY -> Text(text = "每天重复", style = MaterialTheme.typography.bodyLarge)
 
                 RecurrenceType.CUSTOM -> {
-                    IntervalRow(
-                        text = "每",
-                        unit = "天",
-                        value = interval,
-                    ) { interval = it }
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        CustomUnit.entries.forEach { unit ->
+                            ToggleButton(
+                                checked = customUnit == unit,
+                                onCheckedChange = { checked -> if (checked) customUnit = unit },
+                                colors = ToggleButtonDefaults.tonalToggleButtonColors(),
+                            ) {
+                                Text(text = unit.label())
+                            }
+                        }
+                    }
+                    when (customUnit) {
+                        CustomUnit.DAY ->
+                            IntervalRow(
+                                text = "每",
+                                unit = "天",
+                                value = interval,
+                            ) { interval = it }
+
+                        CustomUnit.WEEK -> {
+                            IntervalRow(
+                                text = "每",
+                                unit = "周",
+                                value = interval,
+                            ) { interval = it }
+                            WeekDaySelector(days = days, onChange = { days = it })
+                        }
+
+                        CustomUnit.MONTH -> {
+                            IntervalRow(
+                                text = "每",
+                                unit = "个月",
+                                value = interval,
+                            ) { interval = it }
+                            DaySelector(title = "重复日期", selected = days, onChange = { days = it })
+                        }
+
+                        CustomUnit.YEAR -> {
+                            IntervalRow(
+                                text = "每",
+                                unit = "年",
+                                value = interval,
+                            ) { interval = it }
+                            MonthSelector(selected = months, onChange = { months = it })
+                            DaySelector(title = "重复日期", selected = days, onChange = { days = it })
+                        }
+                    }
                 }
 
                 RecurrenceType.WEEKLY -> {
@@ -169,14 +223,34 @@ fun RecurrencePickerSheet(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                TextButton(onClick = onRemove) {
+                    Text(text = "不重复", color = MaterialTheme.colorScheme.error)
+                }
                 Button(
                     onClick = {
                         val recurrence =
                             when (type) {
                                 RecurrenceType.DAILY -> Recurrence.Daily
-                                RecurrenceType.CUSTOM -> Recurrence.EveryNDays(intervalText)
+                                RecurrenceType.CUSTOM ->
+                                    when (customUnit) {
+                                        CustomUnit.DAY -> Recurrence.EveryNDays(intervalText)
+                                        CustomUnit.WEEK ->
+                                            Recurrence.Weekly(interval = intervalText, days = days)
+
+                                        CustomUnit.MONTH ->
+                                            Recurrence.Monthly(interval = intervalText, days = days)
+
+                                        CustomUnit.YEAR ->
+                                            Recurrence.Yearly(
+                                                interval = intervalText,
+                                                months = months,
+                                                days = days,
+                                            )
+                                    }
+
                                 RecurrenceType.WEEKLY ->
                                     Recurrence.Weekly(
                                         interval = intervalText,
@@ -313,6 +387,15 @@ private fun Recurrence.toType(): RecurrenceType {
     }
 }
 
+private fun Recurrence?.customUnit(): CustomUnit {
+    return when (this) {
+        is Recurrence.Weekly -> CustomUnit.WEEK
+        is Recurrence.Monthly -> CustomUnit.MONTH
+        is Recurrence.Yearly -> CustomUnit.YEAR
+        else -> CustomUnit.DAY
+    }
+}
+
 private fun RecurrenceType.label(): String {
     return when (this) {
         RecurrenceType.DAILY -> "每天"
@@ -320,6 +403,15 @@ private fun RecurrenceType.label(): String {
         RecurrenceType.MONTHLY -> "每月"
         RecurrenceType.YEARLY -> "每年"
         RecurrenceType.CUSTOM -> "自定义"
+    }
+}
+
+private fun CustomUnit.label(): String {
+    return when (this) {
+        CustomUnit.DAY -> "天"
+        CustomUnit.WEEK -> "周"
+        CustomUnit.MONTH -> "月"
+        CustomUnit.YEAR -> "年"
     }
 }
 
