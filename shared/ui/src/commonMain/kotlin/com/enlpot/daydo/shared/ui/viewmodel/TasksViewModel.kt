@@ -23,7 +23,6 @@ import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.tasks.Category
-import com.enlpot.daydo.core.tasks.CategoryColors
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.tasks.taskOccursOn
@@ -405,7 +404,7 @@ class TasksViewModel(
                             )
                         }
 
-                        if (tasksByCategory.isEmpty()) addDefault()
+
                     }
                     .launchIn(this)
             }
@@ -476,9 +475,6 @@ class TasksViewModel(
         repo.getTasks().forEach { task -> scheduler.schedule(task) }
     }
 
-    private suspend fun addDefault() {
-        upsertCategory(Category(name = "默认分类", color = CategoryColors.GRAY.color))
-    }
 
     private suspend fun upsertCategory(category: Category) {
         repo.upsertCategory(category)
