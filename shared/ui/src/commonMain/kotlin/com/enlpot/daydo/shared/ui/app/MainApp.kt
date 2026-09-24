@@ -77,7 +77,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                     AppNavBar(
                         currentRoute = appBackStack.last(),
                         onNavigate = { route ->
-                            appBackStack.removeAll { it == route }
+                            appBackStack.removeAll { true }
                             appBackStack.add(route)
                         },
                     )
@@ -148,7 +148,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                 AppNavRail(
                     currentRoute = appBackStack.last(),
                     onNavigate = { route ->
-                        appBackStack.removeAll { it == route }
+                        appBackStack.removeAll { true }
                         appBackStack.add(route)
                     },
                 )
