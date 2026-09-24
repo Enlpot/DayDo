@@ -58,4 +58,4 @@
 
 ## 致谢
 
-[Grit](https://github.com/shub39/Grit) — 原作者 Shubham Gorai，本项目的脚手架来源。
+[Grit](https://github.com/shub39/Grit) — 原作者 Shubham Gorai，本项目的开发基础，特此致谢。

@@ -68,6 +68,7 @@ android {
     buildTypes {
         release {
             resValue("string", "app_name", appName)
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -219,7 +220,7 @@ fun execute(vararg command: String): String =
 
 tasks.register("generateChangelog") {
     description = "Assembling Changelog"
-    val inputFile = rootProject.file("CHANGELOG.md")
+    val inputFile = rootProject.file("README.md")
     val outputDir = file("$projectDir/src/main/assets/")
     val outputFile = File(outputDir, "changelog.json")
 
@@ -236,8 +237,8 @@ tasks.register("generateChangelog") {
 
         for (line in lines) {
             when {
-                line.startsWith("## ") -> {
-                    currentVersion = line.removePrefix("## ").trim()
+                line.startsWith("### v") -> {
+                    currentVersion = line.removePrefix("### ").trim()
                     map[currentVersion] = mutableListOf()
                 }
 

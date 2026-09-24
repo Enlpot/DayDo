@@ -24,10 +24,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build debug APK
+      - name: Build release APK
         run: |
           chmod +x gradlew
-          ./gradlew :androidApp:assembleFossDebug --console=plain
+          ./gradlew :androidApp:assembleFossRelease --console=plain
+          echo "apk=androidApp/build/outputs/apk/foss/release/androidApp-foss-release.apk" >> "$GITHUB_ENV"
+          echo "apk_name=DayDo-${GITHUB_REF_NAME#v}.apk" >> "$GITHUB_ENV"
 
       - name: Extract release notes from README
         run: |
@@ -37,7 +39,7 @@ jobs:
       - name: Upload APK to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: androidApp/build/outputs/apk/foss/debug/androidApp-foss-debug.apk
+          files: ${{ env.apk }}#${{ env.apk_name }}
           name: DayDo ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
           draft: false
