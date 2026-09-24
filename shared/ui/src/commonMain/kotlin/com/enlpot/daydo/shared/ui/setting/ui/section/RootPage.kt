@@ -68,7 +68,6 @@ fun RootPage(
     onNavigateToLookAndFeel: () -> Unit,
     onNavigateToHaptics: () -> Unit,
     onNavigateToBackup: () -> Unit,
-    onNavigateToWebDav: () -> Unit,
     onNavigateToPaywall: () -> Unit,
 ) {
     var showLocalePicker by rememberSaveable { mutableStateOf(false) }
@@ -94,7 +93,7 @@ fun RootPage(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 60.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
 
             // General settings
@@ -256,8 +255,8 @@ fun RootPage(
                     ListItem(
                         modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { onNavigateToBackup() },
                         colors = listItemColors(),
-                        headlineContent = { Text(text = stringResource(Res.string.backup)) },
-                        supportingContent = { Text(text = stringResource(Res.string.backup_desc)) },
+                        headlineContent = { Text(text = "备份与同步") },
+                        supportingContent = { Text(text = "本地文件备份、恢复与 WebDAV 云同步") },
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
@@ -272,35 +271,13 @@ fun RootPage(
                         },
                     )
 
-                    ListItem(
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable { onNavigateToWebDav() },
-                        colors = listItemColors(),
-                        headlineContent = { Text(text = "WebDAV 同步") },
-                        supportingContent = {
-                            Text(text = "通过 WebDAV 服务器备份与恢复数据")
-                        },
-                        trailingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "导航",
-                            )
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.cloud_upload),
-                                contentDescription = "WebDAV",
-                            )
-                        },
-                    )
                 }
             }
 
             // 版本号
             item {
                 Text(
-                    text = "DayDo v1.1.4",
+                    text = "DayDo v1.1.5",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -525,7 +502,6 @@ private fun Preview() {
         onNavigateToLookAndFeel = {},
         onNavigateToHaptics = {},
         onNavigateToBackup = {},
-        onNavigateToWebDav = {},
         onNavigateToPaywall = {},
     )
 }

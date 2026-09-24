@@ -42,7 +42,7 @@ import com.enlpot.daydo.shared.ui.setting.ui.section.Changelog
 import com.enlpot.daydo.shared.ui.setting.ui.section.HapticsPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.LookAndFeelPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.RootPage
-import com.enlpot.daydo.shared.ui.setting.ui.section.WebDavPage
+
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -61,7 +61,7 @@ private sealed interface SettingsRoutes : NavKey {
 
     @Serializable data object About : SettingsRoutes
 
-    @Serializable data object WebDav : SettingsRoutes
+
 }
 
 private val configuration = SavedStateConfiguration {
@@ -73,7 +73,7 @@ private val configuration = SavedStateConfiguration {
             subclass(SettingsRoutes.Haptics::class, SettingsRoutes.Haptics.serializer())
             subclass(SettingsRoutes.Changelog::class, SettingsRoutes.Changelog.serializer())
             subclass(SettingsRoutes.About::class, SettingsRoutes.About.serializer())
-            subclass(SettingsRoutes.WebDav::class, SettingsRoutes.WebDav.serializer())
+
         }
     }
 }
@@ -105,7 +105,7 @@ fun SettingsGraph(
                             onAction = onAction,
                             onNavigateToLookAndFeel = { backStack.add(SettingsRoutes.LookAndFeel) },
                             onNavigateToBackup = { backStack.add(SettingsRoutes.Backup) },
-                            onNavigateToWebDav = { backStack.add(SettingsRoutes.WebDav) },
+
                             onNavigateToHaptics = { backStack.add(SettingsRoutes.Haptics) },
                             onNavigateToPaywall = onNavigateToPaywall,
                         )
@@ -153,15 +153,7 @@ fun SettingsGraph(
                         )
                     }
 
-                    entry<SettingsRoutes.WebDav>(metadata = horizontalTransitionMetadata()) {
-                        WebDavPage(
-                            state = state,
-                            onAction = onAction,
-                            onNavigateBack = {
-                                if (backStack.size != 1) backStack.removeLastOrNull()
-                            },
-                        )
-                    }
+
 
                     entry<SettingsRoutes.About>(metadata = horizontalTransitionMetadata()) {
                         LaunchedEffect(Unit) { onAction(SettingsAction.OnAboutViewed) }
