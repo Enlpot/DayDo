@@ -60,7 +60,6 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFloatingActionButton
 import androidx.compose.material3.OutlinedIconButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
@@ -463,11 +462,7 @@ private fun TaskItemsSection(
     onToggleSelect: (Task) -> Unit,
     onExitMultiSelect: () -> Unit,
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        modifier = Modifier.fillMaxSize(),
-    ) {
+
         val motionScheme = MaterialTheme.motionScheme
         AnimatedContent(
             targetState = state.currentView,
@@ -602,7 +597,6 @@ private fun TaskItemsSection(
                 }
             }
         }
-    }
 }
 
 @Composable

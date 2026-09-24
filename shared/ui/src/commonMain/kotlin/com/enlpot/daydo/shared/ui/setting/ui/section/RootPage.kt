@@ -19,6 +19,7 @@ package com.enlpot.daydo.shared.ui.setting.ui.section
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -76,6 +77,7 @@ fun RootPage(
 ) {
     var showLocalePicker by rememberSaveable { mutableStateOf(false) }
     var showSmartViewsDialog by rememberSaveable { mutableStateOf(false) }
+    var showStartingPageDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).fillMaxSize()) {
@@ -175,26 +177,27 @@ fun RootPage(
                     )
 
                     ListItem(
-                        headlineContent = { Text(text = stringResource(Res.string.show_habits)) },
+                        headlineContent = { Text(text = "默认起始页面") },
                         supportingContent = {
-                            Text(text = stringResource(Res.string.show_habits_desc))
+                            Text(
+                                text =
+                                    when (state.startingPage) {
+                                        Sections.Home -> "首页"
+                                        Sections.Tasks -> "任务"
+                                        Sections.Habits -> "习惯"
+                                    }
+                            )
                         },
                         trailingContent = {
-                            ExpressiveSwitch(
-                                checked = state.startingPage == Sections.Habits,
-                                onCheckedChange = {
-                                    onAction(
-                                        SettingsAction.ChangeStartingPage(
-                                            if (it) Sections.Habits else Sections.Tasks
-                                        )
-                                    )
-                                },
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = null,
                             )
                         },
                         colors = listItemColors(),
-                        modifier = Modifier.clip(middleItemShape()),
+                        modifier =
+                            Modifier.clip(middleItemShape()).clickable { showStartingPageDialog = true },
                     )
-
                     ListItem(
                         headlineContent = { Text(text = stringResource(Res.string.staring_day)) },
                         trailingContent = {
@@ -375,6 +378,47 @@ fun RootPage(
             }
         }
 
+        if (showStartingPageDialog) {
+            GritDialog(onDismissRequest = { showStartingPageDialog = false }) {
+                Text(
+                    text = "默认起始页面",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text(
+                    text = "选择打开 App 时显示的页面",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Sections.entries.forEach { section ->
+                        val label =
+                            when (section) {
+                                Sections.Home -> "首页"
+                                Sections.Tasks -> "任务"
+                                Sections.Habits -> "习惯"
+                            }
+                        ListItem(
+                            headlineContent = { Text(text = label) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(detachedItemShape())
+                                    .clickable {
+                                        onAction(SettingsAction.ChangeStartingPage(section))
+                                        showStartingPageDialog = false
+                                    },
+                            trailingContent = {
+                                if (state.startingPage == section) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+        }
         if (showLocalePicker) {
             LocalePickerSheet(onDismissRequest = { showLocalePicker = false })
         }
