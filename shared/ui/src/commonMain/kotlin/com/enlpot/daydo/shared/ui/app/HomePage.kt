@@ -79,6 +79,7 @@ import com.enlpot.daydo.shared.ui.task.ui.component.TaskCard
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskUpsertSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.theme.flexFontRounded
+import com.enlpot.daydo.shared.ui.PlatformBackHandler
 import daydo.shared.ui.generated.resources.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
@@ -116,6 +117,8 @@ fun HomePage(
         multiSelect = false
         selectedTaskIds = emptySet()
     }
+
+    PlatformBackHandler(enabled = multiSelect) { exitMultiSelect() }
 
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarState)
