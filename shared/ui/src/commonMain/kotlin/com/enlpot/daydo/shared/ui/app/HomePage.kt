@@ -16,6 +16,9 @@
  */
 package com.enlpot.daydo.shared.ui.app
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,17 +29,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumFloatingActionButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.animateFloatingActionButton
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,7 +57,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import com.enlpot.daydo.core.habits.Habit
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.tasks.taskOccursOn
@@ -58,14 +70,18 @@ import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import com.enlpot.daydo.shared.ui.habit.ui.component.HabitCard
+import com.enlpot.daydo.shared.ui.habit.ui.component.HabitUpsertSheet
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskCard
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskUpsertSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
+import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
@@ -77,33 +93,86 @@ fun HomePage(
     onTaskAction: (TaskAction) -> Unit,
     onHabitAction: (HabitsAction) -> Unit,
 ) = PageFill {
+    val today = LocalDate.now()
+    val todayTasks =
+        remember(taskState.allTasks, today) {
+            taskState.allTasks.filter { taskOccursOn(it, today, today) }.sortedBy { it.index }
+        }
+
     val pagerState = rememberPagerState { 2 }
     val scope = rememberCoroutineScope()
 
+    // 多选 / 编辑 / 新建状态（页面层持有，供标题与 FAB 联动）
+    var multiSelect by rememberSaveable { mutableStateOf(false) }
+    var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
+    var editTask by remember { mutableStateOf<Task?>(null) }
+    var showTaskAddSheet by rememberSaveable { mutableStateOf(false) }
+
+    fun exitMultiSelect() {
+        multiSelect = false
+        selectedTaskIds = emptySet()
+    }
+
+    val topAppBarState = rememberTopAppBarState()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarState)
+
     Column(
         modifier =
-            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+            Modifier.fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
     ) {
-        // 主标题
-        Column(modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp)) {
-            Text(
-                text = stringResource(Res.string.home),
-                style = MaterialTheme.typography.headlineMedium,
-                fontFamily = flexFontEmphasis(),
-            )
-            Text(
-                text = LocalDate.now().toFormattedString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontFamily = flexFontEmphasis(),
-            )
-        }
+        // 主副标题：与其他页面一致的 LargeFlexibleTopAppBar 样式
+        LargeFlexibleTopAppBar(
+            scrollBehavior = scrollBehavior,
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                ),
+            title = {
+                if (multiSelect) {
+                    Text(text = "已选 ${selectedTaskIds.size} 项", fontFamily = flexFontEmphasis())
+                } else {
+                    Text(text = stringResource(Res.string.home), fontFamily = flexFontEmphasis())
+                }
+            },
+            subtitle = {
+                if (!multiSelect) {
+                    Text(
+                        text = today.toFormattedString(),
+                        fontFamily = flexFontRounded(),
+                    )
+                }
+            },
+            actions = {
+                if (multiSelect) {
+                    TextButton(onClick = { selectedTaskIds = todayTasks.map { it.id }.toSet() }) {
+                        Text(text = "全选")
+                    }
+                    IconButton(onClick = {
+                        todayTasks.filter { it.id in selectedTaskIds }
+                            .forEach { onTaskAction(TaskAction.SoftDeleteTask(it)) }
+                        exitMultiSelect()
+                    }) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.delete),
+                            contentDescription = null,
+                        )
+                    }
+                    IconButton(onClick = ::exitMultiSelect) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.close),
+                            contentDescription = null,
+                        )
+                    }
+                }
+            },
+        )
 
         // 双 tab：任务 / 习惯（可左右滑动切换）
         TabRow(
             selectedTabIndex = pagerState.currentPage,
             containerColor = MaterialTheme.colorScheme.background,
-            modifier = Modifier.padding(top = 8.dp),
         ) {
             Tab(
                 selected = pagerState.currentPage == 0,
@@ -119,10 +188,102 @@ fun HomePage(
 
         HorizontalPager(state = pagerState) { page ->
             when (page) {
-                0 -> TodayTasksSection(state = taskState, onAction = onTaskAction)
+                0 ->
+                    TodayTasksSection(
+                        state = taskState,
+                        onAction = onTaskAction,
+                        todayTasks = todayTasks,
+                        multiSelect = multiSelect,
+                        selectedTaskIds = selectedTaskIds,
+                        onToggleSelect = { task ->
+                            if (!multiSelect) multiSelect = true
+                            selectedTaskIds =
+                                if (task.id in selectedTaskIds) selectedTaskIds - task.id
+                                else selectedTaskIds + task.id
+                        },
+                        onExitMultiSelect = ::exitMultiSelect,
+                        onEditTask = { editTask = it },
+                    )
                 else -> TodayHabitsSection(state = habitState, onAction = onHabitAction)
             }
         }
+    }
+
+    // 新建入口：任务 tab 新建任务、习惯 tab 新建习惯
+    MediumFloatingActionButton(
+        onClick = {
+            if (pagerState.currentPage == 0) showTaskAddSheet = true
+            else onHabitAction(HabitsAction.OnAddHabitClicked)
+        },
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        modifier =
+            Modifier.align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .animateFloatingActionButton(
+                    visible = !multiSelect,
+                    alignment = Alignment.BottomEnd,
+                ),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = vectorResource(Res.drawable.add),
+                contentDescription = null,
+                modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize),
+            )
+            AnimatedVisibility(
+                visible = pagerState.currentPage == 0 && todayTasks.isEmpty(),
+                enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+            ) {
+                Text(
+                    text = stringResource(Res.string.add_task),
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+        }
+    }
+
+    if (showTaskAddSheet) {
+        TaskUpsertSheet(
+            task =
+                Task(
+                    categoryId = null,
+                    title = "",
+                    index = todayTasks.size,
+                    status = false,
+                    reminder = null,
+                ),
+            is24Hr = taskState.is24Hour,
+            categories = taskState.tasks.keys.toList(),
+            onDismissRequest = { showTaskAddSheet = false },
+            onUpsert = {
+                onTaskAction(TaskAction.UpsertTask(it))
+                showTaskAddSheet = false
+            },
+            onDelete = {},
+        )
+    }
+
+    if (editTask != null) {
+        TaskUpsertSheet(
+            task = editTask!!,
+            categories = taskState.tasks.keys.toList(),
+            onDismissRequest = { editTask = null },
+            isEditSheet = true,
+            is24Hr = taskState.is24Hour,
+            onUpsert = {
+                onTaskAction(TaskAction.UpsertTask(it))
+                editTask = null
+            },
+            onDelete = {
+                editTask?.let { onTaskAction(TaskAction.SoftDeleteTask(it)) }
+                editTask = null
+            },
+        )
     }
 }
 
@@ -130,67 +291,47 @@ fun HomePage(
 private fun TodayTasksSection(
     state: TaskState,
     onAction: (TaskAction) -> Unit,
+    todayTasks: List<Task>,
+    multiSelect: Boolean,
+    selectedTaskIds: Set<Long>,
+    onToggleSelect: (Task) -> Unit,
+    onExitMultiSelect: () -> Unit,
+    onEditTask: (Task) -> Unit,
 ) {
-    val today = LocalDate.now()
-    val todayTasks =
-        remember(state.allTasks, today) {
-            state.allTasks.filter { taskOccursOn(it, today, today) }.sortedBy { it.index }
-        }
     val active = remember(todayTasks) { todayTasks.filter { !it.status } }
     val completed = remember(todayTasks) { todayTasks.filter { it.status } }
 
-    var multiSelect by rememberSaveable { mutableStateOf(false) }
-    var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
-    var editTask by remember { mutableStateOf<Task?>(null) }
-
-    fun exitMultiSelect() {
-        multiSelect = false
-        selectedTaskIds = emptySet()
-    }
-
-    fun toggleSelect(task: Task) {
-        if (!multiSelect) multiSelect = true
-        selectedTaskIds =
-            if (task.id in selectedTaskIds) selectedTaskIds - task.id
-            else selectedTaskIds + task.id
-    }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        if (multiSelect) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-            ) {
-                Text(text = "已选 ${selectedTaskIds.size} 项", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = { selectedTaskIds = todayTasks.map { it.id }.toSet() }) {
-                    Text(text = "全选")
-                }
-                IconButton(onClick = {
-                    todayTasks.filter { it.id in selectedTaskIds }
-                        .forEach { onAction(TaskAction.SoftDeleteTask(it)) }
-                    exitMultiSelect()
-                }) {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.delete),
-                        contentDescription = null,
-                    )
-                }
-                IconButton(onClick = { exitMultiSelect() }) {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.close),
-                        contentDescription = null,
-                    )
-                }
-            }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        itemsIndexed(items = active, key = { _, it -> it.id }) { index, task ->
+            val cardShape = detachedItemShape(radius = 28)
+            TaskCard(
+                task = task,
+                dragState = false,
+                reorderIcon = {},
+                is24Hr = state.is24Hour,
+                shape = cardShape,
+                modifier = Modifier.fillMaxWidth().clip(cardShape),
+                selectionMode = multiSelect,
+                selected = task.id in selectedTaskIds,
+                onLongClick = { onToggleSelect(task) },
+                onCheck = {
+                    if (multiSelect) onToggleSelect(task)
+                    else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
+                },
+                onClick = {
+                    if (multiSelect) onToggleSelect(task)
+                    else onEditTask(task)
+                },
+            )
         }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            itemsIndexed(items = active, key = { _, it -> it.id }) { index, task ->
+        if (completed.isNotEmpty()) {
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+            itemsIndexed(items = completed, key = { _, it -> it.id }) { index, task ->
                 val cardShape = detachedItemShape(radius = 28)
                 TaskCard(
                     task = task,
@@ -201,68 +342,24 @@ private fun TodayTasksSection(
                     modifier = Modifier.fillMaxWidth().clip(cardShape),
                     selectionMode = multiSelect,
                     selected = task.id in selectedTaskIds,
-                    onLongClick = { toggleSelect(task) },
+                    onLongClick = { onToggleSelect(task) },
                     onCheck = {
-                        if (multiSelect) toggleSelect(task)
+                        if (multiSelect) onToggleSelect(task)
                         else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
                     },
                     onClick = {
-                        if (multiSelect) toggleSelect(task)
-                        else editTask = task
+                        if (multiSelect) onToggleSelect(task)
+                        else onEditTask(task)
                     },
                 )
             }
+        }
 
-            if (completed.isNotEmpty()) {
-                item { Spacer(modifier = Modifier.height(16.dp)) }
-                itemsIndexed(items = completed, key = { _, it -> it.id }) { index, task ->
-                    val cardShape = detachedItemShape(radius = 28)
-                    TaskCard(
-                        task = task,
-                        dragState = false,
-                        reorderIcon = {},
-                        is24Hr = state.is24Hour,
-                        shape = cardShape,
-                        modifier = Modifier.fillMaxWidth().clip(cardShape),
-                        selectionMode = multiSelect,
-                        selected = task.id in selectedTaskIds,
-                        onLongClick = { toggleSelect(task) },
-                        onCheck = {
-                            if (multiSelect) toggleSelect(task)
-                            else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
-                        },
-                        onClick = {
-                            if (multiSelect) toggleSelect(task)
-                            else editTask = task
-                        },
-                    )
-                }
-            }
-
-            if (todayTasks.isEmpty()) {
-                item {
-                    Empty(modifier = Modifier.padding(top = 120.dp))
-                }
+        if (todayTasks.isEmpty()) {
+            item {
+                Empty(modifier = Modifier.padding(top = 120.dp))
             }
         }
-    }
-
-    if (editTask != null) {
-        TaskUpsertSheet(
-            task = editTask!!,
-            categories = state.tasks.keys.toList(),
-            onDismissRequest = { editTask = null },
-            isEditSheet = true,
-            is24Hr = state.is24Hour,
-            onUpsert = {
-                onAction(TaskAction.UpsertTask(it))
-                editTask = null
-            },
-            onDelete = {
-                editTask?.let { onAction(TaskAction.SoftDeleteTask(it)) }
-                editTask = null
-            },
-        )
     }
 }
 
@@ -301,5 +398,22 @@ private fun TodayHabitsSection(
                 Empty(modifier = Modifier.padding(top = 120.dp))
             }
         }
+    }
+
+    if (state.showHabitAddSheet) {
+        HabitUpsertSheet(
+            habit =
+                Habit(
+                    title = "",
+                    description = "",
+                    time = LocalDateTime.now(),
+                    days = DayOfWeek.entries.toSet(),
+                    index = state.habitsWithAnalytics.size,
+                    reminder = false,
+                ),
+            onDismissRequest = { onAction(HabitsAction.DismissAddHabitDialog) },
+            onUpsertHabit = { onAction(HabitsAction.AddHabit(it)) },
+            is24Hr = state.is24Hr,
+        )
     }
 }
