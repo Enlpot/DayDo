@@ -20,7 +20,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -50,8 +49,6 @@ import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.listItemColors
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
 import com.enlpot.daydo.shared.ui.setting.ui.component.LocalePickerSheet
@@ -268,17 +265,27 @@ fun RootPage(
                     text = "取消勾选以在任务页隐藏该分类",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     SmartCategory.entries.forEach { smart ->
-                        ToggleButton(
-                            checked = smart !in state.hiddenSmartViews,
-                            onCheckedChange = {
-                                onAction(SettingsAction.ToggleSmartViewVisibility(smart))
+                        val visible = smart !in state.hiddenSmartViews
+                        ListItem(
+                            headlineContent = { Text(text = smart.labelText()) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable {
+                                        onAction(SettingsAction.ToggleSmartViewVisibility(smart))
+                                    },
+                            trailingContent = {
+                                if (visible) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
                             },
-                            colors = ToggleButtonDefaults.tonalToggleButtonColors(),
-                        ) {
-                            Text(text = smart.labelText())
-                        }
+                        )
                     }
                 }
             }
