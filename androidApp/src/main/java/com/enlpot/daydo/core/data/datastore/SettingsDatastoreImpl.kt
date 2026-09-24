@@ -49,6 +49,9 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val cardHeightKey = stringPreferencesKey("card_height")
         private val hapticStrengthKey = intPreferencesKey("haptic_strength")
         private val hapticSoundKey = stringPreferencesKey("haptic_sound")
+private val webDavServerKey = stringPreferencesKey("webdav_server")
+private val webDavUsernameKey = stringPreferencesKey("webdav_username")
+private val webDavPasswordKey = stringPreferencesKey("webdav_password")
     }
 
     override fun getStartOfTheWeekPref(): Flow<DayOfWeek> =
@@ -157,5 +160,26 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override suspend fun setHapticSound(sound: HapticSound) {
         datastore.edit { prefs -> prefs[hapticSoundKey] = sound.name }
+    }
+
+    override fun getWebDavServer(): Flow<String> =
+        datastore.data.map { prefs -> prefs[webDavServerKey] ?: "" }
+
+    override suspend fun setWebDavServer(server: String) {
+        datastore.edit { prefs -> prefs[webDavServerKey] = server }
+    }
+
+    override fun getWebDavUsername(): Flow<String> =
+        datastore.data.map { prefs -> prefs[webDavUsernameKey] ?: "" }
+
+    override suspend fun setWebDavUsername(username: String) {
+        datastore.edit { prefs -> prefs[webDavUsernameKey] = username }
+    }
+
+    override fun getWebDavPassword(): Flow<String> =
+        datastore.data.map { prefs -> prefs[webDavPasswordKey] ?: "" }
+
+    override suspend fun setWebDavPassword(password: String) {
+        datastore.edit { prefs -> prefs[webDavPasswordKey] = password }
     }
 }

@@ -28,6 +28,14 @@ import kotlinx.datetime.DayOfWeek
 sealed interface SettingsAction {
     data object OnResetBackupState : SettingsAction
 
+data class SetWebDavConfig(val server: String, val username: String, val password: String) : SettingsAction
+
+data object WebDavUpload : SettingsAction
+
+data object WebDavDownload : SettingsAction
+
+data object OnResetWebDavState : SettingsAction
+
     data object OnExport : SettingsAction
 
     data object OnRestore : SettingsAction

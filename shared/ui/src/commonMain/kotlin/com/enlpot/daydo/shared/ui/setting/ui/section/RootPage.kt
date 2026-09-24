@@ -68,6 +68,7 @@ fun RootPage(
     onNavigateToLookAndFeel: () -> Unit,
     onNavigateToHaptics: () -> Unit,
     onNavigateToBackup: () -> Unit,
+    onNavigateToWebDav: () -> Unit,
     onNavigateToPaywall: () -> Unit,
 ) {
     var showLocalePicker by rememberSaveable { mutableStateOf(false) }
@@ -270,13 +271,36 @@ fun RootPage(
                             )
                         },
                     )
+
+                    ListItem(
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable { onNavigateToWebDav() },
+                        colors = listItemColors(),
+                        headlineContent = { Text(text = "WebDAV 同步") },
+                        supportingContent = {
+                            Text(text = "通过 WebDAV 服务器备份与恢复数据")
+                        },
+                        trailingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = "导航",
+                            )
+                        },
+                        leadingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.cloud_upload),
+                                contentDescription = "WebDAV",
+                            )
+                        },
+                    )
                 }
             }
 
             // 版本号
             item {
                 Text(
-                    text = "DayDo v1.1.3",
+                    text = "DayDo v1.1.4",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -501,6 +525,7 @@ private fun Preview() {
         onNavigateToLookAndFeel = {},
         onNavigateToHaptics = {},
         onNavigateToBackup = {},
+        onNavigateToWebDav = {},
         onNavigateToPaywall = {},
     )
 }

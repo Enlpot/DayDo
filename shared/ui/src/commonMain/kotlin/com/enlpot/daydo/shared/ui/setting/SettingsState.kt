@@ -24,6 +24,7 @@ import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.settings.backup.ExportState
 import com.enlpot.daydo.core.settings.backup.RestoreState
+import com.enlpot.daydo.core.settings.webdav.WebDavState
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.theme.Theme
 import kotlinx.datetime.DayOfWeek
@@ -34,6 +35,12 @@ data class SettingsState(
     val changelog: Changelog = emptyList(),
     val currentVersion: String? = null,
     val backupState: BackupState = BackupState(),
+val webdavServer: String = "",
+val webdavUsername: String = "",
+val webdavPassword: String = "",
+val webdavUploadState: WebDavState = WebDavState.IDLE,
+val webdavDownloadState: WebDavState = WebDavState.IDLE,
+val webdavMessage: String = "",
 
     // datastore
     val theme: Theme = Theme(),

@@ -48,9 +48,16 @@ data class TaskSchema(
     val id: Long = 0,
     val categoryId: Long?,
     val title: String,
+    val content: String = "",
     val status: Boolean = false,
     val index: Int = 0,
     val reminder: Long? = null,
+    val dueDate: Long? = null,
+    val dueTime: Long? = null,
+    val recurrence: String? = null,
+    val deletedAt: Long? = null,
+    val seriesId: Long? = null,
+    val completedAt: Long? = null,
 )
 
 @Serializable

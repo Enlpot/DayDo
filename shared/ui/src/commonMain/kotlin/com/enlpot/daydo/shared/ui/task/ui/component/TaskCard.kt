@@ -114,7 +114,7 @@ fun TaskCard(
                     modifier =
                         Modifier.padding(vertical = 2.dp),
                     onCheckedChange = {
-                        if (!selectionMode && hapticFeedback) {
+                        if (!selectionMode && hapticFeedback && !task.status) {
                             haptic(HapticKind.COMPLETE)
                         }
                         onCheck()

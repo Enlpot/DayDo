@@ -59,9 +59,19 @@ class RestoreImpl(
                 return RestoreResult.Failure(exceptionType = RestoreFailedException.InvalidFile)
             }
 
-            val json = Json { ignoreUnknownKeys = true }
+            return restoreFromJson(file.readString())
+        } catch (e: SchemaMismatchException) {
+            Log.e("RestoreRepo", "Failed to restore data, old schema: ", e)
+            RestoreResult.Failure(RestoreFailedException.OldSchema)
+        } catch (e: SerializationException) {
+            Log.e("RestoreRepo", "Failed to deserialize, invalid file: ", e)
+            RestoreResult.Failure(RestoreFailedException.InvalidFile)
+        }
+    }
 
-            val jsonDeserialized = json.decodeFromString<ExportSchema>(file.readString())
+    override suspend fun restoreFromJson(json: String): RestoreResult {
+        return try {
+            val jsonDeserialized = Json { ignoreUnknownKeys = true }.decodeFromString<ExportSchema>(json)
 
             if (
                 jsonDeserialized.tasksSchemaVersion != TaskDatabase.SCHEMA_VERSION ||

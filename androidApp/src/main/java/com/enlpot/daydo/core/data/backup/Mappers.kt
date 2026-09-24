@@ -66,9 +66,16 @@ fun TaskSchema.toTask(): Task {
         id = id,
         categoryId = categoryId,
         title = title,
+        content = content,
         status = status,
         index = index,
         reminder = reminder?.let { Converters.dateFromTimestamp(it) },
+        dueDate = dueDate?.let { Converters.dayFromTimestamp(it) },
+        dueTime = dueTime?.let { Converters.timeFromMinutes(it) },
+        recurrence = recurrence?.let { Converters.recurrenceFromString(it) },
+        deletedAt = deletedAt,
+        seriesId = seriesId,
+        completedAt = completedAt?.let { Converters.dateFromTimestamp(it) },
     )
 }
 
@@ -77,9 +84,16 @@ fun Task.toTaskSchema(): TaskSchema {
         id = id,
         categoryId = categoryId,
         title = title,
+        content = content,
         status = status,
         index = index,
         reminder = reminder?.let { Converters.dateToTimestamp(it) },
+        dueDate = dueDate?.let { Converters.dayToTimestamp(it) },
+        dueTime = dueTime?.let { Converters.timeToMinutes(it) },
+        recurrence = recurrence?.let { Converters.recurrenceToString(it) },
+        deletedAt = deletedAt,
+        seriesId = seriesId,
+        completedAt = completedAt?.let { Converters.dateToTimestamp(it) },
     )
 }
 

@@ -14,31 +14,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.enlpot.daydo.core.settings.backup
+package com.enlpot.daydo.core.settings.webdav
 
-interface RestoreRepo {
-    suspend fun restoreData(): RestoreResult
+interface WebDavRepo {
+    suspend fun upload(server: String, username: String, password: String): WebDavResult
 
-    suspend fun restoreFromJson(json: String): RestoreResult
+    suspend fun download(server: String, username: String, password: String): WebDavResult
 }
 
-sealed class RestoreResult {
-    data object Success : RestoreResult()
+sealed class WebDavResult {
+    data object Success : WebDavResult()
 
-    data class Failure(val exceptionType: RestoreFailedException) : RestoreResult()
+    data class Failure(val message: String) : WebDavResult()
 }
 
-enum class RestoreState {
+enum class WebDavState {
     IDLE,
-    RESTORING,
-    RESTORED,
+    WORKING,
+    DONE,
     FAILURE,
 }
-
-sealed interface RestoreFailedException {
-    data object InvalidFile : RestoreFailedException
-
-    data object OldSchema : RestoreFailedException
-}
-
-class SchemaMismatchException : Exception()

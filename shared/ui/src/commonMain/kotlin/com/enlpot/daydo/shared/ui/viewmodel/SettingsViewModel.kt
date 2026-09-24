@@ -26,6 +26,9 @@ import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.interfaces.ThemeDatastore
 import com.enlpot.daydo.core.settings.backup.ExportRepo
 import com.enlpot.daydo.core.settings.backup.RestoreRepo
+import com.enlpot.daydo.core.settings.webdav.WebDavRepo
+import com.enlpot.daydo.core.settings.webdav.WebDavResult
+import com.enlpot.daydo.core.settings.webdav.WebDavState
 import com.enlpot.daydo.shared.ui.setting.BackupState
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
@@ -47,6 +50,7 @@ import org.koin.core.annotation.Provided
 class SettingsViewModel(
     @Provided private val exportRepo: ExportRepo,
     @Provided private val restoreRepo: RestoreRepo,
+    @Provided private val webDavRepo: WebDavRepo,
     @Provided private val themeDatastore: ThemeDatastore,
     @Provided private val settingsDatastore: SettingsDatastore,
     @Provided private val changelogManager: ChangelogManager,
@@ -136,6 +140,69 @@ class SettingsViewModel(
 
                 OnResetBackupState -> {
                     _state.update { it.copy(backupState = BackupState()) }
+                }
+
+                is SetWebDavConfig -> {
+                    settingsDatastore.setWebDavServer(action.server)
+                    settingsDatastore.setWebDavUsername(action.username)
+                    settingsDatastore.setWebDavPassword(action.password)
+                    _state.update { it.copy(webdavMessage = "") }
+                }
+
+                WebDavUpload -> {
+                    val server = _state.value.webdavServer
+                    val username = _state.value.webdavUsername
+                    val password = _state.value.webdavPassword
+                    _state.update {
+                        it.copy(
+                            webdavUploadState = WebDavState.WORKING,
+                            webdavMessage = "",
+                        )
+                    }
+                    val result = webDavRepo.upload(server, username, password)
+                    _state.update {
+                        it.copy(
+                            webdavUploadState =
+                                if (result is WebDavResult.Success) WebDavState.DONE
+                                else WebDavState.FAILURE,
+                            webdavMessage =
+                                if (result is WebDavResult.Success) "备份已上传到 WebDAV 服务器"
+                                else (result as WebDavResult.Failure).message,
+                        )
+                    }
+                }
+
+                WebDavDownload -> {
+                    val server = _state.value.webdavServer
+                    val username = _state.value.webdavUsername
+                    val password = _state.value.webdavPassword
+                    _state.update {
+                        it.copy(
+                            webdavDownloadState = WebDavState.WORKING,
+                            webdavMessage = "",
+                        )
+                    }
+                    val result = webDavRepo.download(server, username, password)
+                    _state.update {
+                        it.copy(
+                            webdavDownloadState =
+                                if (result is WebDavResult.Success) WebDavState.DONE
+                                else WebDavState.FAILURE,
+                            webdavMessage =
+                                if (result is WebDavResult.Success) "已从 WebDAV 服务器恢复数据"
+                                else (result as WebDavResult.Failure).message,
+                        )
+                    }
+                }
+
+                OnResetWebDavState -> {
+                    _state.update {
+                        it.copy(
+                            webdavUploadState = WebDavState.IDLE,
+                            webdavDownloadState = WebDavState.IDLE,
+                            webdavMessage = "",
+                        )
+                    }
                 }
 
                 OnExport -> {
@@ -378,6 +445,21 @@ class SettingsViewModel(
                 settingsDatastore
                     .getHapticSoundPref()
                     .onEach { flow -> _state.update { it.copy(hapticSound = flow) } }
+                    .launchIn(this)
+
+                settingsDatastore
+                    .getWebDavServer()
+                    .onEach { flow -> _state.update { it.copy(webdavServer = flow) } }
+                    .launchIn(this)
+
+                settingsDatastore
+                    .getWebDavUsername()
+                    .onEach { flow -> _state.update { it.copy(webdavUsername = flow) } }
+                    .launchIn(this)
+
+                settingsDatastore
+                    .getWebDavPassword()
+                    .onEach { flow -> _state.update { it.copy(webdavPassword = flow) } }
                     .launchIn(this)
 
                 settingsDatastore

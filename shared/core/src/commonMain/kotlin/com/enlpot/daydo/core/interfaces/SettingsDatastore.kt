@@ -75,4 +75,16 @@ interface SettingsDatastore {
     fun getHapticSoundPref(): Flow<HapticSound>
 
     suspend fun setHapticSound(sound: HapticSound)
+
+    fun getWebDavServer(): Flow<String>
+
+    suspend fun setWebDavServer(server: String)
+
+    fun getWebDavUsername(): Flow<String>
+
+    suspend fun setWebDavUsername(username: String)
+
+    fun getWebDavPassword(): Flow<String>
+
+    suspend fun setWebDavPassword(password: String)
 }
