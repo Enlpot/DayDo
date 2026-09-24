@@ -17,7 +17,7 @@
 package com.enlpot.daydo.shared.ui
 
 import android.content.Context
-import android.media.AudioManager
+import android.media.SoundPool
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -27,7 +27,7 @@ import kotlin.math.roundToInt
 
 /**
  * Android implementation of haptic feedback: vibration with user-configured
- * strength plus a built-in system sound. [strength] is 0-100 percent.
+ * strength plus a built-in completion sound. [strength] is 0-100 percent.
  */
 fun performAndroidHaptic(context: Context, kind: HapticKind, strength: Int, sound: HapticSound) {
     val vibrator =
@@ -42,7 +42,7 @@ fun performAndroidHaptic(context: Context, kind: HapticKind, strength: Int, soun
             if (strength > 0) {
                 vibrator?.vibrate(VibrationEffect.createOneShot(40, amplitude))
             }
-            playSound(context, sound)
+            playBuiltinSound(context, sound)
         }
 
         HapticKind.DRAG_START -> {
@@ -53,16 +53,35 @@ fun performAndroidHaptic(context: Context, kind: HapticKind, strength: Int, soun
     }
 }
 
-private fun playSound(context: Context, sound: HapticSound) {
+private var soundPool: SoundPool? = null
+private val soundIds = mutableMapOf<HapticSound, Int>()
+private val soundReady = mutableSetOf<HapticSound>()
+private var pendingSound: HapticSound? = null
+
+private fun playBuiltinSound(context: Context, sound: HapticSound) {
     if (sound == HapticSound.NONE) return
-    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-    val effect =
-        when (sound) {
-            HapticSound.NONE -> return
-            HapticSound.CLICK -> AudioManager.FX_KEY_CLICK
-            HapticSound.KEYPRESS -> AudioManager.FX_KEYPRESS_RETURN
-            HapticSound.TOUCH -> AudioManager.FX_FOCUS_NAVIGATION_UP
-            HapticSound.NAVIGATION -> AudioManager.FX_FOCUS_NAVIGATION_DOWN
-        }
-    audioManager.playSoundEffect(effect)
+    val sp =
+        soundPool
+            ?: SoundPool.Builder().setMaxStreams(1).build().also { pool ->
+                soundPool = pool
+                soundIds[HapticSound.CHIME] = pool.load(context, R.raw.daydo_chime, 1)
+                soundIds[HapticSound.DING] = pool.load(context, R.raw.daydo_ding, 1)
+                soundIds[HapticSound.TICK] = pool.load(context, R.raw.daydo_tick, 1)
+                pool.setOnLoadCompleteListener { _, sampleId, status ->
+                    val loaded = soundIds.entries.firstOrNull { it.value == sampleId }?.key
+                    if (loaded != null && status == 0) {
+                        soundReady += loaded
+                        if (pendingSound == loaded) {
+                            pendingSound = null
+                            pool.play(sampleId, 1f, 1f, 1, 0, 1f)
+                        }
+                    }
+                }
+            }
+    val id = soundIds[sound] ?: return
+    if (sound in soundReady) {
+        sp.play(id, 1f, 1f, 1, 0, 1f)
+    } else {
+        pendingSound = sound
+    }
 }

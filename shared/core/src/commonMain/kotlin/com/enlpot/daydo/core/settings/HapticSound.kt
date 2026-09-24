@@ -19,8 +19,10 @@ package com.enlpot.daydo.core.settings
 /** Built-in completion sound, controlled by 设置-触感反馈-提示音. */
 enum class HapticSound {
     NONE,
-    CLICK,
-    KEYPRESS,
-    TOUCH,
-    NAVIGATION,
+    /** 购买确认风「叮—咚」双音 */
+    CHIME,
+    /** 清脆高音「叮」 */
+    DING,
+    /** 轻快短音「嘀」 */
+    TICK,
 }

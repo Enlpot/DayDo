@@ -63,7 +63,7 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override fun getStartingSectionPref(): Flow<Sections> =
         datastore.data.map { pref ->
-            val page = pref[startingSectionKey] ?: Sections.Tasks.name
+            val page = pref[startingSectionKey] ?: Sections.Home.name
             return@map Sections.valueOf(page)
         }
 
@@ -151,8 +151,8 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override fun getHapticSoundPref(): Flow<HapticSound> =
         datastore.data.map { prefs ->
-            val raw = prefs[hapticSoundKey] ?: HapticSound.CLICK.name
-            return@map runCatching { HapticSound.valueOf(raw) }.getOrDefault(HapticSound.CLICK)
+            val raw = prefs[hapticSoundKey] ?: HapticSound.CHIME.name
+            return@map runCatching { HapticSound.valueOf(raw) }.getOrDefault(HapticSound.CHIME)
         }
 
     override suspend fun setHapticSound(sound: HapticSound) {

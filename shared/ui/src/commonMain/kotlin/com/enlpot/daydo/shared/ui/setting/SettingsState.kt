@@ -41,7 +41,7 @@ data class SettingsState(
     val reorderTasks: Boolean = false,
     val startOfTheWeek: DayOfWeek = DayOfWeek.MONDAY,
     val pauseNotifications: Boolean = false,
-    val startingPage: Sections = Sections.Tasks,
+    val startingPage: Sections = Sections.Home,
     val isBiometricLockOn: Boolean? = null,
     val isBiometricLockAvailable: Boolean = false,
     val hiddenSmartViews: Set<SmartCategory> = emptySet(),
@@ -49,7 +49,7 @@ data class SettingsState(
     val hapticFeedback: Boolean = true,
     val cardHeight: CardHeight = CardHeight.NORMAL,
     val hapticStrength: Int = 50,
-    val hapticSound: HapticSound = HapticSound.CLICK,
+    val hapticSound: HapticSound = HapticSound.CHIME,
 )
 
 @Stable

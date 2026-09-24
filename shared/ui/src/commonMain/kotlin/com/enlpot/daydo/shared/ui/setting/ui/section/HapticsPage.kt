@@ -61,10 +61,9 @@ import org.jetbrains.compose.resources.vectorResource
 private fun HapticSound.labelText(): String =
     when (this) {
         HapticSound.NONE -> "无"
-        HapticSound.CLICK -> "系统点击"
-        HapticSound.KEYPRESS -> "按键音"
-        HapticSound.TOUCH -> "触碰音"
-        HapticSound.NAVIGATION -> "导航音"
+        HapticSound.CHIME -> "叮咚"
+        HapticSound.DING -> "叮"
+        HapticSound.TICK -> "嘀"
     }
 
 @Composable
