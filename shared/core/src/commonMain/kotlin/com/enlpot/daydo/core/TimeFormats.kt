@@ -33,7 +33,7 @@ fun LocalDateTime.toFormattedString(is24Hr: Boolean): String {
 }
 
 fun LocalDate.toFormattedString(): String {
-    return "${year}年${month.ordinal + 1}月${dayOfMonth}日 ${dayOfWeek.cnLabel}"
+    return "${year}.${month.ordinal + 1}.${dayOfMonth} ${dayOfWeek.cnLabel}"
 }
 
 fun LocalTime.toFormattedString(is24Hr: Boolean): String {
@@ -42,7 +42,7 @@ fun LocalTime.toFormattedString(is24Hr: Boolean): String {
         "${hour.toString().padStart(2, '0')}:$minuteText"
     } else {
         val h = (hour % 12).let { if (it == 0) 12 else it }
-        "${if (hour < 12) "上午" else "下午"} $h:$minuteText"
+        "$h:$minuteText ${if (hour < 12) "上午" else "下午"}"
     }
 }
 

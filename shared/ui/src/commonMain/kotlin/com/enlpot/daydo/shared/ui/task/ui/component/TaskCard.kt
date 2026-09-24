@@ -45,9 +45,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Task
+import com.enlpot.daydo.core.tasks.nextDateAfter
+import com.enlpot.daydo.core.tasks.occursOn
 import com.enlpot.daydo.core.toFormattedString
 import daydo.shared.ui.generated.resources.*
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.vectorResource
 
 @Composable
@@ -124,6 +128,37 @@ fun TaskCard(
                 )
 
                 when {
+                    task.recurrence != null -> {
+                        val rec = task.recurrence!!
+                        val today = LocalDate.now()
+                        val anchor = task.dueDate ?: today
+                        val occursToday = rec.occursOn(today, anchor)
+                        val nextDate = if (occursToday) today else rec.nextDateAfter(today, anchor)
+                        val dateText =
+                            if (nextDate == today) "今天" else nextDate.toFormattedString()
+                        val timeText =
+                            task.dueTime?.let { " " + it.toFormattedString(is24Hr) }.orEmpty()
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.schedule),
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                            )
+
+                            Text(
+                                text = "下次 $dateText$timeText",
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Light,
+                                    ),
+                            )
+                        }
+                    }
+
                     task.reminder != null -> {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,

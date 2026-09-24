@@ -125,6 +125,7 @@ fun TaskUpsertSheetContent(
 
     var showReminderPicker by rememberSaveable { mutableStateOf(false) }
     var showRecurrencePicker by rememberSaveable { mutableStateOf(false) }
+    var pendingReminderAfterDate by rememberSaveable { mutableStateOf(false) }
 
     val textFieldState =
         rememberTextFieldState(
@@ -300,6 +301,7 @@ fun TaskUpsertSheetContent(
                                     if (newTask.dueDateTime != null) {
                                         showReminderPicker = true
                                     } else {
+                                        pendingReminderAfterDate = true
                                         updateDateTimePickerVisibility(true)
                                     }
                                 } else {
@@ -424,7 +426,10 @@ fun TaskUpsertSheetContent(
         var showTimePicker by rememberSaveable { mutableStateOf(false) }
 
         DatePickerDialog(
-            onDismissRequest = { updateDateTimePickerVisibility(false) },
+            onDismissRequest = {
+                pendingReminderAfterDate = false
+                updateDateTimePickerVisibility(false)
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -446,6 +451,11 @@ fun TaskUpsertSheetContent(
                             newTask = newTask.copy(dueDate = selectedDate, dueTime = selectedTime)
 
                             updateDateTimePickerVisibility(false)
+
+                            if (pendingReminderAfterDate) {
+                                pendingReminderAfterDate = false
+                                showReminderPicker = true
+                            }
                         }
                     },
                     enabled = datePickerState.selectedDateMillis != null,

@@ -243,26 +243,44 @@ class TasksViewModel(
             )
             repo.upsertTask(task.copy(reminder = null))
 
-            // Recurring task: schedule the next occurrence automatically
+            // Recurring task: backfill missed occurrences and schedule the next one
             task.recurrence?.let { recurrence ->
-                val base = task.dueDate ?: LocalDate.now()
-                val nextDate = recurrence.nextDateAfter(base, base)
+                val today = LocalDate.now()
+                val base = task.dueDate ?: today
                 val offset = task.reminderOffsetMinutes()
-                val nextReminder =
-                    reminderFor(
-                        due = task.dueDateTimeFor(nextDate),
-                        offsetMinutes = offset,
-                    )
-                val nextTask =
-                    task.copy(
-                        id = 0L,
-                        status = false,
-                        deletedAt = null,
-                        dueDate = nextDate,
-                        reminder = nextReminder,
-                    )
-                val newId = repo.upsertTask(nextTask)
-                scheduler.schedule(nextTask.copy(id = newId))
+
+                val tasksToCreate = mutableListOf<Task>()
+                var cursor = recurrence.nextDateAfter(base, base)
+                var guard = 0
+                // 补做：base 之后到今天（含）之间错过的所有周期
+                while (cursor <= today && guard < 60) {
+                    tasksToCreate +=
+                        task.copy(
+                            id = 0L,
+                            status = false,
+                            deletedAt = null,
+                            dueDate = cursor,
+                            reminder = reminderFor(task.dueDateTimeFor(cursor), offset),
+                        )
+                    cursor = recurrence.nextDateAfter(cursor, base)
+                    guard++
+                }
+                // 未来下一次：大于今天的第一周期
+                if (guard < 60) {
+                    tasksToCreate +=
+                        task.copy(
+                            id = 0L,
+                            status = false,
+                            deletedAt = null,
+                            dueDate = cursor,
+                            reminder = reminderFor(task.dueDateTimeFor(cursor), offset),
+                        )
+                }
+
+                tasksToCreate.forEach { nextTask ->
+                    val newId = repo.upsertTask(nextTask)
+                    scheduler.schedule(nextTask.copy(id = newId))
+                }
             }
         } else {
             if (task.id == 0L) {
