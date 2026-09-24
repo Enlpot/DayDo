@@ -32,7 +32,8 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           chmod +x gradlew
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore-release.jks
+          printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" > keystore-b64.txt
+          base64 -d keystore-b64.txt > keystore-release.jks
           ./gradlew :androidApp:assembleFossRelease --console=plain
           cp androidApp/build/outputs/apk/foss/release/androidApp-foss-release.apk DayDo-${GITHUB_REF_NAME#v}.apk
           echo "apk_name=DayDo-${GITHUB_REF_NAME#v}.apk" >> "$GITHUB_ENV"
