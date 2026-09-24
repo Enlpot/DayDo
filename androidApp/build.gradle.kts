@@ -43,8 +43,8 @@ plugins {
 }
 
 val appName = "DayDo"
-val appVersionCode = 5
-val appVersionName = "1.0.5"
+val appVersionCode = 6
+val appVersionName = "1.0.6"
 
 val gitHash = execute("git", "rev-parse", "HEAD").take(7)
 

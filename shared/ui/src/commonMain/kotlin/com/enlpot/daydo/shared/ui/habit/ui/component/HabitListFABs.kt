@@ -29,7 +29,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -91,38 +91,25 @@ fun BoxScope.HabitListFABs(
                 )
             }
 
-            MediumFloatingActionButton(
+            FloatingActionButton(
                 onClick = { onAction(HabitsAction.OnAddHabitClicked) },
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 modifier =
-                    Modifier.animateFloatingActionButton(
-                        visible = fabVisible,
-                        alignment = Alignment.BottomEnd,
-                    ),
+                    Modifier.size(45.dp)
+                        .animateFloatingActionButton(
+                            visible = fabVisible,
+                            alignment = Alignment.BottomEnd,
+                        ),
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.add),
-                        contentDescription = "Add Habit",
-                        modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize),
-                    )
-
-                    AnimatedVisibility(
-                        visible = state.habitsWithAnalytics.isEmpty(),
-                        enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
-                        exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
-                    ) {
-                        Text(text = stringResource(Res.string.add_habit))
-                    }
-                }
+                Icon(
+                    imageVector = vectorResource(Res.drawable.add),
+                    contentDescription = "Add Habit",
+                    modifier = Modifier.size(24.dp),
+                )
             }
         } else {
-            MediumFloatingActionButton(
+            FloatingActionButton(
                 onClick = {
                     if (isUserSubscribed || state.habitsWithAnalytics.size <= 5) {
                         onAction(HabitsAction.OnAddHabitClicked)
@@ -133,30 +120,17 @@ fun BoxScope.HabitListFABs(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 modifier =
-                    Modifier.animateFloatingActionButton(
-                        visible = fabVisible,
-                        alignment = Alignment.BottomEnd,
-                    ),
+                    Modifier.size(45.dp)
+                        .animateFloatingActionButton(
+                            visible = fabVisible,
+                            alignment = Alignment.BottomEnd,
+                        ),
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.add),
-                        contentDescription = "Add Habit",
-                        modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize),
-                    )
-
-                    AnimatedVisibility(
-                        visible = state.habitsWithAnalytics.isEmpty(),
-                        enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
-                        exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
-                    ) {
-                        Text(text = stringResource(Res.string.add_habit))
-                    }
-                }
+                Icon(
+                    imageVector = vectorResource(Res.drawable.add),
+                    contentDescription = "Add Habit",
+                    modifier = Modifier.size(24.dp),
+                )
             }
 
             AnimatedVisibility(

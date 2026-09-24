@@ -58,7 +58,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -191,13 +191,14 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
             )
         }
 
-        MediumFloatingActionButton(
+        FloatingActionButton(
             onClick = { showTaskAddSheet = true },
             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
             modifier =
                 Modifier.align(Alignment.BottomEnd)
                     .padding(16.dp)
+                    .size(45.dp)
                     .then(
                         if (windowSizeClass.widthSizeClass != WindowWidthSizeClass.Expanded)
                             Modifier
@@ -210,26 +211,11 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                         alphaAnimationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
                     ),
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = vectorResource(Res.drawable.add),
-                    contentDescription = null,
-                    modifier = Modifier.size(FloatingActionButtonDefaults.MediumIconSize),
-                )
-                AnimatedVisibility(
-                    visible = state.displayTasks.isEmpty(),
-                    enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
-                    exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.add_task),
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
-            }
+            Icon(
+                imageVector = vectorResource(Res.drawable.add),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+            )
         }
 
         if (showDeleteDialog) {

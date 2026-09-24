@@ -40,7 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -217,7 +217,7 @@ fun HomePage(
     }
 
     // 新建入口：任务 tab 新建任务、习惯 tab 新建习惯
-    SmallFloatingActionButton(
+    FloatingActionButton(
         onClick = {
             if (pagerState.currentPage == 0) showTaskAddSheet = true
             else onHabitAction(HabitsAction.OnAddHabitClicked)
@@ -227,6 +227,7 @@ fun HomePage(
         modifier =
             Modifier.align(Alignment.BottomEnd)
                 .padding(16.dp)
+                .size(45.dp)
                 .animateFloatingActionButton(
                     visible = !multiSelect,
                     alignment = Alignment.BottomEnd,
