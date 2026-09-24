@@ -2,6 +2,12 @@
 
 本文件记录每个版本的更新内容，每次发布新版本时在此追加最新条目。
 
+## v1.0.2（2026-09-24）
+
+体积优化：
+
+- 移除 5 个未使用的内置字体（Inter / Manrope / Montserrat / Outfit / Poppins），保留 Figtree（正文）与 Google Sans Flex（标题），安装包体积从约 9.6MB 降至约 8.9MB
+
 ## v1.0.1（2026-09-24）
 
 Bug 修复：
