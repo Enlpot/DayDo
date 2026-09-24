@@ -203,7 +203,14 @@ class SettingsViewModel(
                     settingsDatastore.setBiometricPref(action.pref)
                 }
 
-                is ChangeReorderTasks -> {
+
+                is ChangeCornerRadius -> {
+                    analytics.trackEvent(
+                        AnalyticsWrapper.Companion.AnalyticsEvent.LOOK_AND_FEEL_UPDATED.name,
+                        mapOf("setting" to "ChangeCornerRadius", "value" to action.radius),
+                    )
+                    settingsDatastore.setCornerRadius(action.radius)
+                }                is ChangeReorderTasks -> {
                     analytics.trackEvent(
                         AnalyticsWrapper.Companion.AnalyticsEvent.SETTINGS_UPDATED.name,
                         mapOf("setting" to "ChangeReorderTasks", "value" to action.pref),
@@ -333,6 +340,10 @@ class SettingsViewModel(
                     .launchIn(this)
 
                 settingsDatastore
+                settingsDatastore
+                    .getCornerRadiusPref()
+                    .onEach { flow -> _state.update { it.copy(cornerRadius = flow) } }
+                    .launchIn(this)
                 settingsDatastore
                     .getHiddenSmartViewsFlow()
                     .onEach { flow -> _state.update { it.copy(hiddenSmartViews = flow) } }

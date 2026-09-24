@@ -48,6 +48,7 @@ import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import androidx.compose.material3.ToggleButton
@@ -107,7 +108,7 @@ fun RootPage(
                         },
                         colors = listItemColors(),
                         modifier =
-                            Modifier.clip(RoundedCornerShape(28.dp)).clickable { showSmartViewsDialog = true },
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { showSmartViewsDialog = true },
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
@@ -136,7 +137,7 @@ fun RootPage(
                         },
                         colors = listItemColors(),
                         modifier =
-                            Modifier.clip(RoundedCornerShape(28.dp)).clickable { showStartingPageDialog = true },
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { showStartingPageDialog = true },
                     )
                     ListItem(
                         headlineContent = { Text(text = stringResource(Res.string.staring_day)) },
@@ -153,7 +154,7 @@ fun RootPage(
                             )
                         },
                         colors = listItemColors(),
-                        modifier = Modifier.clip(RoundedCornerShape(28.dp)),
+                        modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
                     )
 
                     if (state.isBiometricLockAvailable) {
@@ -173,7 +174,7 @@ fun RootPage(
                                 )
                             },
                             colors = listItemColors(),
-                            modifier = Modifier.clip(RoundedCornerShape(28.dp)),
+                            modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
                         )
                     }
 
@@ -189,7 +190,7 @@ fun RootPage(
                             )
                         },
                         colors = listItemColors(),
-                        modifier = Modifier.clip(RoundedCornerShape(28.dp)),
+                        modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
                     )
                 }
             }
@@ -199,7 +200,7 @@ fun RootPage(
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     ListItem(
                         modifier =
-                            Modifier.clip(RoundedCornerShape(28.dp)).clickable {
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable {
                                 onNavigateToLookAndFeel()
                             },
                         headlineContent = { Text(text = stringResource(Res.string.look_and_feel)) },
@@ -222,7 +223,7 @@ fun RootPage(
                     )
 
                     ListItem(
-                        modifier = Modifier.clip(RoundedCornerShape(28.dp)).clickable { onNavigateToBackup() },
+                        modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { onNavigateToBackup() },
                         colors = listItemColors(),
                         headlineContent = { Text(text = stringResource(Res.string.backup)) },
                         supportingContent = { Text(text = stringResource(Res.string.backup_desc)) },
@@ -264,7 +265,7 @@ fun RootPage(
                         },
                         headlineContent = { Text(text = stringResource(Res.string.about)) },
                         modifier =
-                            Modifier.clip(RoundedCornerShape(28.dp)).clickable { onNavigateToAppInfo() },
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { onNavigateToAppInfo() },
                     )
 
                     ListItem(
@@ -283,7 +284,7 @@ fun RootPage(
                         },
                         headlineContent = { Text(text = stringResource(Res.string.changelog)) },
                         modifier =
-                            Modifier.clip(RoundedCornerShape(28.dp)).clickable { onNavigateToChangelog() },
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { onNavigateToChangelog() },
                     )
                 }
             }
@@ -341,7 +342,7 @@ fun RootPage(
                             colors = listItemColors(),
                             modifier =
                                 Modifier.fillMaxWidth()
-                                    .clip(RoundedCornerShape(28.dp))
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
                                     .clickable {
                                         onAction(SettingsAction.ChangeStartingPage(section))
                                         showStartingPageDialog = false

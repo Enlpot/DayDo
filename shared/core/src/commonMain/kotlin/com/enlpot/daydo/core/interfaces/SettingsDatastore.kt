@@ -54,4 +54,7 @@ interface SettingsDatastore {
     fun getHiddenSmartViewsFlow(): Flow<Set<SmartCategory>>
 
     suspend fun setHiddenSmartViews(views: Set<SmartCategory>)
+    fun getCornerRadiusPref(): Flow<Int>
+
+    suspend fun setCornerRadius(radius: Int)
 }

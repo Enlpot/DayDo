@@ -38,6 +38,7 @@ import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
@@ -46,15 +47,18 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontFamily
+import kotlin.math.roundToInt
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.theme.AppTheme
@@ -63,11 +67,8 @@ import com.enlpot.daydo.core.theme.PaletteStyle
 import com.enlpot.daydo.core.theme.Theme
 import com.enlpot.daydo.shared.ui.components.ColorPickerDialog
 import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
-import com.enlpot.daydo.shared.ui.components.detachedItemShape
-import com.enlpot.daydo.shared.ui.components.endItemShape
-import com.enlpot.daydo.shared.ui.components.leadingItemShape
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
-import com.enlpot.daydo.shared.ui.components.middleItemShape
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
 import com.enlpot.daydo.shared.ui.theme.GritTheme
@@ -121,7 +122,61 @@ fun LookAndFeelPage(
             item {
                 // appTheme picker
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Column(modifier = Modifier.clip(leadingItemShape())) {
+                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
+                    // corner radius picker
+                    var sliderValue by
+                        remember(state.cornerRadius) { mutableFloatStateOf(state.cornerRadius.toFloat()) }
+                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
+                        ListItem(
+                            headlineContent = { Text(text = "圆角大小") },
+                            supportingContent = { Text(text = "拖动调整卡片圆角") },
+                            colors = listItemColors(),
+                        )
+                        Row(
+                            modifier =
+                                Modifier.fillParentMaxWidth()
+                                    .background(listItemColors().containerColor)
+                                    .padding(start = 52.dp, end = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Slider(
+                                value = sliderValue,
+                                onValueChange = { sliderValue = it },
+                                valueRange = 0f..40f,
+                                onValueChangeFinished = {
+                                    onAction(SettingsAction.ChangeCornerRadius(sliderValue.roundToInt()))
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                text = "${sliderValue.roundToInt()}dp",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
+                        }
+                        Box(
+                            modifier =
+                                Modifier.fillParentMaxWidth()
+                                    .background(listItemColors().containerColor)
+                                    .padding(start = 52.dp, end = 16.dp, bottom = 16.dp),
+                        ) {
+                            Box(
+                                modifier =
+                                    Modifier.fillParentMaxWidth()
+                                        .height(64.dp)
+                                        .clip(RoundedCornerShape(sliderValue.roundToInt().dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer)
+                                        .padding(16.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = "预览 · ${sliderValue.roundToInt()}dp 圆角",
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                            }
+                        }
+                    }
+
                         ListItem(
                             leadingContent = {
                                 Icon(
@@ -201,11 +256,11 @@ fun LookAndFeelPage(
                             Modifier.clip(
                                 when {
                                     state.theme.isMaterialYou && !isUserSubscribed ->
-                                        detachedItemShape()
+                                        RoundedCornerShape(LocalCardCornerRadius.current.dp)
 
-                                    state.theme.isMaterialYou -> endItemShape()
-                                    isUserSubscribed -> middleItemShape()
-                                    else -> leadingItemShape()
+                                    state.theme.isMaterialYou -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
+                                    isUserSubscribed -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
+                                    else -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
                                 }
                             )
                     ) {
@@ -268,7 +323,7 @@ fun LookAndFeelPage(
                                 )
                             },
                             colors = listItemColors(),
-                            modifier = Modifier.clip(middleItemShape()),
+                            modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
                         )
 
                         // seed color picker
@@ -297,7 +352,7 @@ fun LookAndFeelPage(
                                 }
                             },
                             colors = listItemColors(),
-                            modifier = Modifier.clip(middleItemShape()),
+                            modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
                         )
 
                         // palette style picker

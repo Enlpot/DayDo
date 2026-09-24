@@ -19,6 +19,7 @@ package com.enlpot.daydo.core.data.datastore
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
@@ -41,6 +42,7 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val taskReorderKey = booleanPreferencesKey("task_reorder")
         private val compactHabitView = booleanPreferencesKey("compact_habit_view")
         private val hiddenSmartViewsKey = stringPreferencesKey("hidden_smart_views")
+        private val cornerRadiusKey = intPreferencesKey("corner_radius")
     }
 
     override fun getStartOfTheWeekPref(): Flow<DayOfWeek> =
@@ -109,5 +111,11 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         datastore.edit { prefs ->
             prefs[hiddenSmartViewsKey] = views.joinToString(",") { it.name }
         }
+    }
+    override fun getCornerRadiusPref(): Flow<Int> =
+        datastore.data.map { prefs -> prefs[cornerRadiusKey] ?: 20 }
+
+    override suspend fun setCornerRadius(radius: Int) {
+        datastore.edit { prefs -> prefs[cornerRadiusKey] = radius }
     }
 }

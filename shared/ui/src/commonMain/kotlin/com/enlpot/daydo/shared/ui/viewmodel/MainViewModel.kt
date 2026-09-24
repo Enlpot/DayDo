@@ -116,6 +116,10 @@ class MainViewModel(
                     .launchIn(this)
 
                 settingsDatastore
+                    .getCornerRadiusPref()
+                    .onEach { pref -> _state.update { it.copy(cornerRadius = pref) } }
+                    .launchIn(this)
+                settingsDatastore
                     .getBiometricLockPref()
                     .onEach { pref -> _state.update { it.copy(isBiometricLockOn = pref) } }
                     .launchIn(this)

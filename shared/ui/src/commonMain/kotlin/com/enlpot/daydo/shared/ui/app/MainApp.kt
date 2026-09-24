@@ -32,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Companion.Compact
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
 import com.enlpot.daydo.shared.ui.app.AppSections.Companion.toIconRes
 import com.enlpot.daydo.shared.ui.app.AppSections.Companion.toStringRes
 import com.enlpot.daydo.shared.ui.app.HomePage
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.habit.ui.HabitsGraph
 import com.enlpot.daydo.shared.ui.navigation.fadeTransitionMetadata
 import com.enlpot.daydo.shared.ui.setting.ui.SettingsGraph
@@ -70,6 +72,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
             },
         )
 
+    CompositionLocalProvider(LocalCardCornerRadius provides state.cornerRadius) {
     when (windowSizeClass.widthSizeClass) {
         Compact -> {
             Scaffold(
@@ -210,6 +213,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
         }
     }
 }
+    }
 
 @Composable
 private fun AppNavRail(

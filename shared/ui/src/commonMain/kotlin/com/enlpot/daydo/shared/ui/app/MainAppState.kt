@@ -28,6 +28,7 @@ data class MainAppState(
     val isBiometricLockOn: Boolean? = null,
     val isUserSubscribed: Boolean = false,
     val startingSection: Sections = Sections.Tasks,
+    val cornerRadius: Int = 20,
     val theme: Theme = Theme(),
     val isFoss: Boolean = false,
 )

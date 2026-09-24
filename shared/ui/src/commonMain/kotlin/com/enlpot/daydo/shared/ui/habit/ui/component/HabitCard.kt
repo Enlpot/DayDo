@@ -57,6 +57,7 @@ import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.minusDays
 import com.kizitonwose.calendar.core.plusDays
 import com.enlpot.daydo.core.habits.HabitWithAnalytics
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
@@ -140,7 +141,7 @@ fun HabitCard(
             ),
     ) {
         ListItem(
-            modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large),
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
             colors =
                 ListItemDefaults.colors(
                     containerColor = cardBackground,
