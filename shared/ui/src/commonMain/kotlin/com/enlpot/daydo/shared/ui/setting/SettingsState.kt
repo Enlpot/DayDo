@@ -22,6 +22,7 @@ import com.enlpot.daydo.core.app.Changelog
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.settings.backup.ExportState
 import com.enlpot.daydo.core.settings.backup.RestoreState
+import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.theme.Theme
 import kotlinx.datetime.DayOfWeek
 
@@ -41,6 +42,7 @@ data class SettingsState(
     val startingPage: Sections = Sections.Tasks,
     val isBiometricLockOn: Boolean? = null,
     val isBiometricLockAvailable: Boolean = false,
+    val hiddenSmartViews: Set<SmartCategory> = emptySet(),
 )
 
 @Stable

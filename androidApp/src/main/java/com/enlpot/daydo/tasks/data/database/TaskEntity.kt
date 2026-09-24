@@ -21,7 +21,10 @@ import androidx.room3.Entity
 import androidx.room3.ForeignKey
 import androidx.room3.Index
 import androidx.room3.PrimaryKey
+import com.enlpot.daydo.core.tasks.Recurrence
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 
 @Entity(
     tableName = "task",
@@ -38,9 +41,13 @@ import kotlinx.datetime.LocalDateTime
 )
 data class TaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val categoryId: Long,
+    val categoryId: Long? = null,
     val title: String,
     val status: Boolean = false,
     val index: Int = 0,
     @ColumnInfo(name = "reminder", defaultValue = "NULL") val reminder: LocalDateTime? = null,
+    @ColumnInfo(name = "dueDate", defaultValue = "NULL") val dueDate: LocalDate? = null,
+    @ColumnInfo(name = "dueTime", defaultValue = "NULL") val dueTime: LocalTime? = null,
+    @ColumnInfo(name = "recurrence", defaultValue = "NULL") val recurrence: Recurrence? = null,
+    @ColumnInfo(name = "deletedAt", defaultValue = "NULL") val deletedAt: Long? = null,
 )

@@ -17,6 +17,7 @@
 package com.enlpot.daydo.core.interfaces
 
 import com.enlpot.daydo.core.settings.Sections
+import com.enlpot.daydo.core.tasks.SmartCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.DayOfWeek
 
@@ -48,4 +49,9 @@ interface SettingsDatastore {
     fun getCompactViewPref(): Flow<Boolean>
 
     suspend fun setCompactView(pref: Boolean)
+
+    /** Smart views the user chose to hide from the category selector */
+    fun getHiddenSmartViewsFlow(): Flow<Set<SmartCategory>>
+
+    suspend fun setHiddenSmartViews(views: Set<SmartCategory>)
 }

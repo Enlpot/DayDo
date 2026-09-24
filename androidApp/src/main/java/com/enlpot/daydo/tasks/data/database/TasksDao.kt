@@ -24,9 +24,17 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TasksDao {
-    @Query("SELECT * FROM task") fun getTasksFlow(): Flow<List<TaskEntity>>
+    @Query("SELECT * FROM task WHERE deletedAt IS NULL")
+    fun getTasksFlow(): Flow<List<TaskEntity>>
 
-    @Query("SELECT * FROM task") suspend fun getTasks(): List<TaskEntity>
+    @Query("SELECT * FROM task WHERE deletedAt IS NULL")
+    suspend fun getTasks(): List<TaskEntity>
+
+    @Query("SELECT * FROM task WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
+    fun getDeletedTasksFlow(): Flow<List<TaskEntity>>
+
+    @Query("SELECT * FROM task WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
+    suspend fun getDeletedTasks(): List<TaskEntity>
 
     @Query("UPDATE task SET `index` = :newIndex WHERE id = :id")
     suspend fun updateTaskIndexById(id: Long, newIndex: Int)
@@ -36,6 +44,17 @@ interface TasksDao {
     @Upsert suspend fun upsertTask(taskEntity: TaskEntity): Long
 
     @Delete suspend fun deleteTask(taskEntity: TaskEntity)
+
+    @Query("UPDATE task SET deletedAt = :timestamp WHERE id = :id")
+    suspend fun softDeleteTask(id: Long, timestamp: Long)
+
+    @Query("UPDATE task SET deletedAt = NULL WHERE id = :id")
+    suspend fun restoreTask(id: Long)
+
+    @Query("DELETE FROM task WHERE id = :id") suspend fun purgeTask(id: Long)
+
+    @Query("UPDATE task SET categoryId = NULL WHERE categoryId = :categoryId")
+    suspend fun moveTasksToInbox(categoryId: Long)
 
     @Query("DELETE FROM task") suspend fun deleteAllTasks()
 }

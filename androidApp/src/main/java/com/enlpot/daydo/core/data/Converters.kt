@@ -17,16 +17,21 @@
 package com.enlpot.daydo.core.data
 
 import androidx.room3.ColumnTypeConverter
+import com.enlpot.daydo.core.tasks.Recurrence
 import kotlin.time.Instant
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.Json
 
 object Converters {
     val allDays = dayOfWeekToString(DayOfWeek.entries.toSet())
+
+    private val json = Json { ignoreUnknownKeys = true }
 
     @ColumnTypeConverter
     fun dayOfWeekToString(value: Set<DayOfWeek>): String {
@@ -59,5 +64,26 @@ object Converters {
     @ColumnTypeConverter
     fun dayToTimestamp(date: LocalDate): Long {
         return date.toEpochDays()
+    }
+
+    @ColumnTypeConverter
+    fun timeFromMinutes(value: Long?): LocalTime? {
+        return value?.let { LocalTime(hour = (it / 60).toInt(), minute = (it % 60).toInt()) }
+    }
+
+    @ColumnTypeConverter
+    fun timeToMinutes(time: LocalTime?): Long? {
+        return time?.let { it.hour * 60L + it.minute }
+    }
+
+    @ColumnTypeConverter
+    fun recurrenceFromString(value: String?): Recurrence? {
+        if (value.isNullOrBlank()) return null
+        return runCatching { json.decodeFromString<Recurrence>(value) }.getOrNull()
+    }
+
+    @ColumnTypeConverter
+    fun recurrenceToString(recurrence: Recurrence?): String? {
+        return recurrence?.let { json.encodeToString(Recurrence.serializer(), it) }
     }
 }

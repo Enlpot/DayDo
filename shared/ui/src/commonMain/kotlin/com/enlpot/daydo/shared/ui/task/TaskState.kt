@@ -19,14 +19,27 @@ package com.enlpot.daydo.shared.ui.task
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.enlpot.daydo.core.tasks.Category
+import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
+
+/** The view currently shown in the task list: a smart view or a user category. */
+sealed interface TaskView {
+    data class Smart(val category: SmartCategory) : TaskView
+
+    data class Regular(val category: Category) : TaskView
+}
 
 @Stable
 @Immutable
 data class TaskState(
     val tasks: Map<Category, List<Task>> = emptyMap(),
-    val currentCategory: Category? = null,
+    val allTasks: List<Task> = emptyList(),
+    val deletedTasks: List<Task> = emptyList(),
+    val currentView: TaskView = TaskView.Smart(SmartCategory.ALL),
+    val displayTasks: List<Task> = emptyList(),
+    val displayCompletedTasks: List<Task> = emptyList(),
     val completedTasks: List<Task> = emptyList(),
+    val hiddenSmartViews: Set<SmartCategory> = emptySet(),
     val is24Hour: Boolean = false,
     val reorderTasks: Boolean = true,
 )

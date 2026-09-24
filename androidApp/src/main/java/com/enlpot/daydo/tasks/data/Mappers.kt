@@ -29,6 +29,10 @@ fun Task.toTaskEntity(): TaskEntity {
         index = index,
         status = status,
         reminder = reminder,
+        dueDate = dueDate,
+        dueTime = dueTime,
+        recurrence = recurrence,
+        deletedAt = deletedAt,
     )
 }
 
@@ -40,6 +44,10 @@ fun TaskEntity.toTask(): Task {
         index = index,
         status = status,
         reminder = reminder,
+        dueDate = dueDate,
+        dueTime = dueTime,
+        recurrence = recurrence,
+        deletedAt = deletedAt,
     )
 }
 

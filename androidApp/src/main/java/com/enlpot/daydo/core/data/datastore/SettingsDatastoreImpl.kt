@@ -23,6 +23,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.settings.Sections
+import com.enlpot.daydo.core.tasks.SmartCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.DayOfWeek
@@ -39,6 +40,7 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val biometricLockKey = booleanPreferencesKey("biometric")
         private val taskReorderKey = booleanPreferencesKey("task_reorder")
         private val compactHabitView = booleanPreferencesKey("compact_habit_view")
+        private val hiddenSmartViewsKey = stringPreferencesKey("hidden_smart_views")
     }
 
     override fun getStartOfTheWeekPref(): Flow<DayOfWeek> =
@@ -94,5 +96,18 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override suspend fun setCompactView(pref: Boolean) {
         datastore.edit { prefs -> prefs[compactHabitView] = pref }
+    }
+
+    override fun getHiddenSmartViewsFlow(): Flow<Set<SmartCategory>> =
+        datastore.data.map { prefs ->
+            val raw = prefs[hiddenSmartViewsKey].orEmpty()
+            if (raw.isBlank()) emptySet()
+            else raw.split(",").mapNotNull { runCatching { SmartCategory.valueOf(it) }.getOrNull() }.toSet()
+        }
+
+    override suspend fun setHiddenSmartViews(views: Set<SmartCategory>) {
+        datastore.edit { prefs ->
+            prefs[hiddenSmartViewsKey] = views.joinToString(",") { it.name }
+        }
     }
 }

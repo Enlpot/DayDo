@@ -19,6 +19,7 @@ package com.enlpot.daydo.shared.ui.setting.ui.section
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -42,13 +43,17 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.settings.Sections
+import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
+import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.endItemShape
 import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.middleItemShape
+import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonDefaults
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
 import com.enlpot.daydo.shared.ui.setting.ui.component.LocalePickerSheet
@@ -70,6 +75,7 @@ fun RootPage(
     onNavigateToAppInfo: () -> Unit,
 ) {
     var showLocalePicker by rememberSaveable { mutableStateOf(false) }
+    var showSmartViewsDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).fillMaxSize()) {
@@ -150,6 +156,22 @@ fun RootPage(
                         },
                         colors = listItemColors(),
                         modifier = Modifier.clip(middleItemShape()),
+                    )
+
+                    ListItem(
+                        headlineContent = { Text(text = "智能分类") },
+                        supportingContent = {
+                            Text(text = "选择在任务页显示的智能分类")
+                        },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.clip(middleItemShape()).clickable { showSmartViewsDialog = true },
+                        trailingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = null,
+                            )
+                        },
                     )
 
                     ListItem(
@@ -327,9 +349,47 @@ fun RootPage(
             languagePicker(onClick = { showLocalePicker = true })
         }
 
+        if (showSmartViewsDialog) {
+            GritDialog(onDismissRequest = { showSmartViewsDialog = false }) {
+                Text(
+                    text = "智能分类",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text(
+                    text = "取消勾选以在任务页隐藏该分类",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    SmartCategory.entries.forEach { smart ->
+                        ToggleButton(
+                            checked = smart !in state.hiddenSmartViews,
+                            onCheckedChange = {
+                                onAction(SettingsAction.ToggleSmartViewVisibility(smart))
+                            },
+                            colors = ToggleButtonDefaults.tonalToggleButtonColors(),
+                        ) {
+                            Text(text = smart.labelText())
+                        }
+                    }
+                }
+            }
+        }
+
         if (showLocalePicker) {
             LocalePickerSheet(onDismissRequest = { showLocalePicker = false })
         }
+    }
+}
+
+private fun SmartCategory.labelText(): String {
+    return when (this) {
+        SmartCategory.ALL -> "所有"
+        SmartCategory.TODAY -> "今天"
+        SmartCategory.TOMORROW -> "明天"
+        SmartCategory.NEXT_7_DAYS -> "最近7天"
+        SmartCategory.COMPLETED -> "已完成"
+        SmartCategory.DELETED -> "已删除"
+        SmartCategory.INBOX -> "收集箱"
     }
 }
 

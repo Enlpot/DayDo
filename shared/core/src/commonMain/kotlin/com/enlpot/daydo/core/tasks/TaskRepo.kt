@@ -24,6 +24,12 @@ interface TaskRepo {
 
     fun getCompletedTasksFlow(): Flow<List<Task>>
 
+    /** All non-deleted tasks, for smart views (today / tomorrow / ... / inbox) */
+    fun getAllTasksFlow(): Flow<List<Task>>
+
+    /** Soft-deleted tasks (recycle bin) */
+    fun getDeletedTasksFlow(): Flow<List<Task>>
+
     suspend fun getTasks(): List<Task>
 
     suspend fun getTaskById(id: Long): Task?
@@ -36,7 +42,19 @@ interface TaskRepo {
 
     suspend fun deleteTask(task: Task)
 
+    /** Soft-delete a task (moves it to the "Deleted" smart view) */
+    suspend fun softDeleteTask(task: Task)
+
+    /** Restore a soft-deleted task */
+    suspend fun restoreTask(task: Task)
+
+    /** Permanently delete a soft-deleted task */
+    suspend fun purgeTask(task: Task)
+
     suspend fun deleteAllTasks()
+
+    /** Move tasks of a category to the inbox (categoryId = null) when the category is deleted */
+    suspend fun moveTasksToInbox(categoryId: Long)
 
     suspend fun upsertCategory(category: Category)
 

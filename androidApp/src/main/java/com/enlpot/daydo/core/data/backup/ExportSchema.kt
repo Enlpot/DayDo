@@ -46,7 +46,7 @@ data class HabitSchema(
 @Serializable
 data class TaskSchema(
     val id: Long = 0,
-    val categoryId: Long,
+    val categoryId: Long?,
     val title: String,
     val status: Boolean = false,
     val index: Int = 0,

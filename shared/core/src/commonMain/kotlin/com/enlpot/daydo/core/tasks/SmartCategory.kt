@@ -16,25 +16,13 @@
  */
 package com.enlpot.daydo.core.tasks
 
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class Task(
-    val id: Long = 0,
-    val categoryId: Long? = null,
-    val title: String,
-    val index: Int = 0,
-    val status: Boolean = false,
-    val dueDate: LocalDate? = null,
-    val dueTime: LocalTime? = null,
-    val reminder: LocalDateTime? = null,
-    val recurrence: Recurrence? = null,
-    val deletedAt: Long? = null,
-)
-
-/** Convenience accessor: full due date-time, or null when no due date set */
-val Task.dueDateTime: LocalDateTime?
-    get() = dueDate?.let { d -> LocalDateTime(date = d, time = dueTime ?: LocalTime(0, 0)) }
+/** Built-in smart views, configurable (hideable) from settings. */
+enum class SmartCategory {
+    ALL,
+    TODAY,
+    TOMORROW,
+    NEXT_7_DAYS,
+    COMPLETED,
+    DELETED,
+    INBOX,
+}

@@ -46,6 +46,12 @@ class TasksRepository(
             .map { entities -> entities.map { it.toTask() }.sortedBy { it.index } }
             .flowOn(Dispatchers.IO)
 
+    private val deletedTasksFlow =
+        tasksDao
+            .getDeletedTasksFlow()
+            .map { entities -> entities.map { it.toTask() } }
+            .flowOn(Dispatchers.IO)
+
     val categoriesFlow =
         categoryDao
             .getCategoriesFlow()
@@ -65,6 +71,10 @@ class TasksRepository(
     override fun getCompletedTasksFlow(): Flow<List<Task>> {
         return tasksFlow.map { tasks -> tasks.filter { it.status } }.flowOn(Dispatchers.IO)
     }
+
+    override fun getAllTasksFlow(): Flow<List<Task>> = tasksFlow
+
+    override fun getDeletedTasksFlow(): Flow<List<Task>> = deletedTasksFlow
 
     override suspend fun getTasks(): List<Task> {
         return tasksDao.getTasks().map { it.toTask() }
@@ -99,8 +109,25 @@ class TasksRepository(
         tasksDao.deleteTask(task.toTaskEntity())
     }
 
+    override suspend fun softDeleteTask(task: Task) {
+        tasksDao.softDeleteTask(task.id, System.currentTimeMillis())
+        notificationManager.cancelNotification(task)
+    }
+
+    override suspend fun restoreTask(task: Task) {
+        tasksDao.restoreTask(task.id)
+    }
+
+    override suspend fun purgeTask(task: Task) {
+        tasksDao.purgeTask(task.id)
+    }
+
     override suspend fun deleteAllTasks() {
         tasksDao.deleteAllTasks()
+    }
+
+    override suspend fun moveTasksToInbox(categoryId: Long) {
+        tasksDao.moveTasksToInbox(categoryId)
     }
 
     override suspend fun upsertCategory(category: Category) {
@@ -108,6 +135,7 @@ class TasksRepository(
     }
 
     override suspend fun deleteCategory(category: Category) {
+        moveTasksToInbox(category.id)
         categoryDao.deleteCategory(category.toCategoryEntity())
     }
 

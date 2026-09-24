@@ -17,6 +17,7 @@
 package com.enlpot.daydo.shared.ui.task
 
 import com.enlpot.daydo.core.tasks.Category
+import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
 
 sealed interface TaskAction {
@@ -24,17 +25,30 @@ sealed interface TaskAction {
 
     data class ChangeCategory(val category: Category) : TaskAction
 
+    data class ChangeView(val view: TaskView) : TaskAction
+
     data class DeleteCategory(val category: Category) : TaskAction
 
     data object DeleteTasks : TaskAction
 
     data class DeleteTask(val task: Task) : TaskAction
 
+    /** Soft-delete a task (move to the "Deleted" view) */
+    data class SoftDeleteTask(val task: Task) : TaskAction
+
+    /** Restore a task from the "Deleted" view */
+    data class RestoreTask(val task: Task) : TaskAction
+
+    /** Permanently remove a task from the "Deleted" view */
+    data class PurgeTask(val task: Task) : TaskAction
+
     data class ReorderTasks(val mapping: List<Pair<Int, Task>>) : TaskAction
 
     data class ReorderCategories(val mapping: List<Pair<Int, Category>>) : TaskAction
 
     data class UpsertTask(val task: Task) : TaskAction
+
+    data class ToggleSmartViewVisibility(val category: SmartCategory) : TaskAction
 
     data object OnTasksOpened : TaskAction
 

@@ -21,6 +21,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -53,6 +56,8 @@ fun TaskCard(
     dragState: Boolean = false,
     reorderIcon: @Composable () -> Unit,
     is24Hr: Boolean,
+    onCheck: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(4.dp),
 ) {
@@ -89,10 +94,24 @@ fun TaskCard(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            if (!dragState) {
+                Checkbox(
+                    checked = task.status,
+                    onCheckedChange = { onCheck() },
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            }
+
+            Column(
+                modifier =
+                    Modifier.weight(1f)
+                        .clip(shape)
+                        .clickable(enabled = !dragState) { onClick() }
+                        .padding(horizontal = 8.dp, vertical = 12.dp),
+            ) {
                 Text(
                     text = task.title,
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
@@ -104,25 +123,49 @@ fun TaskCard(
                         },
                 )
 
-                if (task.reminder != null) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Icon(
-                            imageVector = vectorResource(Res.drawable.alarm),
-                            contentDescription = "Reminder",
-                            modifier = Modifier.size(12.dp),
-                        )
+                when {
+                    task.reminder != null -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.alarm),
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                            )
 
-                        Text(
-                            text = task.reminder!!.toFormattedString(is24Hr),
-                            style =
-                                MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Light,
-                                ),
-                        )
+                            Text(
+                                text = task.reminder!!.toFormattedString(is24Hr),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Light,
+                                    ),
+                            )
+                        }
+                    }
+
+                    task.dueDate != null -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.schedule),
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                            )
+
+                            Text(
+                                text = task.dueDate!!.toFormattedString(),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Light,
+                                    ),
+                            )
+                        }
                     }
                 }
             }

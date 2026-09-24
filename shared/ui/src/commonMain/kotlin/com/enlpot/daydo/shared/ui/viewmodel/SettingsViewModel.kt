@@ -211,6 +211,17 @@ class SettingsViewModel(
                     settingsDatastore.setTaskReorderPref(action.pref)
                 }
 
+                is ToggleSmartViewVisibility -> {
+                    val hidden = _state.value.hiddenSmartViews
+                    val newHidden =
+                        if (action.category in hidden) {
+                            hidden - action.category
+                        } else {
+                            hidden + action.category
+                        }
+                    settingsDatastore.setHiddenSmartViews(newHidden)
+                }
+
                 OnSettingsOpened -> {
                     analytics.trackEvent(
                         AnalyticsWrapper.Companion.AnalyticsEvent.SETTINGS_OPENED.name,
@@ -319,6 +330,12 @@ class SettingsViewModel(
                 settingsDatastore
                     .getStartOfTheWeekPref()
                     .onEach { flow -> _state.update { it.copy(startOfTheWeek = flow) } }
+                    .launchIn(this)
+
+                settingsDatastore
+                settingsDatastore
+                    .getHiddenSmartViewsFlow()
+                    .onEach { flow -> _state.update { it.copy(hiddenSmartViews = flow) } }
                     .launchIn(this)
 
                 settingsDatastore

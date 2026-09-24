@@ -17,6 +17,7 @@
 package com.enlpot.daydo.shared.ui.task.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -64,10 +66,14 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.Task
+import com.enlpot.daydo.core.tasks.dueDateTime
+import com.enlpot.daydo.core.tasks.reminderFor
+import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
@@ -80,6 +86,7 @@ import daydo.shared.ui.generated.resources.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 import kotlinx.coroutines.delay
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -115,7 +122,10 @@ fun TaskUpsertSheetContent(
     onPermissionRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var newTask by rememberSaveable(stateSaver = genericSaver<Task>()) { mutableStateOf(task) }
+    var newTask by remember { mutableStateOf(task) }
+
+    var showReminderPicker by rememberSaveable { mutableStateOf(false) }
+    var showRecurrencePicker by rememberSaveable { mutableStateOf(false) }
 
     val textFieldState =
         rememberTextFieldState(
@@ -126,14 +136,21 @@ fun TaskUpsertSheetContent(
     val now = LocalDateTime.now()
     val timePickerState =
         rememberTimePickerState(
-            initialHour = now.time.hour,
-            initialMinute = now.time.minute,
+            initialHour = newTask.dueTime?.hour ?: now.time.hour,
+            initialMinute = newTask.dueTime?.minute ?: now.time.minute,
             is24Hour = is24Hr,
         )
     val datePickerState =
         rememberDatePickerState(
-            initialSelectedDateMillis = now.toInstant(TimeZone.UTC).toEpochMilliseconds()
+            initialSelectedDateMillis =
+                newTask.dueDate?.let {
+                    LocalDateTime(date = it, time = LocalTime(0, 0))
+                        .toInstant(TimeZone.UTC)
+                        .toEpochMilliseconds()
+                } ?: now.toInstant(TimeZone.UTC).toEpochMilliseconds()
         )
+    var timeSelected by rememberSaveable { mutableStateOf(newTask.dueTime != null) }
+
     val isValidDateTime =
         if (newTask.reminder != null) {
             newTask.reminder!! > LocalDateTime.now()
@@ -179,6 +196,12 @@ fun TaskUpsertSheetContent(
         ) {
             item {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    ToggleButton(
+                        checked = newTask.categoryId == null,
+                        onCheckedChange = { newTask = newTask.copy(categoryId = null) },
+                        colors = ToggleButtonDefaults.tonalToggleButtonColors(),
+                        content = { Text(text = "收集箱") },
+                    )
                     categories.forEach { category ->
                         ToggleButton(
                             checked = category.id == newTask.categoryId,
@@ -219,7 +242,63 @@ fun TaskUpsertSheetContent(
 
             item {
                 ListItem(
-                    modifier = Modifier.clip(detachedItemShape()),
+                    modifier =
+                        Modifier.clip(detachedItemShape())
+                            .clickable {
+                                if (notificationPermission) {
+                                    updateDateTimePickerVisibility(true)
+                                } else {
+                                    onPermissionRequest()
+                                }
+                            },
+                    colors = listItemColors(),
+                    leadingContent = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.schedule),
+                            contentDescription = null,
+                        )
+                    },
+                    headlineContent = { Text(text = "时间") },
+                    supportingContent = {
+                        Text(
+                            text = newTask.dueDateTimeText(is24Hr),
+                            color =
+                                if (newTask.dueDate != null) MaterialTheme.colorScheme.onSurface
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    trailingContent = {
+                        if (newTask.dueDate != null) {
+                            IconButton(
+                                onClick = {
+                                    newTask =
+                                        newTask.copy(
+                                            dueDate = null,
+                                            dueTime = null,
+                                            reminder = null,
+                                        )
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.close),
+                                    contentDescription = "清除时间",
+                                )
+                            }
+                        }
+                    },
+                )
+            }
+
+            item {
+                val hasDue = newTask.dueDate != null
+                val offset = newTask.reminderOffsetMinutes()
+
+                ListItem(
+                    modifier =
+                        Modifier.clip(detachedItemShape())
+                            .clickable(enabled = newTask.reminder != null) {
+                                if (newTask.reminder != null) showReminderPicker = true
+                            },
                     colors = listItemColors(),
                     leadingContent = {
                         Icon(
@@ -227,17 +306,26 @@ fun TaskUpsertSheetContent(
                             contentDescription = null,
                         )
                     },
-                    headlineContent = { Text(text = stringResource(Res.string.add_reminder)) },
+                    headlineContent = { Text(text = "提醒") },
                     supportingContent = {
-                        if (newTask.reminder != null) {
-                            Column {
-                                Text(text = newTask.reminder!!.toFormattedString(is24Hr = is24Hr))
+                        Column {
+                            if (newTask.reminder != null) {
+                                Text(
+                                    text =
+                                        if (offset != null) reminderPresetLabel(offset)
+                                        else newTask.reminder!!.toFormattedString(is24Hr)
+                                )
                                 if (!isValidDateTime) {
                                     Text(
                                         text = stringResource(Res.string.invalid_date_time),
                                         color = MaterialTheme.colorScheme.error,
                                     )
                                 }
+                            } else if (!hasDue) {
+                                Text(
+                                    text = "先设置时间后可提醒",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
                             }
                         }
                     },
@@ -247,12 +335,54 @@ fun TaskUpsertSheetContent(
                             onCheckedChange = { checked ->
                                 if (checked) {
                                     if (notificationPermission) {
-                                        updateDateTimePickerVisibility(true)
+                                        if (newTask.dueDateTime != null) {
+                                            showReminderPicker = true
+                                        } else {
+                                            updateDateTimePickerVisibility(true)
+                                        }
                                     } else {
                                         onPermissionRequest()
                                     }
                                 } else {
                                     newTask = newTask.copy(reminder = null)
+                                }
+                            },
+                        )
+                    },
+                )
+            }
+
+            item {
+                ListItem(
+                    modifier =
+                        Modifier.clip(detachedItemShape())
+                            .clickable(enabled = newTask.recurrence != null) {
+                                if (newTask.recurrence != null) showRecurrencePicker = true
+                            },
+                    colors = listItemColors(),
+                    leadingContent = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.check_list),
+                            contentDescription = null,
+                        )
+                    },
+                    headlineContent = { Text(text = "重复") },
+                    supportingContent = {
+                        Text(
+                            text = newTask.recurrence?.toDisplayString() ?: "不重复",
+                            color =
+                                if (newTask.recurrence != null) MaterialTheme.colorScheme.onSurface
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    },
+                    trailingContent = {
+                        ExpressiveSwitch(
+                            checked = newTask.recurrence != null,
+                            onCheckedChange = { checked ->
+                                if (checked) {
+                                    showRecurrencePicker = true
+                                } else {
+                                    newTask = newTask.copy(recurrence = null)
                                 }
                             },
                         )
@@ -299,8 +429,11 @@ fun TaskUpsertSheetContent(
                                     textFieldState.text.length <= 100 &&
                                     isValidDateTime &&
                                     (newTask.reminder != task.reminder ||
-                                        textFieldState.text.toString() != task.title ||
-                                        newTask.categoryId != task.categoryId),
+                                        newTask.dueDate != task.dueDate ||
+                                        newTask.dueTime != task.dueTime ||
+                                        newTask.recurrence != task.recurrence ||
+                                        newTask.categoryId != task.categoryId ||
+                                        textFieldState.text.toString() != task.title),
                         ) {
                             Text(
                                 stringResource(
@@ -323,23 +456,21 @@ fun TaskUpsertSheetContent(
                 TextButton(
                     onClick = {
                         if (datePickerState.selectedDateMillis != null) {
-                            newTask =
-                                newTask.copy(
-                                    reminder =
-                                        LocalDateTime(
-                                            date =
-                                                Instant.fromEpochMilliseconds(
-                                                        datePickerState.selectedDateMillis!!
-                                                    )
-                                                    .toLocalDateTime(TimeZone.UTC)
-                                                    .date,
-                                            time =
-                                                LocalTime(
-                                                    hour = timePickerState.hour,
-                                                    minute = timePickerState.minute,
-                                                ),
-                                        )
-                                )
+                            val selectedDate =
+                                Instant.fromEpochMilliseconds(datePickerState.selectedDateMillis!!)
+                                    .toLocalDateTime(TimeZone.UTC)
+                                    .date
+                            val selectedTime =
+                                if (timeSelected) {
+                                    LocalTime(
+                                        hour = timePickerState.hour,
+                                        minute = timePickerState.minute,
+                                    )
+                                } else {
+                                    null
+                                }
+
+                            newTask = newTask.copy(dueDate = selectedDate, dueTime = selectedTime)
 
                             updateDateTimePickerVisibility(false)
                         }
@@ -350,7 +481,12 @@ fun TaskUpsertSheetContent(
                 }
             },
             dismissButton = {
-                IconButton(onClick = { showTimePicker = true }) {
+                IconButton(
+                    onClick = {
+                        timeSelected = true
+                        showTimePicker = true
+                    },
+                ) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.schedule),
                         contentDescription = "Select Time",
@@ -366,6 +502,160 @@ fun TaskUpsertSheetContent(
                     state = timePickerState,
                     onConfirm = { showTimePicker = false },
                 )
+            }
+        }
+    }
+
+    if (showReminderPicker) {
+        ReminderPickerSheet(
+            initialOffset = newTask.reminderOffsetMinutes() ?: 0,
+            due = newTask.dueDateTime,
+            onDismissRequest = { showReminderPicker = false },
+            onConfirm = { offset ->
+                newTask = newTask.copy(reminder = reminderFor(newTask.dueDateTime, offset))
+                showReminderPicker = false
+            },
+            onRemove = {
+                newTask = newTask.copy(reminder = null)
+                showReminderPicker = false
+            },
+        )
+    }
+
+    if (showRecurrencePicker) {
+        RecurrencePickerSheet(
+            initial = newTask.recurrence,
+            onDismissRequest = { showRecurrencePicker = false },
+            onConfirm = { recurrence ->
+                newTask = newTask.copy(recurrence = recurrence)
+                showRecurrencePicker = false
+            },
+        )
+    }
+}
+
+private fun Task.dueDateTimeText(is24Hr: Boolean): String {
+    val date = dueDate ?: return "无"
+    val dateText = date.toFormattedString()
+    return if (dueTime != null) {
+        "$dateText ${dueTime!!.toFormattedString(is24Hr)}"
+    } else {
+        dateText
+    }
+}
+
+private val reminderPresets = listOf(0, 5, 15, 30, 60, 1440)
+
+private fun reminderPresetLabel(offsetMinutes: Int): String {
+    return when (offsetMinutes) {
+        0 -> "到期时提醒"
+        5, 15, 30 -> "提前${offsetMinutes}分钟提醒"
+        60 -> "提前1小时提醒"
+        1440 -> "提前1天提醒"
+        else -> "提前${offsetMinutes}分钟提醒（自定义）"
+    }
+}
+
+@Composable
+private fun ReminderPickerSheet(
+    initialOffset: Int,
+    due: LocalDateTime?,
+    onDismissRequest: () -> Unit,
+    onConfirm: (Int) -> Unit,
+    onRemove: () -> Unit,
+) {
+    var customOffset by
+        remember {
+            mutableStateOf(
+                initialOffset.takeIf { it !in reminderPresets }?.toString().orEmpty()
+            )
+        }
+    val customValue = customOffset.toIntOrNull()?.coerceAtLeast(0)
+
+    GritBottomSheet(onDismissRequest = onDismissRequest, padding = 0.dp) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier =
+                    Modifier.size(48.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = MaterialShapes.Pill.toShape(),
+                        ),
+            ) {
+                Icon(
+                    imageVector = vectorResource(Res.drawable.alarm),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+            }
+
+            Text(
+                text = "提醒",
+                style = MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
+            )
+            Text(
+                text = due?.toFormattedString(is24Hr = false) ?: "",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 16.dp),
+        ) {
+            reminderPresets.forEach { preset ->
+                ListItem(
+                    modifier =
+                        Modifier.clip(detachedItemShape())
+                            .clickable { onConfirm(preset) },
+                    colors = listItemColors(),
+                    headlineContent = { Text(text = reminderPresetLabel(preset)) },
+                    trailingContent = {
+                        if (initialOffset == preset) {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.check),
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                )
+            }
+
+            ListItem(
+                modifier = Modifier.clip(detachedItemShape()),
+                colors = listItemColors(),
+                headlineContent = { Text(text = "自定义（提前N分钟）") },
+                trailingContent = {
+                    OutlinedTextField(
+                        value = customOffset,
+                        onValueChange = { customOffset = it },
+                        placeholder = { Text(text = "分钟") },
+                        singleLine = true,
+                        keyboardOptions =
+                            KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.width(96.dp),
+                    )
+                },
+            )
+
+            TextButton(
+                onClick = { customValue?.let(onConfirm) },
+                enabled = customValue != null,
+                modifier = Modifier.align(Alignment.End),
+            ) {
+                Text(text = "确定")
+            }
+
+            TextButton(
+                onClick = onRemove,
+                modifier = Modifier.align(Alignment.End),
+            ) {
+                Text(text = "不提醒")
             }
         }
     }

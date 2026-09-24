@@ -18,6 +18,7 @@ package com.enlpot.daydo.shared.ui.setting
 
 import androidx.compose.ui.graphics.Color
 import com.enlpot.daydo.core.settings.Sections
+import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.theme.AppTheme
 import com.enlpot.daydo.core.theme.Fonts
 import com.enlpot.daydo.core.theme.PaletteStyle
@@ -53,6 +54,8 @@ sealed interface SettingsAction {
     data class ChangeMaterialYou(val pref: Boolean) : SettingsAction
 
     data class ChangeBiometricLock(val pref: Boolean) : SettingsAction
+
+    data class ToggleSmartViewVisibility(val category: SmartCategory) : SettingsAction
 
     data object OnSettingsOpened : SettingsAction
 
