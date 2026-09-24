@@ -26,6 +26,8 @@ data class Task(
     val id: Long = 0,
     val categoryId: Long? = null,
     val title: String,
+    /** 任务内容/备注（第二行输入，可换行） */
+    val content: String = "",
     val index: Int = 0,
     val status: Boolean = false,
     val dueDate: LocalDate? = null,

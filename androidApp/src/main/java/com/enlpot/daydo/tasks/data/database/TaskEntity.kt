@@ -43,6 +43,7 @@ data class TaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val categoryId: Long? = null,
     val title: String,
+    @ColumnInfo(name = "content", defaultValue = "''") val content: String = "",
     val status: Boolean = false,
     val index: Int = 0,
     @ColumnInfo(name = "reminder", defaultValue = "NULL") val reminder: LocalDateTime? = null,

@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonShapes
@@ -135,6 +136,11 @@ fun TaskUpsertSheetContent(
             initialText = newTask.title,
             initialSelection = TextRange(newTask.title.length),
         )
+    val contentState =
+        rememberTextFieldState(
+            initialText = newTask.content,
+            initialSelection = TextRange(newTask.content.length),
+        )
 
     val now = LocalDateTime.now()
     val timePickerState =
@@ -158,6 +164,18 @@ fun TaskUpsertSheetContent(
         if (newTask.reminder != null) {
             newTask.reminder!! > LocalDateTime.now()
         } else true
+
+    val canSubmit =
+        textFieldState.text.isNotBlank() &&
+            textFieldState.text.length <= 100 &&
+            isValidDateTime &&
+            (newTask.reminder != task.reminder ||
+                newTask.dueDate != task.dueDate ||
+                newTask.dueTime != task.dueTime ||
+                newTask.recurrence != task.recurrence ||
+                newTask.categoryId != task.categoryId ||
+                textFieldState.text.toString() != task.title ||
+                contentState.text.toString() != task.content)
 
     GritBottomSheet(
         modifier = modifier.imePadding(),
@@ -235,17 +253,43 @@ fun TaskUpsertSheetContent(
                 OutlinedTextField(
                     state = textFieldState,
                     shape = MaterialTheme.shapes.medium,
-                    placeholder = { Text(text = stringResource(Res.string.add_task)) },
+                    textStyle = MaterialTheme.typography.titleLarge,
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    placeholder = { Text(text = "标题") },
                     keyboardOptions =
                         KeyboardOptions.Default.copy(
                             capitalization = KeyboardCapitalization.Sentences,
-                            imeAction = ImeAction.None,
+                            imeAction = ImeAction.Done,
                         ),
                     onKeyboardAction = { defaultAction ->
-                        textFieldState.edit { append("\n") }
-                        defaultAction()
+                        if (canSubmit) {
+                            onUpsert(
+                                newTask.copy(
+                                    title = textFieldState.text.toString(),
+                                    content = contentState.text.toString(),
+                                )
+                            )
+                            onDismissRequest()
+                        } else {
+                            defaultAction()
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    state = contentState,
+                    shape = MaterialTheme.shapes.medium,
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    placeholder = { Text(text = "内容") },
+                    keyboardOptions =
+                        KeyboardOptions.Default.copy(
+                            capitalization = KeyboardCapitalization.Sentences,
+                            imeAction = ImeAction.Default,
+                        ),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
 
@@ -400,7 +444,12 @@ fun TaskUpsertSheetContent(
 
                         Button(
                             onClick = {
-                                onUpsert(newTask.copy(title = textFieldState.text.toString()))
+                                onUpsert(
+                                    newTask.copy(
+                                        title = textFieldState.text.toString(),
+                                        content = contentState.text.toString(),
+                                    )
+                                )
                                 onDismissRequest()
                             },
                             shapes =
@@ -409,16 +458,7 @@ fun TaskUpsertSheetContent(
                                     pressedShape = MaterialTheme.shapes.small,
                                 ),
                             modifier = Modifier.weight(1f),
-                            enabled =
-                                textFieldState.text.isNotBlank() &&
-                                    textFieldState.text.length <= 100 &&
-                                    isValidDateTime &&
-                                    (newTask.reminder != task.reminder ||
-                                        newTask.dueDate != task.dueDate ||
-                                        newTask.dueTime != task.dueTime ||
-                                        newTask.recurrence != task.recurrence ||
-                                        newTask.categoryId != task.categoryId ||
-                                        textFieldState.text.toString() != task.title),
+                            enabled = canSubmit,
                         ) {
                             Text(
                                 stringResource(
