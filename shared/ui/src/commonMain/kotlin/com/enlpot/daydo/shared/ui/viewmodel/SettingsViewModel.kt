@@ -215,9 +215,6 @@ class SettingsViewModel(
                     settingsDatastore.setHapticFeedback(action.pref)
                 }
 
-                is ChangeCardHeight -> {
-                    settingsDatastore.setCardHeight(action.height)
-                }
 
                 is ChangeHapticStrength -> {
                     settingsDatastore.setHapticStrength(action.strength)

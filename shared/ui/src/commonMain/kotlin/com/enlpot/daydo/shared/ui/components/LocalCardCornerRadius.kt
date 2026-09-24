@@ -17,7 +17,6 @@
 package com.enlpot.daydo.shared.ui.components
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.enlpot.daydo.core.settings.CardHeight
 
 /**
  * 全局卡片圆角大小（dp），由 设置-外观与风格-圆角大小 控制，
@@ -29,4 +28,3 @@ val LocalCardCornerRadius = staticCompositionLocalOf { 20 }
  * 全局卡片高度档位（紧凑/常规/宽松），由 设置-卡片高度 控制，
  * 任务卡等统一引用，改一处全局同步。
  */
-val LocalCardHeight = staticCompositionLocalOf { CardHeight.NORMAL }

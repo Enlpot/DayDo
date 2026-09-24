@@ -46,10 +46,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.enlpot.daydo.core.settings.CardHeight
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.shared.ui.HapticKind
-import com.enlpot.daydo.shared.ui.components.LocalCardHeight
 import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.core.toFormattedString
 import daydo.shared.ui.generated.resources.*
@@ -72,7 +70,6 @@ fun TaskCard(
     onLongClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticPerformer.current
-    val cardHeight = LocalCardHeight.current
     val cardContent by
         animateColorAsState(
             targetValue =
@@ -115,14 +112,7 @@ fun TaskCard(
                 Checkbox(
                     checked = if (selectionMode) selected else task.status,
                     modifier =
-                        Modifier.padding(
-                            vertical =
-                                when (cardHeight) {
-                                    CardHeight.COMPACT -> 4.dp
-                                    CardHeight.NORMAL -> 8.dp
-                                    CardHeight.COMFORTABLE -> 12.dp
-                                }
-                        ),
+                        Modifier.padding(vertical = 2.dp),
                     onCheckedChange = {
                         if (!selectionMode && hapticFeedback) {
                             haptic(HapticKind.COMPLETE)
@@ -141,15 +131,7 @@ fun TaskCard(
                             onClick = { onClick() },
                             onLongClick = onLongClick,
                         )
-                        .padding(
-                            horizontal = 8.dp,
-                            vertical =
-                                when (cardHeight) {
-                                    CardHeight.COMPACT -> 8.dp
-                                    CardHeight.NORMAL -> 12.dp
-                                    CardHeight.COMFORTABLE -> 16.dp
-                                },
-                        ),
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
             ) {
                 Text(
                     text = task.title,

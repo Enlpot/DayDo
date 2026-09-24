@@ -50,7 +50,6 @@ import com.enlpot.daydo.shared.ui.app.AppSections.Companion.toIconRes
 import com.enlpot.daydo.shared.ui.app.AppSections.Companion.toStringRes
 import com.enlpot.daydo.shared.ui.app.HomePage
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
-import com.enlpot.daydo.shared.ui.components.LocalCardHeight
 import com.enlpot.daydo.shared.ui.habit.ui.HabitsGraph
 import com.enlpot.daydo.shared.ui.navigation.fadeTransitionMetadata
 import com.enlpot.daydo.shared.ui.setting.ui.SettingsGraph
@@ -79,7 +78,6 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
     var settingsSubPage by remember { mutableStateOf(false) }
     CompositionLocalProvider(
         LocalCardCornerRadius provides state.cornerRadius,
-        LocalCardHeight provides state.cardHeight,
     ) {
     when (windowSizeClass.widthSizeClass) {
         Compact -> {
