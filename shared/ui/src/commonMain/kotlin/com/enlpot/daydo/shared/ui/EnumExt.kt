@@ -54,12 +54,12 @@ fun Fonts.toDisplayString(): String {
 /** Enum to [FontResource] used internally */
 fun Fonts.toFontRes(): FontResource? {
     return when (this) {
-        POPPINS -> Res.font.poppins_regular
-        INTER -> Res.font.inter
-        MANROPE -> Res.font.manrope
-        MONTSERRAT -> Res.font.montserrat
+        POPPINS -> Res.font.figtree
+        INTER -> Res.font.figtree
+        MANROPE -> Res.font.figtree
+        MONTSERRAT -> Res.font.figtree
         FIGTREE -> Res.font.figtree
-        OUTFIT -> Res.font.outfit
+        OUTFIT -> Res.font.figtree
         GOOGLE_SANS -> Res.font.google_sans_flex
         SYSTEM_DEFAULT -> null
     }

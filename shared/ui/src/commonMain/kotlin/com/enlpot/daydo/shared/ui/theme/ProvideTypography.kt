@@ -58,7 +58,7 @@ fun flexFontRounded(): FontFamily =
 
 /** function to get custom typography for Grit */
 @Composable
-fun provideTypography(font: FontResource? = Res.font.poppins_regular): Typography {
+fun provideTypography(font: FontResource? = Res.font.figtree): Typography {
     val selectedFont = font?.let { FontFamily(Font(font)) } ?: FontFamily.Default
 
     return Typography(
