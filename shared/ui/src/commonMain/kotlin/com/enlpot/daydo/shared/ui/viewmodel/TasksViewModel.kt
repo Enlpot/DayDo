@@ -26,6 +26,7 @@ import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.CategoryColors
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
+import com.enlpot.daydo.core.tasks.taskOccursOn
 import com.enlpot.daydo.core.tasks.TaskRepo
 import com.enlpot.daydo.core.tasks.nextDateAfter
 import com.enlpot.daydo.core.tasks.occursOn
@@ -489,11 +490,4 @@ private fun Task.dueDateTimeFor(date: LocalDate): LocalDateTime? {
 private fun LocalDate.plusDaysSafe(days: Long): LocalDate =
     LocalDate.fromEpochDays(toEpochDays() + days)
 
-private fun taskOccursOn(task: Task, date: LocalDate, today: LocalDate): Boolean {
-    val rec = task.recurrence
-    return if (rec == null) {
-        task.dueDate == date
-    } else {
-        rec.occursOn(date, task.dueDate ?: today)
-    }
-}
+

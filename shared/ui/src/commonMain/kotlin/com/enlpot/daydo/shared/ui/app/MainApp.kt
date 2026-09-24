@@ -44,6 +44,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
 import com.enlpot.daydo.shared.ui.app.AppSections.Companion.toIconRes
 import com.enlpot.daydo.shared.ui.app.AppSections.Companion.toStringRes
+import com.enlpot.daydo.shared.ui.app.HomePage
 import com.enlpot.daydo.shared.ui.habit.ui.HabitsGraph
 import com.enlpot.daydo.shared.ui.navigation.fadeTransitionMetadata
 import com.enlpot.daydo.shared.ui.setting.ui.SettingsGraph
@@ -63,6 +64,7 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
         rememberNavBackStack(
             AppSections.configuration,
             when (state.startingSection) {
+                Home -> AppSections.HomePages
                 Tasks -> AppSections.TaskPages
                 Habits -> AppSections.HabitPages
             },
@@ -92,6 +94,20 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                     backStack = appBackStack,
                     entryProvider =
                         entryProvider {
+                            entry<AppSections.HomePages>(metadata = fadeTransitionMetadata()) {
+                                val hvm: HabitViewModel = koinViewModel()
+                                val tvm: TasksViewModel = koinViewModel()
+                                val habitState by hvm.state.collectAsStateWithLifecycle()
+                                val taskState by tvm.state.collectAsStateWithLifecycle()
+
+                                HomePage(
+                                    taskState = taskState,
+                                    habitState = habitState,
+                                    onTaskAction = tvm::onAction,
+                                    onHabitAction = hvm::onAction,
+                                )
+                            }
+
                             entry<AppSections.TaskPages>(metadata = fadeTransitionMetadata()) {
                                 val tvm: TasksViewModel = koinViewModel()
                                 val taskPageState by tvm.state.collectAsStateWithLifecycle()
@@ -144,6 +160,20 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                     contentAlignment = Alignment.Center,
                     entryProvider =
                         entryProvider {
+                            entry<AppSections.HomePages>(metadata = fadeTransitionMetadata()) {
+                                val hvm: HabitViewModel = koinViewModel()
+                                val tvm: TasksViewModel = koinViewModel()
+                                val habitState by hvm.state.collectAsStateWithLifecycle()
+                                val taskState by tvm.state.collectAsStateWithLifecycle()
+
+                                HomePage(
+                                    taskState = taskState,
+                                    habitState = habitState,
+                                    onTaskAction = tvm::onAction,
+                                    onHabitAction = hvm::onAction,
+                                )
+                            }
+
                             entry<AppSections.TaskPages>(metadata = fadeTransitionMetadata()) {
                                 val tvm: TasksViewModel = koinViewModel()
                                 val taskPageState by tvm.state.collectAsStateWithLifecycle()

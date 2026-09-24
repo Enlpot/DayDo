@@ -14,10 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.enlpot.daydo.core.settings
+package com.enlpot.daydo.core.tasks
 
-enum class Sections {
-    Home,
-    Tasks,
-    Habits,
+import kotlinx.datetime.LocalDate
+
+/**
+ * Whether [task] occurs on [date].
+ *
+ * 非重复任务：dueDate 等于 [date]；重复任务：按重复规则（锚点 = dueDate 或 [today]）判定。
+ * 任务页"今天/明天/最近7天"智能分类与首页"今天"列表共用此判定，修改此处即全局生效。
+ */
+fun taskOccursOn(task: Task, date: LocalDate, today: LocalDate): Boolean {
+    val rec = task.recurrence
+    return if (rec == null) {
+        task.dueDate == date
+    } else {
+        rec.occursOn(date, task.dueDate ?: today)
+    }
 }
