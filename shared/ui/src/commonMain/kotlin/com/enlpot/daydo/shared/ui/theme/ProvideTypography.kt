@@ -30,31 +30,10 @@ import org.jetbrains.compose.resources.FontResource
 val TYPOGRAPHY = Typography()
 
 @Composable
-fun flexFontEmphasis(slant: Float = 0f): FontFamily =
-    FontFamily(
-        Font(
-            resource = Res.font.google_sans_flex,
-            variationSettings =
-                FontVariation.Settings(
-                    FontVariation.weight(1000),
-                    FontVariation.slant(slant),
-                    FontVariation.width(120f),
-                ),
-        )
-    )
+fun flexFontEmphasis(slant: Float = 0f): FontFamily = FontFamily(Font(Res.font.figtree))
 
 @Composable
-fun flexFontRounded(): FontFamily =
-    FontFamily(
-        Font(
-            resource = Res.font.google_sans_flex,
-            variationSettings =
-                FontVariation.Settings(
-                    FontVariation.weight(700),
-                    FontVariation.Setting("ROND", 100f),
-                ),
-        )
-    )
+fun flexFontRounded(): FontFamily = FontFamily(Font(Res.font.figtree))
 
 /** function to get custom typography for Grit */
 @Composable

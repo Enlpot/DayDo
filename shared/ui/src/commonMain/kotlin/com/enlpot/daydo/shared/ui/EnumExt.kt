@@ -60,7 +60,7 @@ fun Fonts.toFontRes(): FontResource? {
         MONTSERRAT -> Res.font.figtree
         FIGTREE -> Res.font.figtree
         OUTFIT -> Res.font.figtree
-        GOOGLE_SANS -> Res.font.google_sans_flex
+        GOOGLE_SANS -> Res.font.figtree
         SYSTEM_DEFAULT -> null
     }
 }
