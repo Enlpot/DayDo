@@ -38,6 +38,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -48,11 +49,7 @@ import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
 import com.enlpot.daydo.shared.ui.components.GritDialog
-import com.enlpot.daydo.shared.ui.components.detachedItemShape
-import com.enlpot.daydo.shared.ui.components.endItemShape
-import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.components.listItemColors
-import com.enlpot.daydo.shared.ui.components.middleItemShape
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
@@ -97,68 +94,11 @@ fun RootPage(
             contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 60.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // DayDo Plus
-            item {
-                ListItem(
-                    headlineContent = { Text(text = stringResource(Res.string.grit_plus)) },
-                    colors = listItemColors(),
-                    modifier =
-                        Modifier.clip(detachedItemShape()).clickable { onNavigateToPaywall() },
-                    trailingContent = {
-                        Icon(
-                            imageVector = vectorResource(Res.drawable.arrow_forward),
-                            contentDescription = "DayDo Plus",
-                        )
-                    },
-                    leadingContent = {
-                        Icon(
-                            imageVector = vectorResource(Res.drawable.grit_icon),
-                            contentDescription = null,
-                            modifier = Modifier.size(30.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    },
-                )
-            }
 
             // General settings
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    ListItem(
-                        headlineContent = {
-                            Text(text = stringResource(Res.string.pause_notifications))
-                        },
-                        supportingContent = {
-                            Text(text = stringResource(Res.string.pause_notifications_desc))
-                        },
-                        trailingContent = {
-                            ExpressiveSwitch(
-                                checked = state.pauseNotifications,
-                                onCheckedChange = {
-                                    onAction(SettingsAction.ChangePauseNotifications(it))
-                                },
-                            )
-                        },
-                        colors = listItemColors(),
-                        modifier = Modifier.clip(leadingItemShape()),
-                    )
 
-                    ListItem(
-                        headlineContent = { Text(text = stringResource(Res.string.reorder_tasks)) },
-                        supportingContent = {
-                            Text(text = stringResource(Res.string.reorder_tasks_desc))
-                        },
-                        trailingContent = {
-                            ExpressiveSwitch(
-                                checked = state.reorderTasks,
-                                onCheckedChange = {
-                                    onAction(SettingsAction.ChangeReorderTasks(it))
-                                },
-                            )
-                        },
-                        colors = listItemColors(),
-                        modifier = Modifier.clip(middleItemShape()),
-                    )
 
                     ListItem(
                         headlineContent = { Text(text = "智能分类") },
@@ -167,7 +107,7 @@ fun RootPage(
                         },
                         colors = listItemColors(),
                         modifier =
-                            Modifier.clip(middleItemShape()).clickable { showSmartViewsDialog = true },
+                            Modifier.clip(RoundedCornerShape(28.dp)).clickable { showSmartViewsDialog = true },
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
@@ -196,7 +136,7 @@ fun RootPage(
                         },
                         colors = listItemColors(),
                         modifier =
-                            Modifier.clip(middleItemShape()).clickable { showStartingPageDialog = true },
+                            Modifier.clip(RoundedCornerShape(28.dp)).clickable { showStartingPageDialog = true },
                     )
                     ListItem(
                         headlineContent = { Text(text = stringResource(Res.string.staring_day)) },
@@ -213,7 +153,7 @@ fun RootPage(
                             )
                         },
                         colors = listItemColors(),
-                        modifier = Modifier.clip(middleItemShape()),
+                        modifier = Modifier.clip(RoundedCornerShape(28.dp)),
                     )
 
                     if (state.isBiometricLockAvailable) {
@@ -233,7 +173,7 @@ fun RootPage(
                                 )
                             },
                             colors = listItemColors(),
-                            modifier = Modifier.clip(middleItemShape()),
+                            modifier = Modifier.clip(RoundedCornerShape(28.dp)),
                         )
                     }
 
@@ -249,7 +189,7 @@ fun RootPage(
                             )
                         },
                         colors = listItemColors(),
-                        modifier = Modifier.clip(endItemShape()),
+                        modifier = Modifier.clip(RoundedCornerShape(28.dp)),
                     )
                 }
             }
@@ -259,7 +199,7 @@ fun RootPage(
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     ListItem(
                         modifier =
-                            Modifier.clip(leadingItemShape()).clickable {
+                            Modifier.clip(RoundedCornerShape(28.dp)).clickable {
                                 onNavigateToLookAndFeel()
                             },
                         headlineContent = { Text(text = stringResource(Res.string.look_and_feel)) },
@@ -282,7 +222,7 @@ fun RootPage(
                     )
 
                     ListItem(
-                        modifier = Modifier.clip(endItemShape()).clickable { onNavigateToBackup() },
+                        modifier = Modifier.clip(RoundedCornerShape(28.dp)).clickable { onNavigateToBackup() },
                         colors = listItemColors(),
                         headlineContent = { Text(text = stringResource(Res.string.backup)) },
                         supportingContent = { Text(text = stringResource(Res.string.backup_desc)) },
@@ -324,7 +264,7 @@ fun RootPage(
                         },
                         headlineContent = { Text(text = stringResource(Res.string.about)) },
                         modifier =
-                            Modifier.clip(leadingItemShape()).clickable { onNavigateToAppInfo() },
+                            Modifier.clip(RoundedCornerShape(28.dp)).clickable { onNavigateToAppInfo() },
                     )
 
                     ListItem(
@@ -343,7 +283,7 @@ fun RootPage(
                         },
                         headlineContent = { Text(text = stringResource(Res.string.changelog)) },
                         modifier =
-                            Modifier.clip(endItemShape()).clickable { onNavigateToChangelog() },
+                            Modifier.clip(RoundedCornerShape(28.dp)).clickable { onNavigateToChangelog() },
                     )
                 }
             }
@@ -401,7 +341,7 @@ fun RootPage(
                             colors = listItemColors(),
                             modifier =
                                 Modifier.fillMaxWidth()
-                                    .clip(detachedItemShape())
+                                    .clip(RoundedCornerShape(28.dp))
                                     .clickable {
                                         onAction(SettingsAction.ChangeStartingPage(section))
                                         showStartingPageDialog = false
