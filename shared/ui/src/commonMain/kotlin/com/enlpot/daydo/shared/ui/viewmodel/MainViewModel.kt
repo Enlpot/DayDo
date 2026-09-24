@@ -120,6 +120,10 @@ class MainViewModel(
                     .onEach { pref -> _state.update { it.copy(cornerRadius = pref) } }
                     .launchIn(this)
                 settingsDatastore
+                    .getHapticFeedbackPref()
+                    .onEach { pref -> _state.update { it.copy(hapticFeedback = pref) } }
+                    .launchIn(this)
+                settingsDatastore
                     .getBiometricLockPref()
                     .onEach { pref -> _state.update { it.copy(isBiometricLockOn = pref) } }
                     .launchIn(this)

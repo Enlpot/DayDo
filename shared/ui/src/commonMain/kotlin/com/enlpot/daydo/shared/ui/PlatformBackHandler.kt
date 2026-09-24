@@ -14,22 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.enlpot.daydo.shared.ui.app
+package com.enlpot.daydo.shared.ui
 
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
-import com.enlpot.daydo.core.settings.Sections
-import com.enlpot.daydo.core.theme.Theme
+import androidx.compose.runtime.Composable
 
-@Stable
-@Immutable
-data class MainAppState(
-    val isAppUnlocked: Boolean = false,
-    val isBiometricLockOn: Boolean? = null,
-    val isUserSubscribed: Boolean = false,
-    val startingSection: Sections = Sections.Tasks,
-    val cornerRadius: Int = 20,
-    val hapticFeedback: Boolean = true,
-    val theme: Theme = Theme(),
-    val isFoss: Boolean = false,
-)
+/** Intercept the platform back gesture/button when [enabled]; no-op on non-Android targets. */
+@Composable
+expect fun PlatformBackHandler(enabled: Boolean, onBack: () -> Unit)

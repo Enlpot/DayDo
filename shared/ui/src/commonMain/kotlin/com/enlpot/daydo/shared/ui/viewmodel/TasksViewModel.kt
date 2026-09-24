@@ -363,11 +363,13 @@ class TasksViewModel(
                     datastore.getIs24Hr(),
                     datastore.getTaskReorderPref(),
                     datastore.getHiddenSmartViewsFlow(),
-                ) { is24Hr, reorderTasks, hidden ->
+                    datastore.getHapticFeedbackPref(),
+                ) { is24Hr, reorderTasks, hidden, hapticFeedback ->
                         _state.update {
                             it.copy(
                                 is24Hour = is24Hr,
                                 reorderTasks = reorderTasks,
+                                hapticFeedback = hapticFeedback,
                                 hiddenSmartViews = hidden,
                             )
                         }

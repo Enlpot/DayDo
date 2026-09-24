@@ -47,6 +47,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.enlpot.daydo.core.tasks.Task
+import com.enlpot.daydo.shared.ui.HapticKind
+import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.core.toFormattedString
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.vectorResource
@@ -64,8 +66,10 @@ fun TaskCard(
     shape: Shape = RoundedCornerShape(4.dp),
     selectionMode: Boolean = false,
     selected: Boolean = false,
+    hapticFeedback: Boolean = true,
     onLongClick: (() -> Unit)? = null,
 ) {
+    val haptic = LocalHapticPerformer.current
     val cardContent by
         animateColorAsState(
             targetValue =
@@ -107,7 +111,12 @@ fun TaskCard(
             if (!dragState || selectionMode) {
                 Checkbox(
                     checked = if (selectionMode) selected else task.status,
-                    onCheckedChange = { onCheck() },
+                    onCheckedChange = {
+                        if (!selectionMode && hapticFeedback) {
+                            haptic(HapticKind.COMPLETE)
+                        }
+                        onCheck()
+                    },
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
             }

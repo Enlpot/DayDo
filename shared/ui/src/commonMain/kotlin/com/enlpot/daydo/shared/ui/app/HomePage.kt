@@ -358,6 +358,7 @@ private fun TodayTasksSection(
                     modifier = Modifier.fillMaxWidth().clip(cardShape),
                     selectionMode = multiSelect,
                     selected = task.id in selectedTaskIds,
+                    hapticFeedback = state.hapticFeedback,
                     onLongClick = { onToggleSelect(task) },
                     onCheck = {
                         if (multiSelect) onToggleSelect(task)
@@ -384,6 +385,7 @@ private fun TodayTasksSection(
                     modifier = Modifier.fillMaxWidth().clip(cardShape),
                     selectionMode = multiSelect,
                     selected = task.id in selectedTaskIds,
+                    hapticFeedback = state.hapticFeedback,
                     onLongClick = { onToggleSelect(task) },
                     onCheck = {
                         if (multiSelect) onToggleSelect(task)

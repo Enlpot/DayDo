@@ -73,6 +73,7 @@ fun RootPage(
     var showStartOfWeekDialog by rememberSaveable { mutableStateOf(false) }
     var show24HrDialog by rememberSaveable { mutableStateOf(false) }
     var showBiometricDialog by rememberSaveable { mutableStateOf(false) }
+    var showHapticsDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).fillMaxSize()) {
@@ -155,6 +156,23 @@ fun RootPage(
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
                                 .clickable { showStartOfWeekDialog = true },
+                    )
+
+                    ListItem(
+                        headlineContent = { Text(text = "触感反馈") },
+                        supportingContent = {
+                            Text(text = if (state.hapticFeedback) "开启" else "关闭")
+                        },
+                        trailingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = null,
+                            )
+                        },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable { showHapticsDialog = true },
                     )
 
                     if (state.isBiometricLockAvailable) {
@@ -253,6 +271,42 @@ fun RootPage(
             }
 
 
+        }
+
+        if (showHapticsDialog) {
+            GritBottomSheet(onDismissRequest = { showHapticsDialog = false }) {
+                Text(
+                    text = "触感反馈",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text(
+                    text = "完成任务震动、拖动排序震动",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    listOf(true to "开启", false to "关闭").forEach { (value, label) ->
+                        ListItem(
+                            headlineContent = { Text(text = label) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable {
+                                        onAction(SettingsAction.ChangeHapticFeedback(value))
+                                        showHapticsDialog = false
+                                    },
+                            trailingContent = {
+                                if (state.hapticFeedback == value) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
+            }
         }
 
         if (showSmartViewsDialog) {

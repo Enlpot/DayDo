@@ -57,4 +57,8 @@ interface SettingsDatastore {
     fun getCornerRadiusPref(): Flow<Int>
 
     suspend fun setCornerRadius(radius: Int)
+
+    fun getHapticFeedbackPref(): Flow<Boolean>
+
+    suspend fun setHapticFeedback(pref: Boolean)
 }

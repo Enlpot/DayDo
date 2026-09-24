@@ -35,7 +35,9 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.enlpot.daydo.core.interfaces.BiometricUtils
+import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
+import com.enlpot.daydo.shared.ui.performAndroidHaptic
 import com.enlpot.daydo.shared.ui.components.InitialLoading
 import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.viewmodel.MainViewModel
@@ -60,7 +62,10 @@ class MainActivity : FragmentActivity() {
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
 
-            CompositionLocalProvider(LocalWindowSizeClass provides windowSizeClass) {
+            CompositionLocalProvider(
+                LocalWindowSizeClass provides windowSizeClass,
+                LocalHapticPerformer provides { kind -> performAndroidHaptic(this@MainActivity, kind) },
+            ) {
                 val state by mainViewModel.state.collectAsStateWithLifecycle()
 
                 var showContent by remember { mutableStateOf(false) }

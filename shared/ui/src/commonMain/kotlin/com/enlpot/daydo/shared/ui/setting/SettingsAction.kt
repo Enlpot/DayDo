@@ -43,6 +43,8 @@ sealed interface SettingsAction {
 
     data class ChangeCornerRadius(val radius: Int) : SettingsAction
 
+    data class ChangeHapticFeedback(val pref: Boolean) : SettingsAction
+
     data class ChangeAppTheme(val appTheme: AppTheme) : SettingsAction
 
     data class ChangeFontPref(val font: Fonts) : SettingsAction

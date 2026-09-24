@@ -41,6 +41,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
@@ -60,12 +61,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.font.FontFamily
 import kotlin.math.roundToInt
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.theme.AppTheme
-import com.enlpot.daydo.core.theme.Fonts
 import com.enlpot.daydo.core.theme.PaletteStyle
 import com.enlpot.daydo.core.theme.Theme
 import com.enlpot.daydo.shared.ui.components.ColorPickerDialog
@@ -77,7 +76,6 @@ import com.enlpot.daydo.shared.ui.setting.SettingsState
 import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.toDisplayString
-import com.enlpot.daydo.shared.ui.toFontRes
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource
@@ -94,7 +92,6 @@ fun LookAndFeelPage(
     var colorPickerDialog by remember { mutableStateOf(false) }
     var showMaterialYouDialog by rememberSaveable { mutableStateOf(false) }
     var showAppThemeDialog by rememberSaveable { mutableStateOf(false) }
-    var showFontDialog by rememberSaveable { mutableStateOf(false) }
     var showAmoledDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -142,33 +139,11 @@ fun LookAndFeelPage(
                             supportingContent = { Text(text = "拖动调整卡片圆角") },
                             colors = listItemColors(),
                         )
-                        Row(
-                            modifier =
-                                Modifier.fillParentMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 52.dp, end = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Slider(
-                                value = sliderValue,
-                                onValueChange = { sliderValue = it },
-                                valueRange = 0f..40f,
-                                onValueChangeFinished = {
-                                    onAction(SettingsAction.ChangeCornerRadius(sliderValue.roundToInt()))
-                                },
-                                modifier = Modifier.weight(1f),
-                            )
-                            Text(
-                                text = "${sliderValue.roundToInt()}dp",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(start = 8.dp),
-                            )
-                        }
                         Box(
                             modifier =
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
-                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
                         ) {
                             Box(
                                 modifier =
@@ -184,6 +159,34 @@ fun LookAndFeelPage(
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 )
                             }
+                        }
+                        Row(
+                            modifier =
+                                Modifier.fillParentMaxWidth()
+                                    .background(listItemColors().containerColor)
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Slider(
+                                value = sliderValue,
+                                onValueChange = { sliderValue = it },
+                                valueRange = 0f..40f,
+                                onValueChangeFinished = {
+                                    onAction(SettingsAction.ChangeCornerRadius(sliderValue.roundToInt()))
+                                },
+                                colors =
+                                    SliderDefaults.colors(
+                                        thumbColor = MaterialTheme.colorScheme.primary,
+                                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    ),
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                text = "${sliderValue.roundToInt()}dp",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(start = 8.dp),
+                            )
                         }
                     }
 
@@ -262,42 +265,6 @@ fun LookAndFeelPage(
                         }
                     }
 
-                    // font picker
-                    Column(
-                        modifier =
-                            Modifier.clip(
-                                when {
-                                    state.theme.isMaterialYou && !isUserSubscribed ->
-                                        RoundedCornerShape(LocalCardCornerRadius.current.dp)
-
-                                    state.theme.isMaterialYou -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
-                                    isUserSubscribed -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
-                                    else -> RoundedCornerShape(LocalCardCornerRadius.current.dp)
-                                }
-                            )
-                    ) {
-                        ListItem(
-                            headlineContent = { Text(text = stringResource(Res.string.font)) },
-                            supportingContent = { Text(text = state.theme.font.toDisplayString()) },
-                            leadingContent = {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.font),
-                                    contentDescription = null,
-                                )
-                            },
-                            trailingContent = {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.arrow_forward),
-                                    contentDescription = null,
-                                )
-                            },
-                            colors = listItemColors(),
-                            modifier =
-                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                    .clickable { showFontDialog = true },
-                        )
-
-                    }
 
                     if (!state.theme.isMaterialYou) {
                         // amoled toggle
@@ -473,41 +440,6 @@ fun LookAndFeelPage(
         }
     }
 
-    if (showFontDialog) {
-        GritBottomSheet(onDismissRequest = { showFontDialog = false }) {
-            Text(
-                text = "字体",
-                style = MaterialTheme.typography.headlineSmall,
-            )
-            Text(
-                text = "选择界面字体",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Fonts.entries.forEach { font ->
-                    ListItem(
-                        headlineContent = { Text(text = font.toDisplayString()) },
-                        colors = listItemColors(),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable {
-                                    onAction(SettingsAction.ChangeFontPref(font))
-                                    showFontDialog = false
-                                },
-                        trailingContent = {
-                            if (state.theme.font == font) {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.check),
-                                    contentDescription = null,
-                                )
-                            }
-                        },
-                    )
-                }
-            }
-        }
-    }
     if (colorPickerDialog) {
         ColorPickerDialog(
             initialColor = Color(state.theme.seedColor),

@@ -86,7 +86,10 @@ import com.enlpot.daydo.core.tasks.CategoryColors
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.toFormattedString
+import com.enlpot.daydo.shared.ui.HapticKind
+import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
+import com.enlpot.daydo.shared.ui.PlatformBackHandler
 import com.enlpot.daydo.shared.ui.components.Empty
 import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.PageFill
@@ -118,6 +121,7 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
         var showTaskAddSheet by rememberSaveable { mutableStateOf(false) }
         var showCategoryAddSheet by rememberSaveable { mutableStateOf(false) }
         var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
+        var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
         var editState by rememberSaveable { mutableStateOf(false) }
         var editTask by remember { mutableStateOf<Task?>(null) }
         var multiSelect by rememberSaveable { mutableStateOf(false) }
@@ -127,6 +131,8 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
             multiSelect = false
             selectedTaskIds = emptySet()
         }
+
+        PlatformBackHandler(enabled = multiSelect) { exitMultiSelect() }
 
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -151,12 +157,7 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                 onSelectAll = {
                     selectedTaskIds = (state.displayTasks + state.displayCompletedTasks).map { it.id }.toSet()
                 },
-                onDeleteSelected = {
-                    (state.displayTasks + state.displayCompletedTasks)
-                        .filter { it.id in selectedTaskIds }
-                        .forEach { onAction(TaskAction.SoftDeleteTask(it)) }
-                    exitMultiSelect()
-                },
+                onDeleteSelected = { showDeleteConfirm = true },
                 onExitMultiSelect = ::exitMultiSelect,
             )
 
@@ -237,6 +238,19 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                 onConfirm = {
                     onAction(TaskAction.DeleteTasks)
                     showDeleteDialog = false
+                },
+            )
+        }
+
+        if (showDeleteConfirm) {
+            DeleteTasksDialog(
+                onDismiss = { showDeleteConfirm = false },
+                onConfirm = {
+                    (state.displayTasks + state.displayCompletedTasks)
+                        .filter { it.id in selectedTaskIds }
+                        .forEach { onAction(TaskAction.SoftDeleteTask(it)) }
+                    exitMultiSelect()
+                    showDeleteConfirm = false
                 },
             )
         }
@@ -463,6 +477,7 @@ private fun TaskItemsSection(
     onExitMultiSelect: () -> Unit,
 ) {
 
+        val haptic = LocalHapticPerformer.current
         val motionScheme = MaterialTheme.motionScheme
         AnimatedContent(
             targetState = state.currentView,
@@ -528,6 +543,11 @@ private fun TaskItemsSection(
                                         contentDescription = null,
                                         modifier =
                                             Modifier.draggableHandle(
+                                                onDragStarted = {
+                                                    if (state.hapticFeedback) {
+                                                        haptic(HapticKind.DRAG_START)
+                                                    }
+                                                },
                                                 onDragStopped = {
                                                     onAction(
                                                         TaskAction.ReorderTasks(
@@ -545,6 +565,7 @@ private fun TaskItemsSection(
                                 modifier = Modifier.fillMaxWidth().clip(cardShape),
                                 selectionMode = multiSelect,
                                 selected = task.id in selectedTaskIds,
+                                hapticFeedback = state.hapticFeedback,
                                 onLongClick = { onToggleSelect(task) },
                                 onCheck = {
                                     if (multiSelect) onToggleSelect(task)
@@ -578,6 +599,7 @@ private fun TaskItemsSection(
                                 modifier = Modifier.fillMaxWidth().clip(cardShape),
                                 selectionMode = multiSelect,
                                 selected = task.id in selectedTaskIds,
+                                hapticFeedback = state.hapticFeedback,
                                 onLongClick = { onToggleSelect(task) },
                                 onCheck = {
                                     if (multiSelect) onToggleSelect(task)

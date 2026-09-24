@@ -210,7 +210,11 @@ class SettingsViewModel(
                         mapOf("setting" to "ChangeCornerRadius", "value" to action.radius),
                     )
                     settingsDatastore.setCornerRadius(action.radius)
-                }                is ChangeReorderTasks -> {
+                }
+                is ChangeHapticFeedback -> {
+                    settingsDatastore.setHapticFeedback(action.pref)
+                }
+                is ChangeReorderTasks -> {
                     analytics.trackEvent(
                         AnalyticsWrapper.Companion.AnalyticsEvent.SETTINGS_UPDATED.name,
                         mapOf("setting" to "ChangeReorderTasks", "value" to action.pref),
@@ -347,6 +351,11 @@ class SettingsViewModel(
                 settingsDatastore
                     .getHiddenSmartViewsFlow()
                     .onEach { flow -> _state.update { it.copy(hiddenSmartViews = flow) } }
+                    .launchIn(this)
+
+                settingsDatastore
+                    .getHapticFeedbackPref()
+                    .onEach { flow -> _state.update { it.copy(hapticFeedback = flow) } }
                     .launchIn(this)
 
                 settingsDatastore

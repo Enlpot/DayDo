@@ -43,6 +43,7 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val compactHabitView = booleanPreferencesKey("compact_habit_view")
         private val hiddenSmartViewsKey = stringPreferencesKey("hidden_smart_views")
         private val cornerRadiusKey = intPreferencesKey("corner_radius")
+        private val hapticFeedbackKey = booleanPreferencesKey("haptic_feedback")
     }
 
     override fun getStartOfTheWeekPref(): Flow<DayOfWeek> =
@@ -117,5 +118,12 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override suspend fun setCornerRadius(radius: Int) {
         datastore.edit { prefs -> prefs[cornerRadiusKey] = radius }
+    }
+
+    override fun getHapticFeedbackPref(): Flow<Boolean> =
+        datastore.data.map { prefs -> prefs[hapticFeedbackKey] ?: true }
+
+    override suspend fun setHapticFeedback(pref: Boolean) {
+        datastore.edit { prefs -> prefs[hapticFeedbackKey] = pref }
     }
 }

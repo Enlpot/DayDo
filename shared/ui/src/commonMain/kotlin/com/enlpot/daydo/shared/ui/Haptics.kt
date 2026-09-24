@@ -14,22 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.enlpot.daydo.shared.ui.app
+package com.enlpot.daydo.shared.ui
 
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
-import com.enlpot.daydo.core.settings.Sections
-import com.enlpot.daydo.core.theme.Theme
+import androidx.compose.runtime.staticCompositionLocalOf
 
-@Stable
-@Immutable
-data class MainAppState(
-    val isAppUnlocked: Boolean = false,
-    val isBiometricLockOn: Boolean? = null,
-    val isUserSubscribed: Boolean = false,
-    val startingSection: Sections = Sections.Tasks,
-    val cornerRadius: Int = 20,
-    val hapticFeedback: Boolean = true,
-    val theme: Theme = Theme(),
-    val isFoss: Boolean = false,
-)
+/** Haptic feedback kinds used across the app. */
+enum class HapticKind {
+    /** Task completed: short vibration + click sound */
+    COMPLETE,
+
+    /** Drag (reorder) started */
+    DRAG_START,
+}
+
+/**
+ * Platform haptic performer. Provided by the Android entry (MainActivity);
+ * defaults to a no-op on non-Android targets.
+ */
+val LocalHapticPerformer = staticCompositionLocalOf<(HapticKind) -> Unit> { {} }

@@ -44,6 +44,7 @@ data class SettingsState(
     val isBiometricLockAvailable: Boolean = false,
     val hiddenSmartViews: Set<SmartCategory> = emptySet(),
     val cornerRadius: Int = 20,
+    val hapticFeedback: Boolean = true,
 )
 
 @Stable

@@ -42,4 +42,5 @@ data class TaskState(
     val hiddenSmartViews: Set<SmartCategory> = emptySet(),
     val is24Hour: Boolean = false,
     val reorderTasks: Boolean = true,
+    val hapticFeedback: Boolean = true,
 )
