@@ -67,12 +67,13 @@ import org.jetbrains.compose.resources.stringResource
 fun HabitHeatMap(
     heatMapState: HeatMapCalendarState,
     heatMapData: Map<LocalDate, Int>,
-    totalHabits: Int,
     onNavigateToCalendarHeatMap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
     val today = LocalDate.now()
+    // 归一化基准取历史峰值：加/删习惯不会重排历史颜色；totalHabits=0 时也不会除零
+    val maxHeatCount = heatMapData.values.maxOrNull() ?: 1
 
     AnalyticsCard(
         title = stringResource(Res.string.habit_map),
@@ -167,7 +168,7 @@ fun HabitHeatMap(
                                                 else ->
                                                     MaterialTheme.colorScheme.primary.copy(
                                                         alpha =
-                                                            (count.toFloat() / totalHabits)
+                                                            (count.toFloat() / maxHeatCount)
                                                                 .coerceIn(0f, 1f)
                                                     )
                                             },
@@ -198,7 +199,6 @@ private fun Preview() {
             (0..100).associate {
                 LocalDate.now().minus(it, DateTimeUnit.DAY) to Random.nextInt(0, 11)
             },
-        totalHabits = 10,
         onNavigateToCalendarHeatMap = {},
     )
 }

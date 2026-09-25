@@ -204,7 +204,6 @@ fun OverallAnalytics(
                     heatMapState = heatMapState,
                     heatMapData = state.overallAnalytics.heatMapData,
                     modifier = Modifier.widthIn(max = maxWidth),
-                    totalHabits = state.habitsWithAnalytics.size,
                     onNavigateToCalendarHeatMap = onNavigateToCalendarHeatMap,
                 )
             }

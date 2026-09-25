@@ -17,7 +17,10 @@
 package com.enlpot.daydo.core.data.webdav
 
 import android.util.Base64
-import com.enlpot.daydo.core.data.backup.ExportSchema
+import com.enlpot.daydo.core.data.backup.CategorySchema
+import com.enlpot.daydo.core.data.backup.HabitSchema
+import com.enlpot.daydo.core.data.backup.HabitStatusSchema
+import com.enlpot.daydo.core.data.backup.TaskSchema
 import com.enlpot.daydo.core.data.backup.toCategorySchema
 import com.enlpot.daydo.core.data.backup.toHabitSchema
 import com.enlpot.daydo.core.data.backup.toHabitStatusSchema
@@ -29,11 +32,16 @@ import com.enlpot.daydo.core.settings.webdav.WebDavRepo
 import com.enlpot.daydo.core.settings.webdav.WebDavResult
 import com.enlpot.daydo.core.tasks.TaskRepo
 import com.enlpot.daydo.habits.data.database.HabitDatabase
+import com.enlpot.daydo.habits.data.database.HabitStatusDao
+import com.enlpot.daydo.habits.data.toHabitStatus
 import com.enlpot.daydo.tasks.data.database.TaskDatabase
+import com.enlpot.daydo.tasks.data.database.TasksDao
+import com.enlpot.daydo.tasks.data.toTask
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
@@ -42,7 +50,13 @@ class WebDavImpl(
     private val taskRepo: TaskRepo,
     private val habitsRepo: HabitRepo,
     private val restoreRepo: RestoreRepo,
+    private val taskDao: TasksDao,
+    private val habitStatusDao: HabitStatusDao,
 ) : WebDavRepo {
+    private companion object {
+        // 与本地导出一致：分页加载，避免数十万条记录全量驻留内存
+        const val PAGE_SIZE = 2_000
+    }
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun upload(
@@ -59,16 +73,54 @@ class WebDavImpl(
                 return@withContext WebDavResult.Failure("连接失败：${e.message}")
             }
         try {
-            val schema =
-                ExportSchema(
-                    tasksSchemaVersion = TaskDatabase.SCHEMA_VERSION,
-                    habitsSchemaVersion = HabitDatabase.SCHEMA_VERSION,
-                    habits = habitsRepo.getHabits().map { it.toHabitSchema() },
-                    habitStatus = habitsRepo.getHabitStatuses().map { it.toHabitStatusSchema() },
-                    tasks = taskRepo.getTasksIncludingDeleted().map { it.toTaskSchema() },
-                    categories = taskRepo.getCategories().map { it.toCategorySchema() },
-                )
-            val body = json.encodeToString(schema)
+            // 流式拼接导出 JSON（与本地导出 ExportImpl 一致），分页读取避免全量驻留内存
+            val body =
+                buildString {
+                    append("{\"tasksSchemaVersion\":").append(TaskDatabase.SCHEMA_VERSION)
+                        .append(",\"habitsSchemaVersion\":").append(HabitDatabase.SCHEMA_VERSION)
+                    append(",\"habits\":[")
+                    habitsRepo.getHabits().forEachIndexed { index, habit ->
+                        if (index > 0) append(',')
+                        append(Json.encodeToString(HabitSchema.serializer(), habit.toHabitSchema()))
+                    }
+                    append("],\"habitStatus\":[")
+                    var first = true
+                    var offset = 0
+                    while (true) {
+                        val page = habitStatusDao.getStatusPage(offset, PAGE_SIZE)
+                        if (page.isEmpty()) break
+                        page.forEach { status ->
+                            if (!first) append(',')
+                            first = false
+                            append(
+                                Json.encodeToString(
+                                    HabitStatusSchema.serializer(),
+                                    status.toHabitStatus().toHabitStatusSchema(),
+                                )
+                            )
+                        }
+                        offset += page.size
+                    }
+                    append("],\"tasks\":[")
+                    first = true
+                    offset = 0
+                    while (true) {
+                        val page = taskDao.getTasksPage(offset, PAGE_SIZE)
+                        if (page.isEmpty()) break
+                        page.forEach { task ->
+                            if (!first) append(',')
+                            first = false
+                            append(Json.encodeToString(TaskSchema.serializer(), task.toTask().toTaskSchema()))
+                        }
+                        offset += page.size
+                    }
+                    append("],\"categories\":[")
+                    taskRepo.getCategories().forEachIndexed { index, category ->
+                        if (index > 0) append(',')
+                        append(Json.encodeToString(CategorySchema.serializer(), category.toCategorySchema()))
+                    }
+                    append("]}")
+                }
 
             conn.doOutput = true
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")

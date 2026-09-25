@@ -192,5 +192,10 @@ fun calculateConsistency(
         current = current.plus(1, DateTimeUnit.DAY)
     }
 
-    return if (totalEligibleDays > 0) eligibleDates.size.toFloat() / totalEligibleDays else 0f
+    // 钳制到 0..1：边界/时区场景下打卡数不会超过分母（防御性，避免百分比 >100%）
+    return if (totalEligibleDays > 0) {
+        (eligibleDates.size.toFloat() / totalEligibleDays).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
 }
