@@ -272,14 +272,15 @@ private fun ExpandedScreen(
             ) {
                 val backstack = rememberNavBackStack(config, HabitRoutes.HabitAnalytics)
 
+                // 去重后再入栈：analyticsHabitId 变化时避免返回栈无限增长
                 LaunchedEffect(state.analyticsHabitId) {
-                    backstack.add(
+                    val target =
                         if (state.analyticsHabitId != null) {
                             HabitRoutes.HabitAnalytics
                         } else {
                             HabitRoutes.OverallAnalytics
                         }
-                    )
+                    if (backstack.lastOrNull() != target) backstack.add(target)
                 }
 
                 NavDisplay(

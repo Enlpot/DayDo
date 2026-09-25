@@ -44,6 +44,8 @@ import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.vectorResource
 
@@ -195,11 +197,17 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
             }
         }
 
+        // 数据首日对齐到周表头（周一..周日）：首日若为周三则前面补 2 个空位
+        val firstDate = stats.calendar.firstOrNull()?.date ?: today
+        val leadingOffset = firstDate.dayOfWeek.isoDayNumber - 1
+
         for (row in 0 until 5) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 for (col in 0 until 7) {
-                    val index = row * 7 + col
-                    val day = stats.calendar.getOrNull(index)
+                    val index = row * 7 + col - leadingOffset
+                    val day =
+                        if (index in stats.calendar.indices) stats.calendar.getOrNull(index)
+                        else null
                     val isToday = day?.date == today
                     Box(
                         modifier =

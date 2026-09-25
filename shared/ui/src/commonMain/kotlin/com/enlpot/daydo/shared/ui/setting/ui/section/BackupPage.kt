@@ -38,6 +38,7 @@ import androidx.compose.material3.MediumFlexibleTopAppBar
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.settings.backup.ExportState
 import com.enlpot.daydo.core.settings.backup.RestoreState
 import com.enlpot.daydo.core.settings.webdav.WebDavState
+import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
@@ -76,6 +78,12 @@ fun BackupPage(
     var server by remember { mutableStateOf(state.webdavServer) }
     var username by remember { mutableStateOf(state.webdavUsername) }
     var password by remember { mutableStateOf(state.webdavPassword) }
+    var showDownloadConfirm by remember { mutableStateOf(false) }
+
+    // flow 异步发射前输入框为空：仅在用户未输入时回填已存配置，避免覆盖用户输入
+    LaunchedEffect(state.webdavServer) { if (server.isEmpty()) server = state.webdavServer }
+    LaunchedEffect(state.webdavUsername) { if (username.isEmpty()) username = state.webdavUsername }
+    LaunchedEffect(state.webdavPassword) { if (password.isEmpty()) password = state.webdavPassword }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(
@@ -315,7 +323,7 @@ fun BackupPage(
                             },
                             trailingContent = {
                                 OutlinedButton(
-                                    onClick = { onAction(SettingsAction.WebDavDownload) },
+                                    onClick = { showDownloadConfirm = true },
                                     enabled = state.webdavDownloadState != WebDavState.WORKING,
                                 ) {
                                     if (state.webdavDownloadState == WebDavState.WORKING) {
@@ -326,6 +334,39 @@ fun BackupPage(
                                 }
                             },
                         )
+                    }
+
+                    // 下载恢复二次确认：将覆盖本地全部数据
+                    if (showDownloadConfirm) {
+                        GritDialog(onDismissRequest = { showDownloadConfirm = false }) {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.warning),
+                                contentDescription = null,
+                            )
+                            Text(
+                                text = "下载恢复",
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                text = "将从 WebDAV 下载云端备份并覆盖本地全部数据，确定继续？",
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                            ) {
+                                TextButton(onClick = { showDownloadConfirm = false }) {
+                                    Text(text = "取消")
+                                }
+                                TextButton(
+                                    onClick = {
+                                        showDownloadConfirm = false
+                                        onAction(SettingsAction.WebDavDownload)
+                                    },
+                                ) {
+                                    Text(text = "确定")
+                                }
+                            }
+                        }
                     }
                 }
             }

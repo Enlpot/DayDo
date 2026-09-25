@@ -16,14 +16,13 @@
  */
 package com.enlpot.daydo.core.data.backup
 
-import com.enlpot.daydo.habits.data.database.HabitDatabase
-import com.enlpot.daydo.tasks.data.database.TaskDatabase
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class ExportSchema(
-    val tasksSchemaVersion: Int = TaskDatabase.SCHEMA_VERSION,
-    val habitsSchemaVersion: Int = HabitDatabase.SCHEMA_VERSION,
+    // 必填：缺字段的旧备份会校验失败，而不是被静默当作当前版本
+    val tasksSchemaVersion: Int,
+    val habitsSchemaVersion: Int,
     val habits: List<HabitSchema>,
     val habitStatus: List<HabitStatusSchema>,
     val tasks: List<TaskSchema>,

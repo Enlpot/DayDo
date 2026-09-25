@@ -169,9 +169,15 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
     }
 
     override fun getWebDavPassword(): Flow<String> =
-        datastore.data.map { prefs -> prefs[webDavPasswordKey] ?: "" }
+        datastore.data.map { prefs ->
+            val stored = prefs[webDavPasswordKey] ?: ""
+            // 兼容旧明文：无法解密时原样返回，下次保存自动加密迁移
+            WebDavCipher.decrypt(stored) ?: stored
+        }
 
     override suspend fun setWebDavPassword(password: String) {
-        datastore.edit { prefs -> prefs[webDavPasswordKey] = password }
+        datastore.edit { prefs ->
+            prefs[webDavPasswordKey] = WebDavCipher.encrypt(password) ?: password
+        }
     }
 }

@@ -25,6 +25,8 @@ import com.enlpot.daydo.core.habits.HabitRepo
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.settings.backup.ExportRepo
 import com.enlpot.daydo.core.tasks.TaskRepo
+import com.enlpot.daydo.habits.data.database.HabitDatabase
+import com.enlpot.daydo.tasks.data.database.TaskDatabase
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.openFileSaver
 import io.github.vinceglb.filekit.writeString
@@ -87,6 +89,8 @@ class ExportImpl(private val taskRepo: TaskRepo, private val habitsRepo: HabitRe
             file.writeString(
                 Json.encodeToString(
                     ExportSchema(
+                        tasksSchemaVersion = TaskDatabase.SCHEMA_VERSION,
+                        habitsSchemaVersion = HabitDatabase.SCHEMA_VERSION,
                         habits = habitsDef,
                         habitStatus = statusesDef,
                         tasks = tasksDef,

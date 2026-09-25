@@ -125,7 +125,8 @@ fun TaskUpsertSheetContent(
     modifier: Modifier = Modifier,
     onOpenStats: (() -> Unit)? = null,
 ) {
-    var newTask by remember { mutableStateOf(task) }
+    // rememberSaveable：旋转屏幕/进程恢复不丢失已填内容（Task 可序列化）
+    var newTask by rememberSaveable(stateSaver = genericSaver<Task>()) { mutableStateOf(task) }
 
     var showReminderPicker by rememberSaveable { mutableStateOf(false) }
     var showRecurrencePicker by rememberSaveable { mutableStateOf(false) }

@@ -28,6 +28,8 @@ import com.enlpot.daydo.core.settings.backup.RestoreResult
 import com.enlpot.daydo.core.settings.webdav.WebDavRepo
 import com.enlpot.daydo.core.settings.webdav.WebDavResult
 import com.enlpot.daydo.core.tasks.TaskRepo
+import com.enlpot.daydo.habits.data.database.HabitDatabase
+import com.enlpot.daydo.tasks.data.database.TaskDatabase
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +53,8 @@ class WebDavImpl(
         try {
             val schema =
                 ExportSchema(
+                    tasksSchemaVersion = TaskDatabase.SCHEMA_VERSION,
+                    habitsSchemaVersion = HabitDatabase.SCHEMA_VERSION,
                     habits = habitsRepo.getHabits().map { it.toHabitSchema() },
                     habitStatus = habitsRepo.getHabitStatuses().map { it.toHabitStatusSchema() },
                     tasks = taskRepo.getTasks().map { it.toTaskSchema() },

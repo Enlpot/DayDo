@@ -110,7 +110,8 @@ private fun CategoryEditDialog(
     onDismissRequest: () -> Unit,
 ) {
     GritDialog(onDismissRequest = onDismissRequest, padding = 0.dp) {
-        var categories by remember(state.tasks) { mutableStateOf(state.tasks.keys.toList()) }
+        // 只初始化一次：拖动排序时 DB 回流不再重置列表，避免打断拖动
+        var categories by remember { mutableStateOf(state.tasks.keys.toList()) }
 
         val listState = rememberLazyListState()
         val reorderableListState =
