@@ -34,12 +34,15 @@ import com.enlpot.daydo.habits.data.toHabitStatusEntity
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -60,22 +63,28 @@ class HabitRepository(
     private val notificationManager: GritNotificationManager,
 ) : HabitRepo {
 
+    // 共享作用域：shareIn 冷启动后无订阅 5 秒自动停止，避免后台空转
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     private val habits =
         habitDao
             .getAllHabitsFlow()
             .map { habits -> habits.map { it.toHabit() }.sortedBy { it.index } }
             .flowOn(Dispatchers.IO)
+            // 多界面共享同一数据流：首页+习惯页同时显示时，DB 查询只执行一次
+            .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
 
     private val habitStatuses =
         habitStatusDao
             .getAllHabitStatuses()
             .map { habitStatuses -> habitStatuses.map { it.toHabitStatus() } }
             .flowOn(Dispatchers.IO)
+            .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
 
     private val firstDayOfWeek = MutableStateFlow(DayOfWeek.MONDAY)
 
     init {
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             datastore.getStartOfTheWeekPref().onEach { firstDayOfWeek.update { it } }.launchIn(this)
         }
     }
@@ -132,6 +141,8 @@ class HabitRepository(
                 }
             }
             .flowOn(Dispatchers.Default)
+            // 统计结果同样共享：多个界面订阅同一分析流时只算一遍
+            .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
     }
 
     override fun getCompletedHabitIds(): Flow<List<Long>> {

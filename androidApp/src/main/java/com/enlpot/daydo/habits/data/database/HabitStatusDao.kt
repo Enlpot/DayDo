@@ -32,6 +32,10 @@ interface HabitStatusDao {
 
     @Query("SELECT * FROM habit_status") fun getAllHabitStatuses(): Flow<List<HabitStatusEntity>>
 
+    // 导出分页用（打卡记录是大表）
+    @Query("SELECT * FROM habit_status ORDER BY id LIMIT :limit OFFSET :offset")
+    suspend fun getStatusPage(offset: Int, limit: Int): List<HabitStatusEntity>
+
     // IGNORE：同一天重复打卡直接忽略（保留最早记录），配合 (habitId,date) 唯一索引幂等
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertHabitStatus(habitStatusEntity: HabitStatusEntity)

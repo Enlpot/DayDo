@@ -34,6 +34,10 @@ interface TasksDao {
     @Query("SELECT * FROM task")
     suspend fun getAllTasksIncludingDeleted(): List<TaskEntity>
 
+    // 导出分页用：含软删全量，按主键顺序稳定翻页
+    @Query("SELECT * FROM task ORDER BY id LIMIT :limit OFFSET :offset")
+    suspend fun getTasksPage(offset: Int, limit: Int): List<TaskEntity>
+
     @Query("SELECT * FROM task WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
     fun getDeletedTasksFlow(): Flow<List<TaskEntity>>
 

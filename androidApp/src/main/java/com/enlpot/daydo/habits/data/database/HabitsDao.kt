@@ -28,6 +28,10 @@ interface HabitsDao {
 
     @Query("SELECT * FROM habit_index") suspend fun getAllHabits(): List<HabitEntity>
 
+    // 导出分页用
+    @Query("SELECT * FROM habit_index ORDER BY id LIMIT :limit OFFSET :offset")
+    suspend fun getHabitsPage(offset: Int, limit: Int): List<HabitEntity>
+
     @Query("SELECT * FROM habit_index") fun getAllHabitsFlow(): Flow<List<HabitEntity>>
 
     @Upsert suspend fun upsertHabit(habitEntity: HabitEntity): Long

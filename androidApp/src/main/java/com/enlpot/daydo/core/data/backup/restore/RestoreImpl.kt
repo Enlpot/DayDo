@@ -22,24 +22,24 @@ import com.enlpot.daydo.core.data.backup.toCategory
 import com.enlpot.daydo.core.data.backup.toHabit
 import com.enlpot.daydo.core.data.backup.toHabitStatus
 import com.enlpot.daydo.core.data.backup.toTask
-import com.enlpot.daydo.core.habits.HabitRepo
 import com.enlpot.daydo.core.interfaces.AlarmScheduler
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.settings.backup.RestoreFailedException
 import com.enlpot.daydo.core.settings.backup.RestoreRepo
 import com.enlpot.daydo.core.settings.backup.RestoreResult
 import com.enlpot.daydo.core.settings.backup.SchemaMismatchException
-import com.enlpot.daydo.core.tasks.TaskRepo
 import com.enlpot.daydo.habits.data.database.HabitDatabase
+import com.enlpot.daydo.habits.data.toHabitEntity
+import com.enlpot.daydo.habits.data.toHabitStatusEntity
 import com.enlpot.daydo.tasks.data.database.TaskDatabase
+import com.enlpot.daydo.tasks.data.toCategoryEntity
+import com.enlpot.daydo.tasks.data.toTaskEntity
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
 import io.github.vinceglb.filekit.readString
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerializationException
@@ -48,9 +48,9 @@ import org.koin.core.annotation.Single
 
 @Single(binds = [RestoreRepo::class])
 class RestoreImpl(
-    private val taskRepo: TaskRepo,
-    private val habitRepo: HabitRepo,
     private val alarmScheduler: AlarmScheduler,
+    private val taskDatabase: TaskDatabase,
+    private val habitDatabase: HabitDatabase,
 ) : RestoreRepo {
     override suspend fun restoreData(): RestoreResult {
         return try {
@@ -83,41 +83,35 @@ class RestoreImpl(
             }
 
             withContext(Dispatchers.IO) {
-                awaitAll(
-                    async {
-                        habitRepo.getHabits().forEach { alarmScheduler.cancel(it) }
-                        alarmScheduler.cancelAll()
+                // 先取消全部旧闹钟，再清空重建（清库不会自动清 AlarmManager 里已调度的提醒）
+                alarmScheduler.cancelAll()
 
-                        jsonDeserialized.habits
-                            .map { it.toHabit() }
-                            .forEach {
-                                habitRepo.upsertHabit(it)
-                                alarmScheduler.schedule(it)
-                            }
+                val habits = jsonDeserialized.habits.map { it.toHabit() }
+                val statuses = jsonDeserialized.habitStatus.map { it.toHabitStatus() }
+                val categories = jsonDeserialized.categories.map { it.toCategory() }
+                val tasks = jsonDeserialized.tasks.map { it.toTask() }
 
-                        jsonDeserialized.habitStatus
-                            .map { it.toHabitStatus() }
-                            .forEach { habitRepo.insertHabitStatus(it) }
-                    },
-                    async {
-                        jsonDeserialized.categories
-                            .map { it.toCategory() }
-                            .forEach { taskRepo.upsertCategory(it) }
-
-                        jsonDeserialized.tasks
-                            .map { it.toTask() }
-                            .forEach {
-                                taskRepo.upsertTask(it)
-                                // 恢复备份后需重建提醒：仅未完成且提醒时间未过的任务补调度
-                                if (!it.status) {
-                                    val reminder = it.reminder
-                                    if (reminder != null && reminder >= LocalDateTime.now()) {
-                                        alarmScheduler.schedule(it)
-                                    }
-                                }
-                            }
-                    },
+                // 恢复 = 回到备份状态：清空本地旧数据 + 写入备份内容，
+                // 各自库内 @Transaction 完成（中途失败自动回滚，不会"清空后崩溃丢数据"）
+                habitDatabase.replaceAll(
+                    habits.map { it.toHabitEntity() },
+                    statuses.map { it.toHabitStatusEntity() },
                 )
+                taskDatabase.replaceAll(
+                    tasks.map { it.toTaskEntity() },
+                    categories.map { it.toCategoryEntity() },
+                )
+
+                // 重建提醒调度：习惯全部调度；任务仅未完成且提醒时间未过的补调度
+                habits.forEach { alarmScheduler.schedule(it) }
+                tasks
+                    .filter { !it.status }
+                    .forEach { task ->
+                        val reminder = task.reminder
+                        if (reminder != null && reminder >= LocalDateTime.now()) {
+                            alarmScheduler.schedule(task)
+                        }
+                    }
             }
 
             RestoreResult.Success

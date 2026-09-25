@@ -20,6 +20,7 @@ import androidx.room3.AutoMigration
 import androidx.room3.ColumnTypeConverters
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
+import androidx.room3.Transaction
 import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
@@ -36,6 +37,15 @@ abstract class HabitDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitsDao
 
     abstract fun habitStatusDao(): HabitStatusDao
+
+    /** 恢复备份用：清空+写入在单个事务内完成，中途失败自动回滚，不会出现"清空后崩溃丢数据" */
+    @Transaction
+    open suspend fun replaceAll(habits: List<HabitEntity>, statuses: List<HabitStatusEntity>) {
+        habitDao().deleteAllHabits()
+        habitStatusDao().deleteAllHabitStatus()
+        habits.forEach { habitDao().upsertHabit(it) }
+        statuses.forEach { habitStatusDao().insertHabitStatus(it) }
+    }
 
     companion object {
         const val SCHEMA_VERSION = 7

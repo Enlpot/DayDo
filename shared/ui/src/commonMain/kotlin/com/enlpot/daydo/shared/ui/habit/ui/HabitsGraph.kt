@@ -295,7 +295,7 @@ private fun ExpandedScreen(
             ) {
                 val backstack = rememberNavBackStack(config, HabitRoutes.HabitAnalytics)
 
-                // 去重后再入栈：analyticsHabitId 变化时避免返回栈无限增长
+                // 目标页已在栈中（任意位置）时弹到它：只去重栈顶会导致"分析↔总览"交替切换时返回栈无限增长
                 LaunchedEffect(state.analyticsHabitId) {
                     val target =
                         if (state.analyticsHabitId != null) {
@@ -303,7 +303,14 @@ private fun ExpandedScreen(
                         } else {
                             HabitRoutes.OverallAnalytics
                         }
-                    if (backstack.lastOrNull() != target) backstack.add(target)
+                    val existingIndex = backstack.indexOfLast { it == target }
+                    if (existingIndex >= 0) {
+                        while (backstack.size > existingIndex + 1) {
+                            backstack.removeLastOrNull()
+                        }
+                    } else {
+                        backstack.add(target)
+                    }
                 }
 
                 NavDisplay(
