@@ -120,37 +120,30 @@ fun BackupPage(
                             supportingContent = {
                                 Text(text = stringResource(Res.string.export_desc))
                             },
-                        )
+                            trailingContent = {
+                                Button(
+                                    onClick = { onAction(SettingsAction.OnExport) },
+                                    enabled = state.backupState.exportState == ExportState.IDLE,
+                                ) {
+                                    when (state.backupState.exportState) {
+                                        IDLE ->
+                                            Icon(
+                                                painter = painterResource(Res.drawable.play_arrow),
+                                                contentDescription = "Start",
+                                            )
 
-                        Row(
-                            modifier =
-                                Modifier.fillParentMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                            horizontalArrangement = Arrangement.End,
-                        ) {
-                            Button(
-                                onClick = { onAction(SettingsAction.OnExport) },
-                                enabled = state.backupState.exportState == ExportState.IDLE,
-                            ) {
-                                when (state.backupState.exportState) {
-                                    IDLE ->
-                                        Icon(
-                                            painter = painterResource(Res.drawable.play_arrow),
-                                            contentDescription = "Start",
-                                        )
+                                        EXPORTING ->
+                                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
 
-                                    EXPORTING ->
-                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-
-                                    EXPORTED ->
-                                        Icon(
-                                            imageVector = vectorResource(Res.drawable.check_circle),
-                                            contentDescription = "Done",
-                                        )
+                                        EXPORTED ->
+                                            Icon(
+                                                imageVector = vectorResource(Res.drawable.check_circle),
+                                                contentDescription = "Done",
+                                            )
+                                    }
                                 }
-                            }
-                        }
+                            },
+                        )
                     }
 
                     Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
@@ -166,45 +159,38 @@ fun BackupPage(
                             supportingContent = {
                                 Text(text = stringResource(Res.string.restore_desc))
                             },
-                        )
+                            trailingContent = {
+                                Button(
+                                    onClick = { onAction(SettingsAction.OnRestore) },
+                                    enabled =
+                                        state.backupState.restoreState == RestoreState.IDLE ||
+                                            state.backupState.restoreState == RestoreState.FAILURE,
+                                ) {
+                                    when (state.backupState.restoreState) {
+                                        IDLE ->
+                                            Icon(
+                                                painter = painterResource(Res.drawable.play_arrow),
+                                                contentDescription = "Start",
+                                            )
 
-                        Row(
-                            modifier =
-                                Modifier.fillParentMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                            horizontalArrangement = Arrangement.End,
-                        ) {
-                            Button(
-                                onClick = { onAction(SettingsAction.OnRestore) },
-                                enabled =
-                                    state.backupState.restoreState == RestoreState.IDLE ||
-                                        state.backupState.restoreState == RestoreState.FAILURE,
-                            ) {
-                                when (state.backupState.restoreState) {
-                                    IDLE ->
-                                        Icon(
-                                            painter = painterResource(Res.drawable.play_arrow),
-                                            contentDescription = "Start",
-                                        )
+                                        RESTORING ->
+                                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
 
-                                    RESTORING ->
-                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                        RESTORED ->
+                                            Icon(
+                                                imageVector = vectorResource(Res.drawable.check_circle),
+                                                contentDescription = "Done",
+                                            )
 
-                                    RESTORED ->
-                                        Icon(
-                                            imageVector = vectorResource(Res.drawable.check_circle),
-                                            contentDescription = "Done",
-                                        )
-
-                                    FAILURE ->
-                                        Icon(
-                                            imageVector = vectorResource(Res.drawable.warning),
-                                            contentDescription = "Fail",
-                                        )
+                                        FAILURE ->
+                                            Icon(
+                                                imageVector = vectorResource(Res.drawable.warning),
+                                                contentDescription = "Fail",
+                                            )
+                                    }
                                 }
-                            }
-                        }
+                            },
+                        )
                     }
                 }
             }
@@ -298,26 +284,19 @@ fun BackupPage(
                                         }
                                 )
                             },
-                        )
-
-                        Row(
-                            modifier =
-                                Modifier.fillParentMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                            horizontalArrangement = Arrangement.End,
-                        ) {
-                            Button(
-                                onClick = { onAction(SettingsAction.WebDavUpload) },
-                                enabled = state.webdavUploadState != WebDavState.WORKING,
-                            ) {
-                                if (state.webdavUploadState == WebDavState.WORKING) {
-                                    CircularProgressIndicator(modifier = Modifier.size(22.dp))
-                                } else {
-                                    Text(text = "上传备份")
+                            trailingContent = {
+                                Button(
+                                    onClick = { onAction(SettingsAction.WebDavUpload) },
+                                    enabled = state.webdavUploadState != WebDavState.WORKING,
+                                ) {
+                                    if (state.webdavUploadState == WebDavState.WORKING) {
+                                        CircularProgressIndicator(modifier = Modifier.size(22.dp))
+                                    } else {
+                                        Text(text = "上传备份")
+                                    }
                                 }
-                            }
-                        }
+                            },
+                        )
                     }
 
                     Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
@@ -334,26 +313,19 @@ fun BackupPage(
                                         }
                                 )
                             },
-                        )
-
-                        Row(
-                            modifier =
-                                Modifier.fillParentMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                            horizontalArrangement = Arrangement.End,
-                        ) {
-                            OutlinedButton(
-                                onClick = { onAction(SettingsAction.WebDavDownload) },
-                                enabled = state.webdavDownloadState != WebDavState.WORKING,
-                            ) {
-                                if (state.webdavDownloadState == WebDavState.WORKING) {
-                                    CircularProgressIndicator(modifier = Modifier.size(22.dp))
-                                } else {
-                                    Text(text = "下载恢复")
+                            trailingContent = {
+                                OutlinedButton(
+                                    onClick = { onAction(SettingsAction.WebDavDownload) },
+                                    enabled = state.webdavDownloadState != WebDavState.WORKING,
+                                ) {
+                                    if (state.webdavDownloadState == WebDavState.WORKING) {
+                                        CircularProgressIndicator(modifier = Modifier.size(22.dp))
+                                    } else {
+                                        Text(text = "下载恢复")
+                                    }
                                 }
-                            }
-                        }
+                            },
+                        )
                     }
                 }
             }
