@@ -213,14 +213,27 @@ class SettingsViewModel(
                         it.copy(backupState = it.backupState.copy(exportState = EXPORTING))
                     }
 
-                    exportRepo.exportToJson()
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.BACKUP_CREATED.name,
-                        mapOf("status" to "success"),
-                    )
-
-                    _state.update {
-                        it.copy(backupState = it.backupState.copy(exportState = EXPORTED))
+                    try {
+                        val exported = exportRepo.exportToJson()
+                        if (exported) {
+                            analytics.trackEvent(
+                                AnalyticsWrapper.Companion.AnalyticsEvent.BACKUP_CREATED.name,
+                                mapOf("status" to "success"),
+                            )
+                            _state.update {
+                                it.copy(backupState = it.backupState.copy(exportState = EXPORTED))
+                            }
+                        } else {
+                            // 用户取消了保存对话框：回到空闲，不报成功
+                            _state.update {
+                                it.copy(backupState = it.backupState.copy(exportState = IDLE))
+                            }
+                        }
+                    } catch (t: Throwable) {
+                        // 导出失败：回到空闲，避免永久卡在"导出中"导致按钮不可用
+                        _state.update {
+                            it.copy(backupState = it.backupState.copy(exportState = IDLE))
+                        }
                     }
                 }
 

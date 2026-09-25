@@ -17,7 +17,12 @@
 package com.enlpot.daydo.core.settings.backup
 
 interface ExportRepo {
-    suspend fun exportToJson()
+    /**
+     * 导出全部数据为 JSON 文件。
+     * @return true=已写入文件；false=用户取消了保存对话框（未导出）
+     * @throws 序列化/IO 异常向上抛出，由调用方处理（不应永久卡在"导出中"）
+     */
+    suspend fun exportToJson(): Boolean
 }
 
 enum class ExportState {

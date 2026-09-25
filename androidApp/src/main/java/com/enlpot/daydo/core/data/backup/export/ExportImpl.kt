@@ -40,8 +40,8 @@ import org.koin.core.annotation.Single
 @Single(binds = [ExportRepo::class])
 class ExportImpl(private val taskRepo: TaskRepo, private val habitsRepo: HabitRepo) : ExportRepo {
     @OptIn(ExperimentalTime::class)
-    override suspend fun exportToJson() {
-        coroutineScope {
+    override suspend fun exportToJson(): Boolean {
+        return coroutineScope {
             val habitsDef =
                 async {
                         withContext(Dispatchers.IO) {
@@ -81,7 +81,10 @@ class ExportImpl(private val taskRepo: TaskRepo, private val habitsRepo: HabitRe
                     defaultExtension = "json",
                 )
 
-            file?.writeString(
+            // 用户取消保存对话框 -> file 为 null，返回 false（不视为导出成功）
+            if (file == null) return@coroutineScope false
+
+            file.writeString(
                 Json.encodeToString(
                     ExportSchema(
                         habits = habitsDef,
@@ -91,6 +94,7 @@ class ExportImpl(private val taskRepo: TaskRepo, private val habitsRepo: HabitRe
                     )
                 )
             )
+            true
         }
     }
 }

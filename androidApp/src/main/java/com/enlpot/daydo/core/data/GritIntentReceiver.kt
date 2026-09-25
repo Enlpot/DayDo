@@ -98,7 +98,8 @@ class GritIntentReceiver : BroadcastReceiver(), KoinComponent {
 
         Log.d(TAG, "Task marked as complete successfully")
 
-        get<GritNotificationManager>().cancelNotification(taskId.toInt())
+        // 用 Task 重载（+1000 偏移）取消任务通知；此前传 Int 命中 habit 重载（偏移 0），通知永远关不掉
+        get<GritNotificationManager>().cancelNotification(task)
     }
 
     private suspend fun addHabitStatus(intent: Intent) {

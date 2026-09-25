@@ -22,5 +22,5 @@ data class Theme(
     val isAmoled: Boolean = false,
     val isMaterialYou: Boolean = false,
     val paletteStyle: PaletteStyle = PaletteStyle.TONALSPOT,
-    val seedColor: Int = 0xFFFFFF,
+    val seedColor: Int = 0xFFFFFFFF.toInt(),
 )

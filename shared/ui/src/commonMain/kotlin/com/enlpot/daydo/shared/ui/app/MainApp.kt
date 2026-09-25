@@ -179,7 +179,9 @@ fun MainApp(state: MainAppState) {
 
                 NavDisplay(
                     modifier =
-                        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background),
+                        Modifier.weight(1f)
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.background),
                     backStack = appBackStack,
                     contentAlignment = Alignment.Center,
                     entryProvider =

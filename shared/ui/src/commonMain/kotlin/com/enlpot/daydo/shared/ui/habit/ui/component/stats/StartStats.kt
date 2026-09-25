@@ -222,7 +222,13 @@ fun StartStats(
             ) {
                 val fraction by
                     animateFloatAsState(
-                        targetValue = (currentStreak.toFloat() / bestStreak).coerceIn(0f, 1f),
+                        // bestStreak=0（新习惯/零打卡）时避免 0/0=NaN 进入动画与着色器
+                        targetValue =
+                            if (bestStreak > 0) {
+                                (currentStreak.toFloat() / bestStreak).coerceIn(0f, 1f)
+                            } else {
+                                0f
+                            },
                         animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
                     )
 

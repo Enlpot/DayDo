@@ -234,11 +234,13 @@ fun HabitCard(
         )
 
         if (!compactView) {
+            // 打卡日期 Set 化：每个可见日历格只 O(1) 判定，避免对全量 statuses 重复线性扫描
+            val doneDates = habitWithAnalytics.statuses.map { it.date }.toSet()
             WeekCalendar(
                 contentPadding = PaddingValues(8.dp),
                 state = weekState,
                 dayContent = { weekDay ->
-                    val done = habitWithAnalytics.statuses.any { it.date == weekDay.date }
+                    val done = weekDay.date in doneDates
                     val validDay =
                         weekDay.date <= today &&
                             weekDay.date.dayOfWeek in habitWithAnalytics.habit.days
@@ -248,14 +250,8 @@ fun HabitCard(
                             Modifier.fillMaxWidth()
                                 .then(
                                     if (done) {
-                                        val donePrevious =
-                                            habitWithAnalytics.statuses.any {
-                                                it.date == weekDay.date.minusDays(1)
-                                            }
-                                        val doneAfter =
-                                            habitWithAnalytics.statuses.any {
-                                                it.date == weekDay.date.plusDays(1)
-                                            }
+                                        val donePrevious = weekDay.date.minusDays(1) in doneDates
+                                        val doneAfter = weekDay.date.plusDays(1) in doneDates
                                         val shape =
                                             when {
                                                 donePrevious && doneAfter ->
