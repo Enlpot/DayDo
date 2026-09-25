@@ -32,6 +32,7 @@ import kotlinx.datetime.DayOfWeek
 @Immutable
 data class SettingsState(
     val backupState: BackupState = BackupState(),
+    val appVersion: String = "1.0.0",
 val webdavServer: String = "",
 val webdavUsername: String = "",
 val webdavPassword: String = "",

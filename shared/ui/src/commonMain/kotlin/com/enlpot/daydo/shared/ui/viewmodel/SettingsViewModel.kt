@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
+import com.enlpot.daydo.core.interfaces.AppVersionProvider
 import com.enlpot.daydo.core.interfaces.BiometricUtils
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.interfaces.ThemeDatastore
@@ -54,10 +55,15 @@ class SettingsViewModel(
     @Provided private val settingsDatastore: SettingsDatastore,
     @Provided private val biometricUtils: BiometricUtils,
     @Provided private val analytics: AnalyticsWrapper,
+    @Provided private val appVersionProvider: AppVersionProvider,
 ) : ViewModel() {
     private var observeJob: Job? = null
 
     private val _state = MutableStateFlow(SettingsState())
+
+    init {
+        _state.update { it.copy(appVersion = appVersionProvider.versionName) }
+    }
 
     val state =
         _state

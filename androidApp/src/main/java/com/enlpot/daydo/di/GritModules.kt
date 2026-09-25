@@ -19,8 +19,10 @@ package com.enlpot.daydo.di
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.enlpot.daydo.analytics.AnalyticsImpl
+import com.enlpot.daydo.BuildConfig
 import com.enlpot.daydo.core.data.datastore.DatastoreFactory
 import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
+import com.enlpot.daydo.core.interfaces.AppVersionProvider
 import com.enlpot.daydo.habits.data.database.HabitDatabase
 import com.enlpot.daydo.habits.data.database.HabitDbFactory
 import com.enlpot.daydo.habits.data.database.HabitStatusDao
@@ -40,6 +42,12 @@ import org.koin.core.annotation.Single
 @ComponentScan("com.enlpot.daydo")
 class GritModules {
     @Single fun provideAnalyticsWrapper(): AnalyticsWrapper = AnalyticsImpl()
+
+    @Single
+    fun provideAppVersionProvider(): AppVersionProvider =
+        object : AppVersionProvider {
+            override val versionName: String = BuildConfig.VERSION_NAME
+        }
 
     @Single fun getHabitDb(dbFactory: HabitDbFactory): HabitDatabase = dbFactory.create().build()
 
