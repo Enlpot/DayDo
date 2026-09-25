@@ -58,6 +58,7 @@ import com.kizitonwose.calendar.core.minusDays
 import com.kizitonwose.calendar.core.plusDays
 import com.enlpot.daydo.core.habits.HabitWithAnalytics
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
+import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
@@ -310,7 +311,7 @@ fun HabitCard(
                             )
 
                             Text(
-                                text = weekDay.date.dayOfWeek.toString().take(3),
+                                text = weekdayShortLabels()[weekDay.date.dayOfWeek.ordinal],
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1,
                                 modifier = Modifier.basicMarquee(),

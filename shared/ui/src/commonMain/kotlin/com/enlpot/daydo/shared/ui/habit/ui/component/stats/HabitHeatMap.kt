@@ -48,6 +48,7 @@ import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.endItemShape
 import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.habit.daysStartingFrom
+import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.CardArrows
 import daydo.shared.ui.generated.resources.*
@@ -109,7 +110,7 @@ fun HabitHeatMap(
                                 )
                     ) {
                         Text(
-                            text = dayOfWeek.name.take(1),
+                            text = weekdayShortLabels()[dayOfWeek.ordinal],
                             style =
                                 MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurface
