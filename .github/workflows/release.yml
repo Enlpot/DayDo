@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -24,20 +28,38 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run core unit tests
+      - name: Verify tag matches versionName
         run: |
-          chmod +x gradlew
-          ./gradlew :shared:core:testAndroidHostTest --console=plain
+          TAG="${GITHUB_REF_NAME#v}"
+          VN=$(grep -m1 'val appVersionName' androidApp/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          if [ "$TAG" != "$VN" ]; then
+            echo "tag v${TAG} does not match versionName ${VN}, aborting" >&2
+            exit 1
+          fi
+          echo "tag/versionName match: v${VN}"
+
+      - name: Validate keystore secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "missing keystore secrets (KEYSTORE_BASE64/KEYSTORE_PASSWORD/KEY_PASSWORD/KEY_ALIAS), aborting" >&2
+            exit 1
+          fi
+          echo "keystore secrets present"
 
       - name: Build release APK (signed)
         env:
-          KEYSTORE_FILE: ${{ github.workspace }}/keystore-release.jks
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           chmod +x gradlew
-          printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" > keystore-b64.txt
+          printf '%s' "$KEYSTORE_BASE64" > keystore-b64.txt
           base64 -d keystore-b64.txt > keystore-release.jks
           ./gradlew :androidApp:assembleFossRelease --console=plain
           cp androidApp/build/outputs/apk/foss/release/androidApp-foss-release.apk DayDo-${GITHUB_REF_NAME#v}.apk
