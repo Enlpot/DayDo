@@ -47,13 +47,24 @@ object Converters {
     @ColumnTypeConverter
     fun dateFromTimestamp(value: Long?): LocalDateTime? {
         return value?.let {
-            Instant.fromEpochSeconds(value).toLocalDateTime(TimeZone.currentSystemDefault())
+            Instant.fromEpochSeconds(value).toLocalDateTime(TimeZone.UTC)
         }
     }
 
     @ColumnTypeConverter
     fun dateToTimestamp(date: LocalDateTime?): Long? {
-        return date?.toInstant(TimeZone.currentSystemDefault())?.epochSeconds
+        return date?.toInstant(TimeZone.UTC)?.epochSeconds
+    }
+
+    /**
+     * 存量数据迁移用：旧版按「本机时区」折算的 epochSeconds → 改为 UTC 语义。
+     * 先还原原本地时刻，再按 UTC 重新折算；中国等无夏令时地区等价于 +8h。
+     */
+    fun localEpochToUtc(seconds: Long?): Long? = seconds?.let {
+        Instant.fromEpochSeconds(it)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .toInstant(TimeZone.UTC)
+            .epochSeconds
     }
 
     @ColumnTypeConverter

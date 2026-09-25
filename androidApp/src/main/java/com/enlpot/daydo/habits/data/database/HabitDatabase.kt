@@ -38,7 +38,7 @@ abstract class HabitDatabase : RoomDatabase() {
     abstract fun habitStatusDao(): HabitStatusDao
 
     companion object {
-        const val SCHEMA_VERSION = 6
+        const val SCHEMA_VERSION = 7
         const val DB_NAME = "habit_database"
 
         val migrate_3_4 =
@@ -63,6 +63,26 @@ abstract class HabitDatabase : RoomDatabase() {
                         "CREATE UNIQUE INDEX IF NOT EXISTS index_habit_status_habitId_date " +
                             "ON habit_status (habitId, date)"
                     )
+                }
+            }
+
+        // v6→v7：habit_index.time 时间戳存储改为不依赖时区（UTC 语义），存量数据一次性换算。
+        val migrate_6_7 =
+            object : Migration(6, 7) {
+                override suspend fun migrate(connection: SQLiteConnection) {
+                    connection
+                        .prepare("UPDATE habit_index SET time = ? WHERE id = ?")
+                        .use { upd ->
+                            connection.prepare("SELECT id, time FROM habit_index").use { stmt ->
+                                while (stmt.step()) {
+                                    val id = stmt.getLong(0)
+                                    upd.clearBindings()
+                                    upd.bindLong(1, Converters.localEpochToUtc(stmt.getLong(1))!!)
+                                    upd.bindLong(2, id)
+                                    upd.step()
+                                }
+                            }
+                        }
                 }
             }
     }

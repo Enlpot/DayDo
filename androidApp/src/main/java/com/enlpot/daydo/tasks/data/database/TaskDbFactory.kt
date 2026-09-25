@@ -28,6 +28,6 @@ class TaskDbFactory(private val context: Context) {
         val dbfile = appContext.getDatabasePath(TaskDatabase.DB_NAME)
 
         return Room.databaseBuilder<TaskDatabase>(appContext, dbfile.absolutePath)
-            .addMigrations(TaskDatabase.MIGRATION_9_10)
+            .addMigrations(TaskDatabase.MIGRATION_9_10, TaskDatabase.MIGRATION_10_11)
     }
 }

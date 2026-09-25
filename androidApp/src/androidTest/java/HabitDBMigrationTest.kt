@@ -22,7 +22,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.enlpot.daydo.habits.data.database.HabitDatabase
-import com.enlpot.daydo.shared.ui.now
+import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.DateTimeUnit
@@ -31,6 +31,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -62,7 +63,10 @@ class HabitDBMigrationTest {
             .apply {
                 (1..5).forEach { habit ->
                     val timeEpoch =
-                        LocalDateTime.now().toInstant(TimeZone.currentSystemDefault()).epochSeconds
+                        Clock.System.now()
+                            .toLocalDateTime(TimeZone.currentSystemDefault())
+                            .toInstant(TimeZone.currentSystemDefault())
+                            .epochSeconds
 
                     execSQL(
                         """
@@ -80,7 +84,11 @@ class HabitDBMigrationTest {
 
                     (1..3).forEach { offset ->
                         val dateEpoch =
-                            LocalDate.now().minus(offset, DateTimeUnit.DAY).toEpochDays()
+                            Clock.System.now()
+                                .toLocalDateTime(TimeZone.currentSystemDefault())
+                                .date
+                                .minus(offset, DateTimeUnit.DAY)
+                                .toEpochDays()
 
                         execSQL(
                             """
@@ -158,7 +166,9 @@ class HabitDBMigrationTest {
                 assertThat(habitId).isAtMost(5L)
 
                 // Date should be a valid epochDay (not in the future)
-                assertThat(dateEpoch).isAtMost(LocalDate.now().toEpochDays())
+                assertThat(dateEpoch).isAtMost(
+                    Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toEpochDays()
+                )
             }
             assertThat(count).isEqualTo(15)
         }
@@ -176,5 +186,32 @@ class HabitDBMigrationTest {
             )
             .build()
             .close()
+    }
+
+    @OptIn(ExperimentalTime::class)
+    @Test
+    fun migration6to7_convertsHabitTimeToUtc() = runBlocking {
+        val localNow = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val oldTime = localNow.toInstant(TimeZone.currentSystemDefault()).epochSeconds
+
+        helper
+            .createDatabase(6)
+            .apply {
+                execSQL(
+                    "INSERT INTO habit_index (title, description, [index], days, time, reminder) " +
+                        "VALUES ('Habit TZ', '', 0, 'MONDAY', $oldTime, 1)"
+                )
+            }
+            .close()
+
+        val db = helper.runMigrationsAndValidate(7, listOf(HabitDatabase.migrate_6_7))
+
+        db.prepare("SELECT time FROM habit_index").use { stmt ->
+            assertThat(stmt.step()).isTrue()
+            val newTime = stmt.getLong(0)
+            val expected = localNow.toInstant(TimeZone.UTC).epochSeconds
+            assertThat(newTime).isEqualTo(expected)
+        }
+        db.close()
     }
 }

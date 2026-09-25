@@ -22,7 +22,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.enlpot.daydo.tasks.data.database.TaskDatabase
+import kotlin.time.Clock
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -144,5 +148,34 @@ class TaskDBMigrationTest {
             )
             .build()
             .close()
+    }
+
+    @Test
+    fun migration10to11_convertsLocalTimestampsToUtc() = runBlocking {
+        val localNow = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val oldReminder = localNow.toInstant(TimeZone.currentSystemDefault()).epochSeconds
+
+        helper
+            .createDatabase(10)
+            .apply {
+                execSQL(
+                    "INSERT INTO task (categoryId, title, status, [index], reminder, createdAt) " +
+                        "VALUES (NULL, 'TZ', 0, 0, $oldReminder, $oldReminder)"
+                )
+            }
+            .close()
+
+        val db = helper.runMigrationsAndValidate(11, listOf(TaskDatabase.MIGRATION_10_11))
+
+        db.prepare("SELECT reminder, createdAt FROM task").use { stmt ->
+            assertThat(stmt.step()).isTrue()
+            val newReminder = stmt.getLong(0)
+            val newCreatedAt = stmt.getLong(1)
+            // UTC 语义 = 原本地时刻按 UTC 折算（等价于旧值 + 时区偏移）
+            val expected = localNow.toInstant(TimeZone.UTC).epochSeconds
+            assertThat(newReminder).isEqualTo(expected)
+            assertThat(newCreatedAt).isEqualTo(expected)
+        }
+        db.close()
     }
 }

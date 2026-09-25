@@ -39,11 +39,45 @@ abstract class TaskDatabase : RoomDatabase() {
 
     companion object {
         const val DB_NAME = "task_database"
-        const val SCHEMA_VERSION = 10
+        const val SCHEMA_VERSION = 11
         val MIGRATION_9_10 =
             object : Migration(9, 10) {
                 override suspend fun migrate(connection: SQLiteConnection) {
                     connection.execSQL("ALTER TABLE task RENAME COLUMN sortIndex TO sortKey")
+                }
+            }
+
+        // v10→v11：时间戳存储改为不依赖时区（UTC 语义）。
+        // 存量数据按迁移时刻的本机时区一次性换算（还原原本地时刻后重算为 UTC）。
+        val MIGRATION_10_11 =
+            object : Migration(10, 11) {
+                override suspend fun migrate(connection: SQLiteConnection) {
+                    connection
+                        .prepare("UPDATE task SET reminder = ?, completedAt = ?, createdAt = ? WHERE id = ?")
+                        .use { upd ->
+                            connection
+                                .prepare("SELECT id, reminder, completedAt, createdAt FROM task")
+                                .use { stmt ->
+                                    while (stmt.step()) {
+                                        val id = stmt.getLong(0)
+                                        upd.clearBindings()
+                                        val reminder =
+                                            if (stmt.isNull(1)) null
+                                            else Converters.localEpochToUtc(stmt.getLong(1))
+                                        val completedAt =
+                                            if (stmt.isNull(2)) null
+                                            else Converters.localEpochToUtc(stmt.getLong(2))
+                                        val createdAt =
+                                            if (stmt.isNull(3)) null
+                                            else Converters.localEpochToUtc(stmt.getLong(3))
+                                        if (reminder != null) upd.bindLong(1, reminder) else upd.bindNull(1)
+                                        if (completedAt != null) upd.bindLong(2, completedAt) else upd.bindNull(2)
+                                        if (createdAt != null) upd.bindLong(3, createdAt) else upd.bindNull(3)
+                                        upd.bindLong(4, id)
+                                        upd.step()
+                                    }
+                                }
+                        }
                 }
             }
     }
