@@ -26,11 +26,15 @@ import com.enlpot.daydo.tasks.data.toCategory
 import com.enlpot.daydo.tasks.data.toCategoryEntity
 import com.enlpot.daydo.tasks.data.toTask
 import com.enlpot.daydo.tasks.data.toTaskEntity
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.datetime.LocalDateTime
 import org.koin.core.annotation.Single
 
@@ -41,11 +45,15 @@ class TasksRepository(
     private val notificationManager: GritNotificationManager,
 ) : TaskRepo {
 
+    // 共享热流：多个 collector（getTasksFlow/getAllTasksFlow/getCompletedTasksFlow）共用
+    // 同一份 Room 查询与实体转换结果，数据库变更只重算一遍
+    private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val tasksFlow =
         tasksDao
             .getTasksFlow()
-            .map { entities -> entities.map { it.toTask() }.sortedBy { it.index } }
+            .map { entities -> entities.map { it.toTask() } }
             .flowOn(Dispatchers.IO)
+            .shareIn(repoScope, SharingStarted.WhileSubscribed(5000), replay = 1)
 
     private val deletedTasksFlow =
         tasksDao
@@ -60,11 +68,10 @@ class TasksRepository(
             .flowOn(Dispatchers.IO)
 
     override fun getTasksFlow(): Flow<Map<Category, List<Task>>> {
-        return tasksFlow
-            .combine(categoriesFlow) { tasks, categories ->
-                categories.associateWith { category ->
-                    tasks.filter { it.categoryId == category.id }
-                }
+        return categoriesFlow
+            .combine(tasksFlow) { categories, tasks ->
+                val byCategory = tasks.groupBy { it.categoryId }
+                categories.associateWith { category -> byCategory[category.id].orEmpty() }
             }
             .flowOn(Dispatchers.Default)
     }

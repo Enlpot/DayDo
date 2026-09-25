@@ -46,4 +46,10 @@ data class TaskState(
     val statsSeriesId: Long? = null,
     /** 该系列的所有周期记录（含已完成与待做） */
     val seriesTasks: List<Task> = emptyList(),
+    /** 首页"任务"tab：今天发生的未完成任务（已按排序规则排好） */
+    val homeTodayTasks: List<Task> = emptyList(),
+    /** 首页"任务"tab：今天发生的已完成任务（完成时间倒序） */
+    val homeTodayCompleted: List<Task> = emptyList(),
+    /** 首页"已过期"tab：未完成过期 + 今天刚完成的过期任务（按过期时间升序） */
+    val homeOverdueTasks: List<Task> = emptyList(),
 )

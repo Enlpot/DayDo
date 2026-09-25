@@ -32,6 +32,8 @@ import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
 import com.enlpot.daydo.core.tasks.sortActiveTasks
 import com.enlpot.daydo.core.tasks.sortCompletedTasks
 import com.enlpot.daydo.core.tasks.sortOverdueTasks
+import com.enlpot.daydo.core.tasks.taskOccursOn
+import com.enlpot.daydo.core.tasks.typicalCompletionMinuteOfSeries
 import com.enlpot.daydo.core.tasks.taskSortKeyOrCreated
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
@@ -121,8 +123,13 @@ class TasksViewModel(
 
                 is ChangeView -> {
                     val s = _state.value
+                    val today = LocalDate.now()
+                    val typicalBySeries =
+                        s.allTasks
+                            .groupBy { it.seriesId }
+                            .mapValues { (_, seriesTasks) -> typicalCompletionMinuteOfSeries(seriesTasks) }
                     val (display, displayCompleted) =
-                        displayTasksFor(action.view, s.allTasks, s.deletedTasks, LocalDate.now())
+                        displayTasksFor(action.view, s.allTasks, s.deletedTasks, today, typicalBySeries)
                     _state.update {
                         it.copy(
                             currentView = action.view,
@@ -411,8 +418,13 @@ class TasksViewModel(
     private fun switchToAllSmartView() {
         val s = _state.value
         val view = TaskView.Smart(SmartCategory.ALL)
+        val today = LocalDate.now()
+        val typicalBySeries =
+            s.allTasks
+                .groupBy { it.seriesId }
+                .mapValues { (_, seriesTasks) -> typicalCompletionMinuteOfSeries(seriesTasks) }
         val (display, displayCompleted) =
-            displayTasksFor(view, s.allTasks, s.deletedTasks, LocalDate.now())
+            displayTasksFor(view, s.allTasks, s.deletedTasks, today, typicalBySeries)
         _state.update {
             it.copy(
                 currentView = view,
@@ -454,8 +466,28 @@ class TasksViewModel(
                 ) { tasksByCategory, allTasks, deletedTasks ->
                         val today = LocalDate.now()
                         val view = resolveView(_state.value.currentView, tasksByCategory.keys.toList())
+                        // 系列典型完成时间表：全量只算一次，供所有视图排序复用
+                        val typicalBySeries =
+                            allTasks
+                                .groupBy { it.seriesId }
+                                .mapValues { (_, seriesTasks) -> typicalCompletionMinuteOfSeries(seriesTasks) }
                         val (display, displayCompleted) =
-                            displayTasksFor(view, allTasks, deletedTasks, today)
+                            displayTasksFor(view, allTasks, deletedTasks, today, typicalBySeries)
+
+                        // 首页三组列表（今日未完成/今日已完成/已过期）在 VM 侧一次算好
+                        val todayTasks = allTasks.filter { taskOccursOn(it, today) }
+                        val homeTodayActive =
+                            sortActiveTasks(todayTasks.filter { !it.status }, typicalBySeries)
+                        val homeTodayCompleted = sortCompletedTasks(todayTasks.filter { it.status })
+                        val homeOverdueTasks =
+                            sortOverdueTasks(
+                                allTasks.filter {
+                                    val due = it.dueDate
+                                    due != null &&
+                                        due < today &&
+                                        (!it.status || it.completedAt?.date == today)
+                                }
+                            )
 
                         _state.update {
                             it.copy(
@@ -467,10 +499,11 @@ class TasksViewModel(
                                 displayCompletedTasks = displayCompleted,
                                 completedTasks =
                                     tasksByCategory.values.flatten().filter { task -> task.status },
+                                homeTodayTasks = homeTodayActive,
+                                homeTodayCompleted = homeTodayCompleted,
+                                homeOverdueTasks = homeOverdueTasks,
                             )
                         }
-
-
                     }
                     .launchIn(this)
             }
@@ -488,27 +521,28 @@ class TasksViewModel(
         allTasks: List<Task>,
         deletedTasks: List<Task>,
         today: LocalDate,
+        typicalBySeries: Map<Long?, Int?>,
     ): Pair<List<Task>, List<Task>> {
         val active = allTasks.filter { !it.status }
         val completed = allTasks.filter { it.status }
         return when (view) {
             is TaskView.Regular -> {
                 val categoryTasks = allTasks.filter { it.categoryId == view.category.id }
-                sortActiveTasks(categoryTasks.filter { !it.status }, allTasks) to
+                sortActiveTasks(categoryTasks.filter { !it.status }, typicalBySeries) to
                     sortCompletedTasks(categoryTasks.filter { it.status })
             }
 
             is TaskView.Smart ->
                 when (view.category) {
-                    SmartCategory.ALL -> sortActiveTasks(active, allTasks) to sortCompletedTasks(completed)
+                    SmartCategory.ALL -> sortActiveTasks(active, typicalBySeries) to sortCompletedTasks(completed)
 
                     SmartCategory.TODAY ->
-                        sortActiveTasks(active.filter { it.dueDate == today }, allTasks) to
+                        sortActiveTasks(active.filter { it.dueDate == today }, typicalBySeries) to
                             sortCompletedTasks(completed.filter { it.dueDate == today })
 
                     SmartCategory.TOMORROW -> {
                         val tomorrow = today.plusDaysSafe(1)
-                        sortActiveTasks(active.filter { it.dueDate == tomorrow }, allTasks) to
+                        sortActiveTasks(active.filter { it.dueDate == tomorrow }, typicalBySeries) to
                             sortCompletedTasks(completed.filter { it.dueDate == tomorrow })
                     }
 
@@ -517,7 +551,7 @@ class TasksViewModel(
                         val endDays = startDays + 7
                         fun dueInRange(task: Task): Boolean =
                             task.dueDate?.toEpochDays()?.let { it in startDays..endDays } == true
-                        sortActiveTasks(active.filter { dueInRange(it) }, allTasks) to
+                        sortActiveTasks(active.filter { dueInRange(it) }, typicalBySeries) to
                             sortCompletedTasks(completed.filter { dueInRange(it) })
                     }
 
@@ -539,7 +573,7 @@ class TasksViewModel(
                     SmartCategory.DELETED -> deletedTasks to emptyList()
 
                     SmartCategory.INBOX ->
-                        sortActiveTasks(active.filter { it.categoryId == null && it.dueDate == null }, allTasks) to
+                        sortActiveTasks(active.filter { it.categoryId == null && it.dueDate == null }, typicalBySeries) to
                             emptyList()
                 }
         }

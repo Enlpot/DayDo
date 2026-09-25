@@ -64,10 +64,6 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.habits.Habit
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Task
-import com.enlpot.daydo.core.tasks.taskOccursOn
-import com.enlpot.daydo.core.tasks.sortActiveTasks
-import com.enlpot.daydo.core.tasks.sortCompletedTasks
-import com.enlpot.daydo.core.tasks.sortOverdueTasks
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.Empty
 import com.enlpot.daydo.shared.ui.components.PageFill
@@ -106,21 +102,9 @@ fun HomePage(
     onOpenTaskStats: ((Task) -> Unit)? = null,
 ) = PageFill {
     val today = LocalDate.now()
-    val todayTasks =
-        remember(taskState.allTasks, today) {
-            taskState.allTasks.filter { taskOccursOn(it, today) }
-        }
-    // 已过期：未完成 或 今天刚完成的过期任务（完成后当天仍显示，次日消失）
-    val overdueTasks =
-        remember(taskState.allTasks, today) {
-            taskState.allTasks
-                .filter {
-                    val due = it.dueDate
-                    due != null &&
-                        due < today &&
-                        (!it.status || it.completedAt?.date == today)
-                }
-        }
+    // 首页三组列表已由 TasksViewModel 预计算并排好序（避免每次重组全量过滤）
+    val todayTasks = taskState.homeTodayTasks
+    val overdueTasks = taskState.homeOverdueTasks
     val hasOverdue = overdueTasks.isNotEmpty()
     val habitPageIndex = if (hasOverdue) 2 else 1
 
@@ -137,7 +121,8 @@ fun HomePage(
     var showTaskAddSheet by rememberSaveable { mutableStateOf(false) }
 
     val currentListTasks =
-        if (hasOverdue && pagerState.currentPage == 0) overdueTasks else todayTasks
+        if (hasOverdue && pagerState.currentPage == 0) overdueTasks
+        else todayTasks + taskState.homeTodayCompleted
 
     fun exitMultiSelect() {
         multiSelect = false
@@ -237,7 +222,8 @@ fun HomePage(
                     TodayTasksSection(
                         state = taskState,
                         onAction = onTaskAction,
-                        tasks = overdueTasks,
+                        activeTasks = overdueTasks.filter { !it.status },
+                        completedTasks = overdueTasks.filter { it.status },
                         multiSelect = multiSelect,
                         selectedTaskIds = selectedTaskIds,
                         onToggleSelect = { task ->
@@ -254,7 +240,8 @@ fun HomePage(
                     TodayTasksSection(
                         state = taskState,
                         onAction = onTaskAction,
-                        tasks = todayTasks,
+                        activeTasks = todayTasks,
+                        completedTasks = taskState.homeTodayCompleted,
                         multiSelect = multiSelect,
                         selectedTaskIds = selectedTaskIds,
                         onToggleSelect = { task ->
@@ -347,7 +334,8 @@ fun HomePage(
 private fun TodayTasksSection(
     state: TaskState,
     onAction: (TaskAction) -> Unit,
-    tasks: List<Task>,
+    activeTasks: List<Task>,
+    completedTasks: List<Task>,
     multiSelect: Boolean,
     selectedTaskIds: Set<Long>,
     onToggleSelect: (Task) -> Unit,
@@ -355,8 +343,6 @@ private fun TodayTasksSection(
     onEditTask: (Task) -> Unit,
 ) {
     val haptic = LocalHapticPerformer.current
-    val activeTasks = remember(tasks) { sortActiveTasks(tasks.filter { !it.status }, tasks) }
-    val completed = remember(tasks) { sortCompletedTasks(tasks.filter { it.status }) }
 
     val lazyListState = rememberLazyListState()
     var draggedTaskId by remember { mutableStateOf<Long?>(null) }
@@ -430,9 +416,9 @@ private fun TodayTasksSection(
             }
         }
 
-        if (completed.isNotEmpty()) {
+        if (completedTasks.isNotEmpty()) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
-            itemsIndexed(items = completed, key = { _, it -> it.id }) { index, task ->
+            itemsIndexed(items = completedTasks, key = { _, it -> it.id }) { index, task ->
                 val cardShape = taskItemShape()
                 TaskCard(
                     task = task,
@@ -457,7 +443,7 @@ private fun TodayTasksSection(
             }
         }
 
-        if (tasks.isEmpty()) {
+        if (activeTasks.isEmpty() && completedTasks.isEmpty()) {
             item {
                 Empty(modifier = Modifier.padding(top = 120.dp))
             }

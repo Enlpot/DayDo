@@ -19,24 +19,25 @@ import kotlinx.datetime.toInstant
  *      完成不足 3 次的按创建时间倒序
  * 2. 已完成：按完成时间倒序（后完成在上）
  * 3. 已过期：按副标题日期时间升序（越早越上）
+ *
+ * typicalBySeries 由调用方（ViewModel）按全量任务一次性预计算，
+ * 避免每个列表每次排序都重建 seriesId 全量 map 与重复统计完成时刻。
  */
-fun sortActiveTasks(tasks: List<Task>, allForStats: List<Task> = tasks): List<Task> {
+fun sortActiveTasks(tasks: List<Task>, typicalBySeries: Map<Long?, Int?>): List<Task> {
     val normal = tasks.filter { it.recurrence == null }
     val recurring = tasks.filter { it.recurrence != null }
-    // 典型完成时间需要统计该系列全部实例（含已完成），默认退化为当前列表
-    val seriesCache = allForStats.groupBy { it.seriesId }
 
     // 普通任务：被拖过的按相对排序键（越大越上），未拖过的按创建时间倒序（新在顶）
     val normalSorted = normal.sortedByDescending { taskSortKeyOrCreated(it) }
 
+    // 重复任务：典型完成时间只取一次，避免 filter/sortedBy 各算一遍
+    val recTypical = recurring.map { task -> task to typicalBySeries[task.seriesId] }
     val recWithTypical =
-        recurring.filter { typicalCompletionMinute(it, seriesCache) != null }
-            .sortedBy { typicalCompletionMinute(it, seriesCache) }
+        recTypical.filter { it.second != null }.sortedBy { it.second ?: Int.MAX_VALUE }
     val recWithoutTypical =
-        recurring.filter { typicalCompletionMinute(it, seriesCache) == null }
-            .sortedByDescending { createdAtKey(it) }
+        recTypical.filter { it.second == null }.sortedByDescending { createdAtKey(it.first) }
 
-    return normalSorted + recWithTypical + recWithoutTypical
+    return normalSorted + recWithTypical.map { it.first } + recWithoutTypical.map { it.first }
 }
 
 fun sortCompletedTasks(tasks: List<Task>): List<Task> =
@@ -50,15 +51,14 @@ fun sortOverdueTasks(tasks: List<Task>): List<Task> =
         )
     )
 
-
 /**
  * 重复任务系列"典型完成时间"：同系列已完成的实例中，最近 20 次完成时刻（小时:分钟）的中位数。
  * 完成不足 3 次视为无稳定模式，返回 null（按创建时间排）。
+ * 输入为该系列全部实例列表（由调用方 groupBy seriesId 后传入）。
  */
-fun typicalCompletionMinute(task: Task, seriesCache: Map<Long?, List<Task>>): Int? {
-    val seriesId = task.seriesId ?: return null
+fun typicalCompletionMinuteOfSeries(seriesTasks: List<Task>): Int? {
     val minutes =
-        seriesCache[seriesId].orEmpty()
+        seriesTasks
             .mapNotNull { it.completedAt }
             .sortedDescending()
             .take(20)
