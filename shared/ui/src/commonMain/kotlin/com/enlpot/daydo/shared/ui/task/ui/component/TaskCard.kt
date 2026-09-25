@@ -41,11 +41,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.enlpot.daydo.core.now
+import kotlinx.datetime.LocalDate
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.shared.ui.HapticKind
 import com.enlpot.daydo.shared.ui.LocalHapticPerformer
@@ -199,6 +202,10 @@ fun TaskCard(
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Light,
                                     ),
+                                color =
+                                    if (task.dueDate!! < LocalDate.now() && !task.status)
+                                        MaterialTheme.colorScheme.error
+                                    else Color.Unspecified,
                             )
                         }
                     }
