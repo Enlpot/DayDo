@@ -199,6 +199,7 @@
     <string name="weekday_prefix">周</string>
     <string name="every_prefix">每</string>
     <string name="period_2m">近2个月</string>
+    <string name="analytics_cd">统计</string>
     <string name="period_4m">近4个月</string>
     <string name="period_8m">近8个月</string>
     <string name="period_1y">近1年</string>

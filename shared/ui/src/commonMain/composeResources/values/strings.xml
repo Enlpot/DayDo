@@ -199,6 +199,7 @@
     <string name="weekday_prefix"></string>
     <string name="every_prefix">Every </string>
     <string name="period_2m">2M</string>
+    <string name="analytics_cd">Analytics</string>
     <string name="period_4m">4M</string>
     <string name="period_8m">8M</string>
     <string name="period_1y">1Y</string>
