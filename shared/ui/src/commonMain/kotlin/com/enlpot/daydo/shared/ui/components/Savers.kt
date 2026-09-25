@@ -32,5 +32,9 @@ inline fun <reified T> genericSaver(): Saver<T, String> {
             ignoreUnknownKeys = true
             coerceInputValues = true
         }
-    return Saver<T, String>(save = { json.encodeToString(it) }) { json.decodeFromString(it) }
+    return Saver<T, String>(
+        save = { json.encodeToString(it) },
+        // 恢复容错：反序列化失败返回 null，触发初始值回退，避免旧存档崩溃
+        restore = { runCatching { json.decodeFromString<T>(it) }.getOrNull() },
+    )
 }

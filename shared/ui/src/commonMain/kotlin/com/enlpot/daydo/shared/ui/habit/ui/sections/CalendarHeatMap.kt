@@ -259,6 +259,8 @@ private fun YearlyMap(
             if (day.date > today || day.position != DayPosition.MonthDate)
                 return@VerticalYearCalendar
             val count = state.overallAnalytics.heatMapData[day.date]
+            // 归一化基准取历史峰值：加/删习惯不会重排历史颜色（原按当前习惯总数，历史色随总量漂移）
+            val maxHeatCount = state.overallAnalytics.heatMapData.values.maxOrNull() ?: 1
 
             val corners by
                 animateDpAsState(targetValue = if (selectedDay == day.date) 1000.dp else 2.dp)
@@ -278,7 +280,7 @@ private fun YearlyMap(
 
                                     else ->
                                         MaterialTheme.colorScheme.primary.copy(
-                                            alpha = (count.toFloat() / totalHabits).coerceIn(0f, 1f)
+                                            alpha = (count.toFloat() / maxHeatCount).coerceIn(0.15f, 1f)
                                         )
                                 },
                         )
@@ -300,7 +302,11 @@ private fun MonthlyMap(
 ) {
     val calendarState =
         rememberCalendarState(
-            startMonth = YearMonth(year = 2024, month = Month.JANUARY),
+            // 起点取最早习惯的创建月（而非写死 2024），避免历史数据不可达
+            startMonth =
+                state.habitsWithAnalytics
+                    .minOfOrNull { it.habit.time.date.yearMonth }
+                    ?: YearMonth.now(),
             endMonth = YearMonth.now(),
             firstVisibleMonth = YearMonth.now(),
             firstDayOfWeek = state.startingDay,
@@ -318,6 +324,8 @@ private fun MonthlyMap(
         dayContent = { day ->
             if (day.date > today || day.position != DayPosition.MonthDate) return@VerticalCalendar
             val count = state.overallAnalytics.heatMapData[day.date]
+            // 归一化基准取历史峰值：加/删习惯不会重排历史颜色（原按当前习惯总数，历史色随总量漂移）
+            val maxHeatCount = state.overallAnalytics.heatMapData.values.maxOrNull() ?: 1
 
             val corners by
                 animateDpAsState(targetValue = if (selectedDay == day.date) 1000.dp else 8.dp)
@@ -337,7 +345,7 @@ private fun MonthlyMap(
 
                                     else ->
                                         MaterialTheme.colorScheme.primary.copy(
-                                            alpha = (count.toFloat() / totalHabits).coerceIn(0f, 1f)
+                                            alpha = (count.toFloat() / maxHeatCount).coerceIn(0.15f, 1f)
                                         )
                                 },
                         )
@@ -350,7 +358,7 @@ private fun MonthlyMap(
                         0 -> MaterialTheme.colorScheme.onSurface
                         null -> MaterialTheme.colorScheme.onSurfaceVariant
                         else -> {
-                            val alpha = (count.toFloat() / totalHabits).coerceIn(0f, 1f)
+                            val alpha = (count.toFloat() / maxHeatCount).coerceIn(0.15f, 1f)
 
                             if (alpha in 0f..0.5f) {
                                 MaterialTheme.colorScheme.primary

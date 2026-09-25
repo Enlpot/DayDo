@@ -62,7 +62,6 @@ import org.jetbrains.compose.resources.vectorResource
 @Composable
 fun OverallAnalytics(
     state: HabitState,
-    onAction: (HabitsAction) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToCalendarHeatMap: () -> Unit,
     showNavigateBack: Boolean = true,

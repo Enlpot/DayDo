@@ -46,6 +46,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.yearMonth
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import org.jetbrains.compose.resources.stringResource
@@ -74,11 +75,17 @@ fun CalendarMap(
     val edgeWeeks =
         listOf(calendarState.firstDayOfWeek, daysStartingFrom(calendarState.firstDayOfWeek).last())
 
+    // 翻月边界：回到起始月后禁用上一月，到达当前月后禁用下一月
+    val startMonth = startDate.yearMonth
+    val endMonth = YearMonth.now()
+
     AnalyticsCard(
         title = stringResource(Res.string.monthly_progress),
         icon = Res.drawable.calendar_month,
         header = {
             CardArrows(
+                backEnabled = calendarState.firstVisibleMonth.yearMonth > startMonth,
+                forwardEnabled = calendarState.firstVisibleMonth.yearMonth < endMonth,
                 onBackAction = {
                     scope.launch {
                         calendarState.animateScrollToMonth(

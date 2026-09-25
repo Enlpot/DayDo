@@ -46,6 +46,10 @@
     <string name="edit_habit">Edit Habit</string>
     <string name="biometric_lock">Biometric Lock</string>
     <string name="weekly_progress">Weekly Progress</string>
+    <string name="notification_permission_denied">Notification permission denied</string>
+    <string name="edit">Edit</string>
+    <string name="all_analytics">All Analytics</string>
+    <string name="compact_view">Compact View</string>
     <string name="overall_analytics">Overall Analytics</string>
     <string name="monthly_progress">Monthly Progress</string>
     <string name="week_breakdown">Week Day Breakdown</string>
@@ -160,6 +164,8 @@
     <string name="week_label">Week</string>
     <string name="weekday_distribution">Weekday distribution</string>
     <string name="hour_distribution">Completion time distribution</string>
+    <string name="habit_not_found">Habit not found or deleted</string>
+    <string name="back">Back</string>
     <string name="no_completion_record">No completion records</string>
 
     <!-- 任务编辑 -->

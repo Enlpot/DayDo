@@ -199,7 +199,6 @@ fun HabitsGraph(
                             onNavigateBack = {
                                 if (backstack.size != 1) backstack.removeLastOrNull()
                             },
-                            onAction = onAction,
                             modifier = Modifier.background(MaterialTheme.colorScheme.background),
                             onNavigateToCalendarHeatMap = {
                                 backstack.add(HabitRoutes.CalendarHeatMap)
@@ -351,7 +350,6 @@ private fun ExpandedScreen(
                                     state = state,
                                     onNavigateBack = {},
                                     showNavigateBack = false,
-                                    onAction = onAction,
                                     onNavigateToCalendarHeatMap = {
                                         backstack.add(HabitRoutes.CalendarHeatMap)
                                     },
@@ -437,7 +435,7 @@ private fun HabitsTopAppBar(
                                         Res.drawable.collapse
                                     }
                                 ),
-                            contentDescription = "Compact View",
+                            contentDescription = stringResource(Res.string.compact_view),
                         )
                     }
 

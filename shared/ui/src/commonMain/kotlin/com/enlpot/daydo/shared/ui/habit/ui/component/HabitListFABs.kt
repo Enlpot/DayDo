@@ -29,7 +29,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -85,7 +84,7 @@ fun BoxScope.HabitListFABs(
             ) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.analytics),
-                    contentDescription = "All Analytics",
+                    contentDescription = stringResource(Res.string.all_analytics),
                 )
             }
 
@@ -102,7 +101,7 @@ fun BoxScope.HabitListFABs(
             ) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.add),
-                    contentDescription = "Add Habit",
+                    contentDescription = stringResource(Res.string.add_habit),
                     modifier = Modifier.size(24.dp),
                 )
             }
@@ -120,7 +119,7 @@ fun BoxScope.HabitListFABs(
             ) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.add),
-                    contentDescription = "Add Habit",
+                    contentDescription = stringResource(Res.string.add_habit),
                     modifier = Modifier.size(24.dp),
                 )
             }
@@ -142,7 +141,7 @@ fun BoxScope.HabitListFABs(
                 ) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.analytics),
-                        contentDescription = "All Analytics",
+                        contentDescription = stringResource(Res.string.all_analytics),
                     )
                 }
             }

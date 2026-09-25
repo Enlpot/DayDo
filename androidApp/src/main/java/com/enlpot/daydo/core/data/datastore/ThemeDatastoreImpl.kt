@@ -54,7 +54,8 @@ class ThemeDatastoreImpl(private val datastore: DataStore<Preferences>) : ThemeD
     override fun getAppThemeFlow(): Flow<AppTheme> =
         datastore.data.map { prefs ->
             val appTheme = prefs[appThemeKey] ?: AppTheme.SYSTEM.name
-            AppTheme.valueOf(appTheme)
+            // 容错：非法/旧存档枚举值回退默认，避免崩溃
+            runCatching { AppTheme.valueOf(appTheme) }.getOrDefault(AppTheme.SYSTEM)
         }
 
     override suspend fun setAppTheme(theme: AppTheme) {

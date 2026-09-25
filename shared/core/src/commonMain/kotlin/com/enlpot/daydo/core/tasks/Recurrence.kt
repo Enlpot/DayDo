@@ -158,7 +158,6 @@ private fun Recurrence.Yearly.nextYearly(from: LocalDate, base: LocalDate): Loca
 private fun LocalDate.plusDaysSafe(days: Long): LocalDate =
     LocalDate.fromEpochDays(toEpochDays() + days)
 
-private fun LocalDate.monthOrdinal(): Int = year * 12 + month.ordinal + 1
 
 private fun LocalDate.daysInMonth(): Int =
     when (month) {

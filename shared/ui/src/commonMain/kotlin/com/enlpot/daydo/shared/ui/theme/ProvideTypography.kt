@@ -33,10 +33,10 @@ val TYPOGRAPHY = Typography()
 @Composable
 fun flexFontEmphasis(): FontFamily = FontFamily(Font(Res.font.figtree))
 
-/** function to get custom typography for Grit */
+/** function to get custom typography for Grit（固定使用 Figtree） */
 @Composable
-fun provideTypography(font: FontResource? = Res.font.figtree): Typography {
-    val selectedFont = font?.let { FontFamily(Font(font)) } ?: FontFamily.Default
+fun provideTypography(): Typography {
+    val selectedFont = FontFamily(Font(Res.font.figtree))
 
     return Typography(
         displayLarge = TYPOGRAPHY.displayLarge.copy(fontFamily = selectedFont),

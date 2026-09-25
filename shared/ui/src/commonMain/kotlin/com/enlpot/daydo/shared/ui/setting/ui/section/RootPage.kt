@@ -51,6 +51,7 @@ import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
+import com.enlpot.daydo.shared.ui.task.label
 import com.enlpot.daydo.shared.ui.setting.SettingsState
 import com.enlpot.daydo.shared.ui.setting.ui.component.LicenseBottomSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
@@ -319,7 +320,7 @@ fun RootPage(
                     SmartCategory.entries.forEach { smart ->
                         val visible = smart !in state.hiddenSmartViews
                         ListItem(
-                            headlineContent = { Text(text = smart.labelText()) },
+                            headlineContent = { Text(text = smart.label()) },
                             colors = listItemColors(),
                             modifier =
                                 Modifier.fillMaxWidth()
@@ -493,20 +494,6 @@ fun RootPage(
         if (showLicenseDialog) {
             LicenseBottomSheet(onDismissRequest = { showLicenseDialog = false })
         }
-    }
-}
-
-@Composable
-private fun SmartCategory.labelText(): String {
-    return when (this) {
-        SmartCategory.ALL -> stringResource(Res.string.smart_all)
-        SmartCategory.TODAY -> stringResource(Res.string.smart_today)
-        SmartCategory.TOMORROW -> stringResource(Res.string.smart_tomorrow)
-        SmartCategory.NEXT_7_DAYS -> stringResource(Res.string.smart_next_7_days)
-        SmartCategory.OVERDUE -> stringResource(Res.string.smart_overdue)
-        SmartCategory.COMPLETED -> stringResource(Res.string.smart_completed)
-        SmartCategory.DELETED -> stringResource(Res.string.smart_deleted)
-        SmartCategory.INBOX -> stringResource(Res.string.smart_inbox)
     }
 }
 

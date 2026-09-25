@@ -45,6 +45,10 @@
     <string name="description">描述</string>
     <string name="edit_habit">编辑习惯</string>
     <string name="weekly_progress">每周进度</string>
+    <string name="notification_permission_denied">通知权限未开启</string>
+    <string name="edit">编辑</string>
+    <string name="all_analytics">全部统计</string>
+    <string name="compact_view">紧凑视图</string>
     <string name="overall_analytics">总体分析</string>
     <string name="monthly_progress">每月进度</string>
     <string name="week_breakdown">每日明细</string>
@@ -160,6 +164,8 @@
     <string name="week_label">周</string>
     <string name="weekday_distribution">周几完成分布</string>
     <string name="hour_distribution">完成时刻分布</string>
+    <string name="habit_not_found">习惯不存在或已删除</string>
+    <string name="back">返回</string>
     <string name="no_completion_record">暂无完成记录</string>
 
     <!-- 任务编辑 -->

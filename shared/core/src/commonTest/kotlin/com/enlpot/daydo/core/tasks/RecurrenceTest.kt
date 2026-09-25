@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Recurrence 生成器单元测试：覆盖 P0-1~4 回归、输入防御（P1-14）与生成器-判定器一致性属性测试。
+ * Recurrence 生成器单元测试：覆盖周期回归、输入防御与生成器-判定器一致性属性测试。
  */
 package com.enlpot.daydo.core.tasks
 

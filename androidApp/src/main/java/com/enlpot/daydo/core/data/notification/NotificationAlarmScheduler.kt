@@ -48,6 +48,10 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
+    // 已注册闹钟的 PendingIntent 集合：AlarmManager.cancelAll() 仅 API 34+ 可用，
+    // 低版本靠集合逐个取消，恢复/清理时不残留旧闹钟
+    private val scheduledIntents = mutableSetOf<PendingIntent>()
+
     /**
      * 精确闹钟权限（SCHEDULE_EXACT_ALARM）被撤销时降级为窗口闹钟（±10 分钟内触发），
      * 保证提醒不丢、不因 SecurityException 崩溃。权限正常时行为与原来完全一致。
@@ -104,6 +108,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             scheduleTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
             pendingIntent,
         )
+        scheduledIntents.add(pendingIntent)
 
         Log.d(TAG, "Scheduled: Habit '$habit' at $scheduleTime")
     }
@@ -138,6 +143,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             scheduleTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
             pendingIntent,
         )
+        scheduledIntents.add(pendingIntent)
 
         Log.d(TAG, "Scheduled: Task '$task' at $scheduleTime")
     }
@@ -157,6 +163,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             )
 
         alarmManager.cancel(pendingIntent)
+        scheduledIntents.remove(pendingIntent)
         Log.d(TAG, "Cancelled: Habit '${habit.title}'")
     }
 
@@ -175,12 +182,15 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             )
 
         alarmManager.cancel(pendingIntent)
+        scheduledIntents.remove(pendingIntent)
         Log.d(TAG, "Cancelled: Task '${task.title}'")
     }
 
     override fun cancelAll() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            alarmManager.cancelAll()
+        // 低版本无 AlarmManager.cancelAll()：用注册集合逐个取消；高版本同样精确到本应用闹钟
+        synchronized(scheduledIntents) {
+            scheduledIntents.forEach { alarmManager.cancel(it) }
+            scheduledIntents.clear()
         }
     }
 }

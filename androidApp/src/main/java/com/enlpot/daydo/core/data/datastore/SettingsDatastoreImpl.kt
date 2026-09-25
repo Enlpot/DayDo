@@ -54,7 +54,8 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
     override fun getStartOfTheWeekPref(): Flow<DayOfWeek> =
         datastore.data.map { prefs ->
             val dayOfWeek = prefs[startOfWeekKey] ?: DayOfWeek.MONDAY.name
-            return@map DayOfWeek.valueOf(dayOfWeek)
+            // 容错：非法/旧存档枚举值回退默认，避免崩溃
+            return@map runCatching { DayOfWeek.valueOf(dayOfWeek) }.getOrDefault(DayOfWeek.MONDAY)
         }
 
     override suspend fun setStartOfWeek(day: DayOfWeek) {
@@ -64,7 +65,8 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
     override fun getStartingSectionPref(): Flow<Sections> =
         datastore.data.map { pref ->
             val page = pref[startingSectionKey] ?: Sections.Home.name
-            return@map Sections.valueOf(page)
+            // 容错：非法/旧存档枚举值回退默认，避免崩溃
+            return@map runCatching { Sections.valueOf(page) }.getOrDefault(Sections.Home)
         }
 
     override suspend fun setStartingPage(page: Sections) {
@@ -164,8 +166,14 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
         }
 
     override suspend fun setWebDavPassword(password: String) {
-        datastore.edit { prefs ->
-            prefs[webDavPasswordKey] = WebDavCipher.encrypt(password) ?: password
-        }
+        val encrypted =
+            if (password.isEmpty()) {
+                "" // 清空密码
+            } else {
+                // 加密失败必须报错，不允许静默回退明文
+                WebDavCipher.encrypt(password)
+                    ?: throw IllegalStateException("WebDAV 密码加密失败，未保存明文")
+            }
+        datastore.edit { prefs -> prefs[webDavPasswordKey] = encrypted }
     }
 }

@@ -204,7 +204,7 @@ private fun CategoryEditDialog(
                                     IconButton(onClick = { showEditSheet = true }) {
                                         Icon(
                                             imageVector = vectorResource(Res.drawable.edit),
-                                            contentDescription = "Edit",
+                                            contentDescription = stringResource(Res.string.edit),
                                         )
                                     }
 
@@ -214,7 +214,7 @@ private fun CategoryEditDialog(
                                     ) {
                                         Icon(
                                             imageVector = vectorResource(Res.drawable.delete),
-                                            contentDescription = "Delete",
+                                            contentDescription = stringResource(Res.string.delete),
                                         )
                                     }
 

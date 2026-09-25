@@ -159,7 +159,7 @@ fun HabitUpsertSheetContent(
                 Icon(
                     imageVector =
                         vectorResource(if (isEditSheet) Res.drawable.edit else Res.drawable.add),
-                    contentDescription = "Edit Habit",
+                    contentDescription = stringResource(Res.string.edit_habit),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
             }
@@ -202,7 +202,7 @@ fun HabitUpsertSheetContent(
                             Text(text = stringResource(Res.string.too_long))
                         }
                     },
-                    isError = newHabit.title.length > TITLE_STRING_LIMIT,
+                    isError = titleTextFieldState.text.length > TITLE_STRING_LIMIT,
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                 )
             }
@@ -231,7 +231,7 @@ fun HabitUpsertSheetContent(
                             Text(text = stringResource(Res.string.too_long))
                         }
                     },
-                    isError = newHabit.description.length > DESCRIPTION_STRING_LIMIT,
+                    isError = descTextFieldState.text.length > DESCRIPTION_STRING_LIMIT,
                 )
             }
 

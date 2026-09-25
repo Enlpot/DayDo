@@ -18,9 +18,12 @@ package com.enlpot.daydo.shared.ui.task
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.Composable
 import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
+import daydo.shared.ui.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 
 /** The view currently shown in the task list: a smart view or a user category. */
 sealed interface TaskView {
@@ -53,3 +56,18 @@ data class TaskState(
     /** 首页"已过期"tab：未完成过期 + 今天刚完成的过期任务（按过期时间升序） */
     val homeOverdueTasks: List<Task> = emptyList(),
 )
+
+/** 智能分类显示名（设置页与任务页共用，避免两处重复实现） */
+@Composable
+fun SmartCategory.label(): String {
+    return when (this) {
+        SmartCategory.ALL -> stringResource(Res.string.smart_all)
+        SmartCategory.TODAY -> stringResource(Res.string.smart_today)
+        SmartCategory.TOMORROW -> stringResource(Res.string.smart_tomorrow)
+        SmartCategory.NEXT_7_DAYS -> stringResource(Res.string.smart_next_7_days)
+        SmartCategory.OVERDUE -> stringResource(Res.string.smart_overdue)
+        SmartCategory.COMPLETED -> stringResource(Res.string.smart_completed)
+        SmartCategory.DELETED -> stringResource(Res.string.smart_deleted)
+        SmartCategory.INBOX -> stringResource(Res.string.smart_inbox)
+    }
+}

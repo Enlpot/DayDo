@@ -38,7 +38,8 @@ import org.koin.core.annotation.Single
 class GritNotificationManager(private val context: Context) {
     companion object {
         private const val TAG = "NotificationManager"
-        private const val HABIT_NOTIF_ID_OFFSET = 0
+        // 习惯与任务的通知 ID 空间隔离：任务占 1000 起，习惯占 100 万起，避免 id 增长后互相覆盖
+        private const val HABIT_NOTIF_ID_OFFSET = 1_000_000
         private const val TASK_NOTIF_ID_OFFSET = 1000
 
         fun createNotificationChannel(context: Context) {

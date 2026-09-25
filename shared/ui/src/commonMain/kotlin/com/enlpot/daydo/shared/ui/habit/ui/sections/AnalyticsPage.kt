@@ -92,7 +92,13 @@ fun AnalyticsPage(
 
     val currentMonth = remember { YearMonth.now() }
     val currentHabit =
-        state.habitsWithAnalytics.find { it.habit.id == state.analyticsHabitId } ?: return
+        state.habitsWithAnalytics.find { it.habit.id == state.analyticsHabitId }
+
+    if (currentHabit == null) {
+        // 习惯不存在（已删除/数据未就绪）：显示空状态而非整页空白，可返回
+        AnalyticsMissing(onNavigateBack = onNavigateBack)
+        return
+    }
 
     val heatMapState =
         rememberHeatMapCalendarState(
@@ -313,3 +319,23 @@ fun AnalyticsPage(
         )
     }
 }
+
+/** 统计目标习惯不存在时的空状态 */
+@Composable
+private fun AnalyticsMissing(onNavigateBack: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = stringResource(Res.string.habit_not_found),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        TextButton(onClick = onNavigateBack) {
+            Text(stringResource(Res.string.back))
+        }
+    }
+}
+

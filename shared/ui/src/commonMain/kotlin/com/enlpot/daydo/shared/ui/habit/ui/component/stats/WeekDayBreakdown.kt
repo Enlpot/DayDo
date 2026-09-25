@@ -53,6 +53,20 @@ import kotlin.random.nextInt
 import kotlinx.datetime.format.DayOfWeekNames
 import org.jetbrains.compose.resources.stringResource
 
+/** 数据层周几键为英文缩写（Mon..Sun），UI 层映射为本地化标签 */
+@Composable
+private fun localizedDayLabel(day: String): String =
+    when (day) {
+        "Mon" -> stringResource(Res.string.monday)
+        "Tue" -> stringResource(Res.string.tuesday)
+        "Wed" -> stringResource(Res.string.wednesday)
+        "Thu" -> stringResource(Res.string.thursday)
+        "Fri" -> stringResource(Res.string.friday)
+        "Sat" -> stringResource(Res.string.saturday)
+        "Sun" -> stringResource(Res.string.sunday)
+        else -> day
+    }
+
 @Composable
 fun WeekDayBreakdown(
     weekDayData: WeekDayFrequencyData,
@@ -140,7 +154,7 @@ fun WeekDayBreakdown(
                             }
                         }
                         Text(
-                            text = day,
+                            text = localizedDayLabel(day),
                             color = MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.Bold,
                         )

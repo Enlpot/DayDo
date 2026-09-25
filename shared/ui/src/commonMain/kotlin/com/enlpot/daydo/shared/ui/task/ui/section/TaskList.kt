@@ -100,6 +100,8 @@ import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.middleItemShape
 import com.enlpot.daydo.shared.ui.components.taskItemShape
 import com.enlpot.daydo.shared.ui.task.TaskAction
+import com.enlpot.daydo.shared.ui.task.label
+import com.enlpot.daydo.shared.ui.task.label
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.TaskView
 import com.enlpot.daydo.shared.ui.task.ui.component.CategoryUpsertSheet
@@ -464,11 +466,22 @@ private fun TaskItemsSection(
                 remember(state.displayTasks, state.displayCompletedTasks, view) {
                     mutableStateOf(state.displayTasks + state.displayCompletedTasks)
                 }
+            val activeCount = state.displayTasks.size
             val reorderableListState =
                 rememberReorderableLazyListState(lazyListState) { from, to ->
+                    // 已完成任务固定按完成时间倒序，不接受拖动；活动任务也不允许拖入已完成区
+                    val effectiveTo =
+                        if (from.index >= activeCount) {
+                            from.index
+                        } else {
+                            to.index.coerceAtMost(activeCount - 1)
+                        }
+                    if (effectiveTo == from.index) {
+                        return@rememberReorderableLazyListState
+                    }
                     reorderableTasks =
                         reorderableTasks.toMutableList().apply {
-                            add(to.index, removeAt(from.index))
+                            add(effectiveTo, removeAt(from.index))
                         }
                 }
 
@@ -587,20 +600,6 @@ private fun DeletedTaskCard(
             }
         },
     )
-}
-
-@Composable
-private fun SmartCategory.label(): String {
-    return when (this) {
-        SmartCategory.ALL -> stringResource(Res.string.smart_all)
-        SmartCategory.TODAY -> stringResource(Res.string.smart_today)
-        SmartCategory.TOMORROW -> stringResource(Res.string.smart_tomorrow)
-        SmartCategory.NEXT_7_DAYS -> stringResource(Res.string.smart_next_7_days)
-        SmartCategory.OVERDUE -> stringResource(Res.string.smart_overdue)
-        SmartCategory.COMPLETED -> stringResource(Res.string.smart_completed)
-        SmartCategory.DELETED -> stringResource(Res.string.smart_deleted)
-        SmartCategory.INBOX -> stringResource(Res.string.smart_inbox)
-    }
 }
 
 @Composable

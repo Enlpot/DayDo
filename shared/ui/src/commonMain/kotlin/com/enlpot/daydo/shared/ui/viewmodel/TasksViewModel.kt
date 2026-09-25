@@ -176,20 +176,49 @@ class TasksViewModel(
                     val moved = _state.value.allTasks.firstOrNull { it.id == action.taskId }
                     if (moved != null && !moved.status) {
                         val all = _state.value.allTasks
+                        // 已完成任务固定按完成时间倒序，不作为活动任务排序键的邻居参与中点计算
                         val aboveKey =
                             action.aboveId?.let { id -> all.firstOrNull { it.id == id } }
+                                ?.takeIf { !it.status }
                                 ?.let { taskSortKeyOrCreated(it) }
                         val belowKey =
                             action.belowId?.let { id -> all.firstOrNull { it.id == id } }
+                                ?.takeIf { !it.status }
                                 ?.let { taskSortKeyOrCreated(it) }
-                        val newKey =
+                        var newKey =
                             when {
-                                aboveKey != null && belowKey != null ->
+                                aboveKey != null && belowKey != null && aboveKey - belowKey > 1 ->
                                     belowKey + (aboveKey - belowKey) / 2
-                                aboveKey != null -> aboveKey - 1
+                                aboveKey != null && belowKey == null -> aboveKey - 1
                                 belowKey != null -> belowKey + 1
                                 else -> taskSortKeyOrCreated(moved)
                             }
+                        // 相邻键差 1 时中点/±1 会撞同键（排序截断）：整段按当前顺序重编号（步长 2）腾出空间
+                        if (aboveKey != null && belowKey != null && aboveKey - belowKey <= 1) {
+                            val active =
+                                all
+                                    .filter { !it.status }
+                                    .sortedWith(compareBy { taskSortKeyOrCreated(it) })
+                            active.forEachIndexed { idx, t ->
+                                repo.updateTaskSortKeyById(t.id, idx * 2L)
+                            }
+                            val newAbove =
+                                action.aboveId
+                                    ?.let { id -> active.firstOrNull { it.id == id } }
+                                    ?.let { active.indexOf(it) * 2L }
+                            val newBelow =
+                                action.belowId
+                                    ?.let { id -> active.firstOrNull { it.id == id } }
+                                    ?.let { active.indexOf(it) * 2L }
+                            newKey =
+                                when {
+                                    newAbove != null && newBelow != null ->
+                                        newBelow + (newAbove - newBelow) / 2
+                                    newAbove != null -> newAbove - 1
+                                    newBelow != null -> newBelow + 1
+                                    else -> newKey
+                                }
+                        }
                         repo.updateTaskSortKeyById(action.taskId, newKey)
                     }
                 }
@@ -228,14 +257,6 @@ class TasksViewModel(
                                 } ?: TaskView.Smart(SmartCategory.ALL)
                         )
                     }
-                }
-
-                is DeleteTask -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.TASK_DELETED.name,
-                        mapOf("has_reminder" to (action.task.reminder != null)),
-                    )
-                    repo.softDeleteTask(action.task)
                 }
 
                 is SoftDeleteTask -> {
@@ -303,10 +324,14 @@ class TasksViewModel(
                 AnalyticsWrapper.Companion.AnalyticsEvent.TASK_COMPLETED.name,
                 mapOf("has_reminder" to (task.reminder != null)),
             )
-            // 老数据（无 seriesId）首次完成时初始化系列，后续周期继承
+            // 老数据（无 seriesId）首次完成时初始化系列，后续周期继承；随机 seriesId 需查重避免撞号
             val seriesTask =
                 if (task.recurrence != null && task.seriesId == null) {
-                    task.copy(seriesId = Random.nextLong())
+                    var newSeriesId = Random.nextLong()
+                    while (repo.getTasksBySeries(newSeriesId).isNotEmpty()) {
+                        newSeriesId = Random.nextLong()
+                    }
+                    task.copy(seriesId = newSeriesId)
                 } else {
                     task
                 }

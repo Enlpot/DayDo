@@ -20,6 +20,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.widget.Toast
+import daydo.shared.ui.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -46,6 +48,8 @@ actual fun TaskUpsertSheet(
     onOpenStats: (() -> Unit)?,
 ) {
     val context = LocalContext.current
+    // 回调（非 Composable 上下文）中 Toast 使用，需在组合体内提前取值
+    val deniedText = stringResource(Res.string.notification_permission_denied)
 
     var showDateTimePicker by rememberSaveable { mutableStateOf(false) }
     var notificationPermission by rememberSaveable {
@@ -59,6 +63,17 @@ actual fun TaskUpsertSheet(
         )
     }
 
+    // 打开弹窗时重新检查权限（用户可能在系统设置中修改过，避免陈旧值）
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        notificationPermission =
+            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) == PackageManager.PERMISSION_GRANTED) ||
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+    }
+
     val launcher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) {
             granted ->
@@ -66,7 +81,7 @@ actual fun TaskUpsertSheet(
                 showDateTimePicker = true
                 notificationPermission = true
             } else
-                Toast.makeText(context, "Notification permission denied", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, deniedText, Toast.LENGTH_SHORT).show()
         }
 
     TaskUpsertSheetContent(

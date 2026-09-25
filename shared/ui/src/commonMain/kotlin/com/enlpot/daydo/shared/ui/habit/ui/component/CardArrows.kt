@@ -33,10 +33,12 @@ fun CardArrows(
     onForwardAction: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    backEnabled: Boolean = enabled,
+    forwardEnabled: Boolean = enabled,
     onExpandAction: (() -> Unit)? = null,
 ) {
     Row(modifier = modifier) {
-        IconButton(onClick = onBackAction, enabled = enabled) {
+        IconButton(onClick = onBackAction, enabled = backEnabled) {
             Icon(
                 painter = painterResource(Res.drawable.arrow_back),
                 contentDescription = null,
@@ -44,7 +46,7 @@ fun CardArrows(
             )
         }
 
-        IconButton(onClick = onForwardAction, enabled = enabled) {
+        IconButton(onClick = onForwardAction, enabled = forwardEnabled) {
             Icon(
                 painter = painterResource(Res.drawable.arrow_forward),
                 contentDescription = null,

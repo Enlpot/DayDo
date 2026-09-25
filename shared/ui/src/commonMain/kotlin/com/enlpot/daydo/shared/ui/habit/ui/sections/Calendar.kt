@@ -30,6 +30,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -79,8 +80,25 @@ fun Calendar(
 ) {
     var calendarType by rememberSaveable { mutableStateOf(CalendarType.MONTH) }
 
-    val currentHabit =
-        state.habitsWithAnalytics.find { it.habit.id == state.analyticsHabitId } ?: return
+    val currentHabit = state.habitsWithAnalytics.find { it.habit.id == state.analyticsHabitId }
+    if (currentHabit == null) {
+        // 习惯不存在（已删除/数据未就绪）：显示空状态而非整页空白
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = stringResource(Res.string.habit_not_found),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = onNavigateBack) {
+                Text(stringResource(Res.string.back))
+            }
+        }
+        return
+    }
     val windowSizeClass = LocalWindowSizeClass.current
     val today = LocalDate.now()
     val doneDates =

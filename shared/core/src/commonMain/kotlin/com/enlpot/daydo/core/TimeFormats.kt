@@ -42,7 +42,16 @@ fun LocalTime.toFormattedString(is24Hr: Boolean): String {
         "${hour.toString().padStart(2, '0')}:$minuteText"
     } else {
         val h = (hour % 12).let { if (it == 0) 12 else it }
-        "$h:$minuteText ${if (hour < 12) "上午" else "下午"}"
+        // 中文时段分段：0-4 凌晨 / 5-11 上午 / 12 中午 / 13-17 下午 / 18-23 晚上
+        val period =
+            when (hour) {
+                in 0..4 -> "凌晨"
+                in 5..11 -> "上午"
+                12 -> "中午"
+                in 13..17 -> "下午"
+                else -> "晚上"
+            }
+        "$h:$minuteText $period"
     }
 }
 

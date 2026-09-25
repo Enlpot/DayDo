@@ -37,11 +37,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -105,8 +108,10 @@ class HabitRepository(
     override fun getHabitsWithAnalytics(): Flow<List<HabitWithAnalytics>> {
         return habits
             .combine(habitStatuses) { habitsFlow, habitStatusesFlow ->
+                // 按 habitId 分组一次，避免每个 habit 全量过滤全部打卡记录（O(N×M) → O(N+M)）
+                val statusesByHabit = habitStatusesFlow.groupBy { it.habitId }
                 habitsFlow.map { habit ->
-                    val habitStatusesForHabit = habitStatusesFlow.filter { it.habitId == habit.id }
+                    val habitStatusesForHabit = statusesByHabit[habit.id] ?: emptyList()
                     val dates = habitStatusesForHabit.map { it.date }
 
                     HabitWithAnalytics(
@@ -131,19 +136,29 @@ class HabitRepository(
 
     override fun getCompletedHabitIds(): Flow<List<Long>> {
         return habitStatuses
-            .map { habitStatuses ->
-                habitStatuses.filter { it.date == LocalDate.now() }.map { it.habitId }
+            .combine(dateTicker()) { habitStatusesFlow, today ->
+                habitStatusesFlow.filter { it.date == today }.map { it.habitId }
             }
             .flowOn(Dispatchers.Default)
     }
 
+    /** 每分钟检查一次日期，仅当天变化时向下游 emit，驱动跨午夜自动刷新 */
+    private fun dateTicker(): Flow<LocalDate> =
+        flow {
+            while (true) {
+                emit(LocalDate.now())
+                delay(60_000)
+            }
+        }.distinctUntilChanged()
+
     override fun getOverallAnalytics(): Flow<OverallAnalytics> {
         return habits
             .combine(habitStatuses) { habitsFlow, habitStatusesFlow ->
+                val statusesByHabit = habitStatusesFlow.groupBy { it.habitId }
                 val habitConsistencies =
                     habitsFlow.map { habit ->
                         val dates =
-                            habitStatusesFlow.filter { it.habitId == habit.id }.map { it.date }
+                            (statusesByHabit[habit.id] ?: emptyList()).map { it.date }
                         habit.title to calculateConsistency(dates, habit.days, habit.time.date)
                     }
 

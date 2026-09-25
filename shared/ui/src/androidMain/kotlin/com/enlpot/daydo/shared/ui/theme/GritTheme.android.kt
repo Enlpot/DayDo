@@ -50,7 +50,20 @@ actual fun GritTheme(theme: Theme, content: @Composable (() -> Unit)) {
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && theme.isMaterialYou -> {
                 val context = LocalContext.current
-                if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                val dynamic =
+                    if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                // MaterialYou 深色模式下将背景替换为 AMOLED 纯黑，避免该设置被静默忽略
+                if (theme.isAmoled && isDark) {
+                    dynamic.copy(
+                        background = Color.Black,
+                        surface = Color.Black,
+                        surfaceContainer = Color.Black,
+                        surfaceContainerHigh = Color.Black,
+                        surfaceContainerHighest = Color.Black,
+                    )
+                } else {
+                    dynamic
+                }
             }
 
             else -> dynamicColorScheme
