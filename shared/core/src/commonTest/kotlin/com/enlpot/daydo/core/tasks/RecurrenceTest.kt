@@ -159,6 +159,18 @@ class RecurrenceTest {
         )
     }
 
+    // ---------- P1-9：每 N 天锚定 base（未对齐 from 不再周期漂移） ----------
+    @Test
+    fun everyNDaysAnchorsToBase() {
+        val base = LocalDate(2026, 9, 24)
+        val every3 = Recurrence.EveryNDays(interval = 3)
+        // 未对齐 from：跳到 base 对齐周期的下一个周期日
+        assertEquals(LocalDate(2026, 9, 27), every3.nextDateAfter(LocalDate(2026, 9, 25), base))
+        assertEquals(LocalDate(2026, 9, 27), every3.nextDateAfter(LocalDate(2026, 9, 26), base))
+        // 对齐日：跳到下一周期
+        assertEquals(LocalDate(2026, 9, 30), every3.nextDateAfter(LocalDate(2026, 9, 27), base))
+    }
+
     // ---------- P1-14：非法输入防御——不死循环、不抛异常、回退 anchor ----------
     @Test
     fun invalidWeeklyDaysFallBackToAnchor() {

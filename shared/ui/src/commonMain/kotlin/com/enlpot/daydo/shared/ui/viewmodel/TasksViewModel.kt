@@ -604,8 +604,9 @@ class TasksViewModel(
                     }
 
                     SmartCategory.NEXT_7_DAYS -> {
+                        // "最近7天"= 今天起 7 天（今天 + 未来 6 天）；原实现含今天共 8 天
                         val startDays = today.toEpochDays()
-                        val endDays = startDays + 7
+                        val endDays = startDays + 6
                         fun dueInRange(task: Task): Boolean =
                             task.dueDate?.toEpochDays()?.let { it in startDays..endDays } == true
                         sortActiveTasks(active.filter { dueInRange(it) }, typicalBySeries) to
