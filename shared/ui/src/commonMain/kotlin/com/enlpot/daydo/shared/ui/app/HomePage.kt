@@ -49,6 +49,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -104,8 +105,25 @@ fun HomePage(
         remember(taskState.allTasks, today) {
             taskState.allTasks.filter { taskOccursOn(it, today, today) }.sortedBy { it.index }
         }
+    // 已过期：未完成 或 今天刚完成的过期任务（完成后当天仍显示，次日消失）
+    val overdueTasks =
+        remember(taskState.allTasks, today) {
+            taskState.allTasks
+                .filter {
+                    val due = it.dueDate
+                    due != null &&
+                        due < today &&
+                        (!it.status || it.completedAt?.date == today)
+                }
+                .sortedBy { it.index }
+        }
+    val hasOverdue = overdueTasks.isNotEmpty()
+    val habitPageIndex = if (hasOverdue) 2 else 1
 
-    val pagerState = rememberPagerState { 2 }
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { if (hasOverdue) 3 else 2 })
+    LaunchedEffect(hasOverdue) {
+        if (!hasOverdue && pagerState.currentPage > 1) pagerState.scrollToPage(1)
+    }
     val scope = rememberCoroutineScope()
 
     // 多选 / 编辑 / 新建状态（页面层持有，供标题与 FAB 联动）
@@ -113,6 +131,9 @@ fun HomePage(
     var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
     var editTask by remember { mutableStateOf<Task?>(null) }
     var showTaskAddSheet by rememberSaveable { mutableStateOf(false) }
+
+    val currentListTasks =
+        if (hasOverdue && pagerState.currentPage == 0) overdueTasks else todayTasks
 
     fun exitMultiSelect() {
         multiSelect = false
@@ -154,11 +175,11 @@ fun HomePage(
             },
             actions = {
                 if (multiSelect) {
-                    TextButton(onClick = { selectedTaskIds = todayTasks.map { it.id }.toSet() }) {
+                    TextButton(onClick = { selectedTaskIds = currentListTasks.map { it.id }.toSet() }) {
                         Text(text = "全选")
                     }
                     IconButton(onClick = {
-                        todayTasks.filter { it.id in selectedTaskIds }
+                        currentListTasks.filter { it.id in selectedTaskIds }
                             .forEach { onTaskAction(TaskAction.SoftDeleteTask(it)) }
                         exitMultiSelect()
                     }) {
@@ -177,30 +198,42 @@ fun HomePage(
             },
         )
 
-        // 双 tab：任务 / 习惯（可左右滑动切换）
+        // 三 tab：已过期（有未处理过期任务时显示）/ 任务 / 习惯（可左右滑动切换）
         TabRow(
             selectedTabIndex = pagerState.currentPage,
             containerColor = MaterialTheme.colorScheme.background,
         ) {
+            if (hasOverdue) {
+                Tab(
+                    selected = pagerState.currentPage == 0,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                    text = { Text(text = "已过期") },
+                )
+            }
             Tab(
-                selected = pagerState.currentPage == 0,
-                onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                selected = pagerState.currentPage == (if (hasOverdue) 1 else 0),
+                onClick = {
+                    scope.launch { pagerState.animateScrollToPage(if (hasOverdue) 1 else 0) }
+                },
                 text = { Text(text = "任务") },
             )
             Tab(
-                selected = pagerState.currentPage == 1,
-                onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                selected = pagerState.currentPage == habitPageIndex,
+                onClick = { scope.launch { pagerState.animateScrollToPage(habitPageIndex) } },
                 text = { Text(text = "习惯") },
             )
         }
 
         HorizontalPager(state = pagerState) { page ->
-            when (page) {
-                0 ->
+            val isOverduePage = hasOverdue && page == 0
+            val isTasksPage =
+                if (hasOverdue) page == 1 else page == 0
+            when {
+                isOverduePage ->
                     TodayTasksSection(
                         state = taskState,
                         onAction = onTaskAction,
-                        todayTasks = todayTasks,
+                        tasks = overdueTasks,
                         multiSelect = multiSelect,
                         selectedTaskIds = selectedTaskIds,
                         onToggleSelect = { task ->
@@ -212,6 +245,24 @@ fun HomePage(
                         onExitMultiSelect = ::exitMultiSelect,
                         onEditTask = { editTask = it },
                     )
+
+                isTasksPage ->
+                    TodayTasksSection(
+                        state = taskState,
+                        onAction = onTaskAction,
+                        tasks = todayTasks,
+                        multiSelect = multiSelect,
+                        selectedTaskIds = selectedTaskIds,
+                        onToggleSelect = { task ->
+                            if (!multiSelect) multiSelect = true
+                            selectedTaskIds =
+                                if (task.id in selectedTaskIds) selectedTaskIds - task.id
+                                else selectedTaskIds + task.id
+                        },
+                        onExitMultiSelect = ::exitMultiSelect,
+                        onEditTask = { editTask = it },
+                    )
+
                 else -> TodayHabitsSection(state = habitState, onAction = onHabitAction)
             }
         }
@@ -220,8 +271,8 @@ fun HomePage(
     // 新建入口：任务 tab 新建任务、习惯 tab 新建习惯
     FloatingActionButton(
         onClick = {
-            if (pagerState.currentPage == 0) showTaskAddSheet = true
-            else onHabitAction(HabitsAction.OnAddHabitClicked)
+            if (pagerState.currentPage == habitPageIndex) onHabitAction(HabitsAction.OnAddHabitClicked)
+            else showTaskAddSheet = true
         },
         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
@@ -292,19 +343,19 @@ fun HomePage(
 private fun TodayTasksSection(
     state: TaskState,
     onAction: (TaskAction) -> Unit,
-    todayTasks: List<Task>,
+    tasks: List<Task>,
     multiSelect: Boolean,
     selectedTaskIds: Set<Long>,
     onToggleSelect: (Task) -> Unit,
     onExitMultiSelect: () -> Unit,
     onEditTask: (Task) -> Unit,
 ) {
-    val completed = remember(todayTasks) { todayTasks.filter { it.status } }
+    val completed = remember(tasks) { tasks.filter { it.status } }
 
     val lazyListState = rememberLazyListState()
     var reorderableTasks by
-        remember(todayTasks) {
-            mutableStateOf(todayTasks.filter { !it.status }.sortedBy { it.index })
+        remember(tasks) {
+            mutableStateOf(tasks.filter { !it.status }.sortedBy { it.index })
         }
     val reorderableListState =
         rememberReorderableLazyListState(lazyListState) { from, to ->
@@ -395,7 +446,7 @@ private fun TodayTasksSection(
             }
         }
 
-        if (todayTasks.isEmpty()) {
+        if (tasks.isEmpty()) {
             item {
                 Empty(modifier = Modifier.padding(top = 120.dp))
             }

@@ -22,6 +22,7 @@ enum class SmartCategory {
     TODAY,
     TOMORROW,
     NEXT_7_DAYS,
+    OVERDUE,
     COMPLETED,
     DELETED,
     INBOX,

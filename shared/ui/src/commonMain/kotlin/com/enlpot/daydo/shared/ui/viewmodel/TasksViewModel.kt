@@ -284,24 +284,33 @@ class TasksViewModel(
                 val base = seriesTask.dueDate ?: today
                 val offset = seriesTask.reminderOffsetMinutes()
 
+                // 该系列已有实例的日期（查重，避免同一周期重复生成）
+                val existingDueDates =
+                    repo.getTasks()
+                        .filter { it.seriesId == seriesTask.seriesId }
+                        .mapNotNull { it.dueDate }
+                        .toSet()
+
                 val tasksToCreate = mutableListOf<Task>()
                 var cursor = recurrence.nextDateAfter(base, base)
                 var guard = 0
-                // 补做：base 之后到今天（含）之间错过的所有周期
+                // 补做：base 之后到今天（含）之间错过的所有周期（已有实例的跳过）
                 while (cursor <= today && guard < 60) {
-                    tasksToCreate +=
-                        seriesTask.copy(
-                            id = 0L,
-                            status = false,
-                            deletedAt = null,
-                            dueDate = cursor,
-                            reminder = null,
-                        )
+                    if (cursor !in existingDueDates) {
+                        tasksToCreate +=
+                            seriesTask.copy(
+                                id = 0L,
+                                status = false,
+                                deletedAt = null,
+                                dueDate = cursor,
+                                reminder = null,
+                            )
+                    }
                     cursor = recurrence.nextDateAfter(cursor, base)
                     guard++
                 }
-                // 未来下一次：大于今天的第一周期
-                if (guard < 60) {
+                // 未来下一次：大于今天的第一周期（该日期已有实例则不再创建）
+                if (guard < 60 && cursor !in existingDueDates) {
                     tasksToCreate +=
                         seriesTask.copy(
                             id = 0L,
@@ -470,28 +479,35 @@ class TasksViewModel(
                     SmartCategory.ALL -> active to completed
 
                     SmartCategory.TODAY ->
-                        active.filter { taskOccursOn(it, today, today) } to
-                            completed.filter { taskOccursOn(it, today, today) }
+                        active.filter { it.dueDate == today } to
+                            completed.filter { it.dueDate == today }
 
                     SmartCategory.TOMORROW -> {
                         val tomorrow = today.plusDaysSafe(1)
-                        active.filter { taskOccursOn(it, tomorrow, today) } to
-                            completed.filter { taskOccursOn(it, tomorrow, today) }
+                        active.filter { it.dueDate == tomorrow } to
+                            completed.filter { it.dueDate == tomorrow }
                     }
 
                     SmartCategory.NEXT_7_DAYS -> {
                         val startDays = today.toEpochDays()
                         val endDays = startDays + 7
-                        fun occursWithin(task: Task): Boolean {
-                            var d = startDays
-                            while (d <= endDays) {
-                                if (taskOccursOn(task, LocalDate.fromEpochDays(d), today)) return true
-                                d++
+                        fun dueInRange(task: Task): Boolean =
+                            task.dueDate?.toEpochDays()?.let { it in startDays..endDays } == true
+                        active.filter { dueInRange(it) } to
+                            completed.filter { dueInRange(it) }
+                    }
+
+                    SmartCategory.OVERDUE -> {
+                        // 未完成的过期任务 + 今天刚完成的过期任务（完成后当天仍显示，次日消失）
+                        val overdueActive =
+                            active.filter { it.dueDate?.let { d -> d < today } == true }
+                        val overdueCompletedToday =
+                            completed.filter {
+                                val due = it.dueDate
+                                due != null && due < today && it.completedAt?.date == today
                             }
-                            return false
-                        }
-                        active.filter { occursWithin(it) } to
-                            completed.filter { occursWithin(it) }
+                        (overdueActive + overdueCompletedToday).sortedBy { it.index } to
+                            emptyList()
                     }
 
                     SmartCategory.COMPLETED -> completed to emptyList()

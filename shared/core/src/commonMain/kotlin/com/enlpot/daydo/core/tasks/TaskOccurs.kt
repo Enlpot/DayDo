@@ -25,10 +25,6 @@ import kotlinx.datetime.LocalDate
  * 任务页"今天/明天/最近7天"智能分类与首页"今天"列表共用此判定，修改此处即全局生效。
  */
 fun taskOccursOn(task: Task, date: LocalDate, today: LocalDate): Boolean {
-    val rec = task.recurrence
-    return if (rec == null) {
-        task.dueDate == date
-    } else {
-        rec.occursOn(date, task.dueDate ?: today)
-    }
+    // 统一按实例日期判定：重复任务是否出现在某天，取决于该日期的实例是否存在（完成驱动）
+    return task.dueDate == date
 }

@@ -277,7 +277,7 @@ fun RootPage(
             // 版本号
             item {
                 Text(
-                    text = "DayDo v1.1.10",
+                    text = "DayDo v1.2.0",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -484,6 +484,7 @@ private fun SmartCategory.labelText(): String {
         SmartCategory.TODAY -> "今天"
         SmartCategory.TOMORROW -> "明天"
         SmartCategory.NEXT_7_DAYS -> "最近7天"
+        SmartCategory.OVERDUE -> "已过期"
         SmartCategory.COMPLETED -> "已完成"
         SmartCategory.DELETED -> "已删除"
         SmartCategory.INBOX -> "收集箱"
