@@ -280,7 +280,7 @@ fun BackupPage(
                                         when (state.webdavUploadState) {
                                             WebDavState.DONE -> "已上传到 ${server.ifBlank { "WebDAV 服务器" }}"
                                             WebDavState.FAILURE -> state.webdavMessage
-                                            else -> "将当前任务、习惯等全部数据上传到 WebDAV"
+                                            else -> "上传全部数据到 WebDAV"
                                         }
                                 )
                             },
@@ -292,7 +292,7 @@ fun BackupPage(
                                     if (state.webdavUploadState == WebDavState.WORKING) {
                                         CircularProgressIndicator(modifier = Modifier.size(22.dp))
                                     } else {
-                                        Text(text = "上传备份")
+                                        Text(text = "上传")
                                     }
                                 }
                             },
@@ -309,7 +309,7 @@ fun BackupPage(
                                         when (state.webdavDownloadState) {
                                             WebDavState.DONE -> "已恢复"
                                             WebDavState.FAILURE -> state.webdavMessage
-                                            else -> "从 WebDAV 下载备份并覆盖本地数据"
+                                            else -> "从 WebDAV 下载恢复数据"
                                         }
                                 )
                             },
@@ -321,7 +321,7 @@ fun BackupPage(
                                     if (state.webdavDownloadState == WebDavState.WORKING) {
                                         CircularProgressIndicator(modifier = Modifier.size(22.dp))
                                     } else {
-                                        Text(text = "下载恢复")
+                                        Text(text = "下载")
                                     }
                                 }
                             },

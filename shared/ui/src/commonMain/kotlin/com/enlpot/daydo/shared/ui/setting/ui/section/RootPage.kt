@@ -277,7 +277,7 @@ fun RootPage(
             // 版本号
             item {
                 Text(
-                    text = "DayDo v1.1.9",
+                    text = "DayDo v1.1.10",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
