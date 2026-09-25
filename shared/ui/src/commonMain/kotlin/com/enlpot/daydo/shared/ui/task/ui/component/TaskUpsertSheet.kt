@@ -163,7 +163,8 @@ fun TaskUpsertSheetContent(
 
     val isValidDateTime =
         if (newTask.reminder != null) {
-            newTask.reminder!! > LocalDateTime.now()
+            // 存量过期提醒未修改时允许编辑其他字段（改标题等）；仅新增/修改为过期提醒时阻止提交
+            newTask.reminder!! > LocalDateTime.now() || newTask.reminder == task.reminder
         } else true
 
     val canSubmit =
@@ -299,11 +300,8 @@ fun TaskUpsertSheetContent(
                     modifier =
                         Modifier.clip(detachedItemShape())
                             .clickable {
-                                if (notificationPermission) {
-                                    updateDateTimePickerVisibility(true)
-                                } else {
-                                    onPermissionRequest()
-                                }
+                                // 日期/时间不需要通知权限：权限被拒也能设日期；提醒才需要权限
+                                updateDateTimePickerVisibility(true)
                             },
                     colors = listItemColors(),
                     leadingContent = {
@@ -326,6 +324,7 @@ fun TaskUpsertSheetContent(
                         if (newTask.dueDate != null && newTask.recurrence == null) {
                             IconButton(
                                 onClick = {
+                                    timeSelected = false
                                     newTask =
                                         newTask.copy(
                                             dueDate = null,
@@ -544,7 +543,7 @@ fun TaskUpsertSheetContent(
 
     if (showReminderPicker) {
         ReminderPickerSheet(
-            initialOffset = newTask.reminderOffsetMinutes() ?: 0,
+            initialOffset = newTask.reminderOffsetMinutes(),
             due = newTask.dueDateTime,
             onDismissRequest = { showReminderPicker = false },
             onConfirm = { offset ->
@@ -601,7 +600,7 @@ private fun reminderPresetLabel(offsetMinutes: Int): String {
 
 @Composable
 private fun ReminderPickerSheet(
-    initialOffset: Int,
+    initialOffset: Int?,
     due: LocalDateTime?,
     onDismissRequest: () -> Unit,
     onConfirm: (Int) -> Unit,
@@ -610,7 +609,7 @@ private fun ReminderPickerSheet(
     var customOffset by
         remember {
             mutableStateOf(
-                initialOffset.takeIf { it !in reminderPresets }?.toString().orEmpty()
+                initialOffset?.takeIf { it !in reminderPresets }?.toString().orEmpty()
             )
         }
     val customValue = customOffset.toIntOrNull()?.coerceAtLeast(0)

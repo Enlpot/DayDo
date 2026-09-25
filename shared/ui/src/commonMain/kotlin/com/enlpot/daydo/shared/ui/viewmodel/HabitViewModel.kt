@@ -144,12 +144,7 @@ class HabitViewModel(
                     completedHabitsFetchJob?.cancel()
                     completedHabitsFetchJob = launch {
                         if (action.date == null) {
-                            _state.update {
-                                it.copy(
-                                    overallAnalytics =
-                                        it.overallAnalytics.copy(completedHabits = null)
-                                )
-                            }
+                            _state.update { it.copy(selectedDayCompletedHabits = null) }
                             return@launch
                         }
 
@@ -158,13 +153,10 @@ class HabitViewModel(
 
                         _state.update { habitState ->
                             habitState.copy(
-                                overallAnalytics =
-                                    habitState.overallAnalytics.copy(
-                                        completedHabits =
-                                            if (completedHabits.isNotEmpty()) {
-                                                action.date to completedHabits
-                                            } else null
-                                    )
+                                selectedDayCompletedHabits =
+                                    if (completedHabits.isNotEmpty()) {
+                                        action.date to completedHabits
+                                    } else null
                             )
                         }
                     }

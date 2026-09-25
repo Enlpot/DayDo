@@ -79,6 +79,7 @@ fun BackupPage(
     var username by remember { mutableStateOf(state.webdavUsername) }
     var password by remember { mutableStateOf(state.webdavPassword) }
     var showDownloadConfirm by remember { mutableStateOf(false) }
+    var showRestoreConfirm by remember { mutableStateOf(false) }
 
     // flow 异步发射前输入框为空：仅在用户未输入时回填已存配置，避免覆盖用户输入
     LaunchedEffect(state.webdavServer) { if (server.isEmpty()) server = state.webdavServer }
@@ -169,7 +170,7 @@ fun BackupPage(
                             },
                             trailingContent = {
                                 Button(
-                                    onClick = { onAction(SettingsAction.OnRestore) },
+                                    onClick = { showRestoreConfirm = true },
                                     enabled =
                                         state.backupState.restoreState == RestoreState.IDLE ||
                                             state.backupState.restoreState == RestoreState.FAILURE,
@@ -289,7 +290,7 @@ fun BackupPage(
                                             WebDavState.DONE ->
                                     stringResource(
                                         Res.string.uploaded_to,
-                                        server.ifBlank { stringResource(Res.string.webdav_server) },
+                                        state.webdavServer.ifBlank { stringResource(Res.string.webdav_server) },
                                     )
                                             WebDavState.FAILURE -> state.webdavMessage
                                             else -> stringResource(Res.string.upload_all_to_webdav)
@@ -338,6 +339,39 @@ fun BackupPage(
                                 }
                             },
                         )
+                    }
+
+                    // 本地恢复二次确认：将覆盖本地全部数据（与 WebDAV 下载口径一致）
+                    if (showRestoreConfirm) {
+                        GritDialog(onDismissRequest = { showRestoreConfirm = false }) {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.warning),
+                                contentDescription = null,
+                            )
+                            Text(
+                                text = stringResource(Res.string.restore),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                text = stringResource(Res.string.restore_confirm),
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                            ) {
+                                TextButton(onClick = { showRestoreConfirm = false }) {
+                                    Text(text = stringResource(Res.string.cancel))
+                                }
+                                TextButton(
+                                    onClick = {
+                                        showRestoreConfirm = false
+                                        onAction(SettingsAction.OnRestore)
+                                    },
+                                ) {
+                                    Text(text = stringResource(Res.string.confirm))
+                                }
+                            }
+                        }
                     }
 
                     // 下载恢复二次确认：将覆盖本地全部数据

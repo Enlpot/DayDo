@@ -21,6 +21,7 @@ import androidx.compose.runtime.Stable
 import com.enlpot.daydo.core.habits.HabitWithAnalytics
 import com.enlpot.daydo.core.habits.OverallAnalytics
 import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 
 /**
  * Represents the overall state for the habits feature.
@@ -50,6 +51,8 @@ data class HabitState(
     val analyticsHabitId: Long? = null,
     val showHabitAddSheet: Boolean = false,
     val editState: Boolean = false,
+    // 热力图选中日期当日完成习惯（弹窗数据）：独立于 overallAnalytics，避免被统计流整体覆盖
+    val selectedDayCompletedHabits: Pair<LocalDate, List<String>>? = null,
 
     // datastore
     val compactHabitView: Boolean = false,

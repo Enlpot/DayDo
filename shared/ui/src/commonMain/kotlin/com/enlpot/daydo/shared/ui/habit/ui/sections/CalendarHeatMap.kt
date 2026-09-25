@@ -99,9 +99,9 @@ fun CalendarHeatMap(
 
     LaunchedEffect(selectedDay) { onChangeSelectedDay(selectedDay) }
 
-    if (state.overallAnalytics.completedHabits != null) {
+    if (state.selectedDayCompletedHabits != null) {
         GritBottomSheet(onDismissRequest = { selectedDay = null }, padding = 16.dp) {
-            state.overallAnalytics.completedHabits?.let { (date, habits) ->
+            state.selectedDayCompletedHabits?.let { (date, habits) ->
                 Text(
                     text = date.toFormattedString(),
                     fontFamily = flexFontEmphasis(),

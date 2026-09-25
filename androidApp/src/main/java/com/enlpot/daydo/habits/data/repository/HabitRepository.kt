@@ -141,6 +141,9 @@ class HabitRepository(
                 }
             }
             .flowOn(Dispatchers.Default)
+            // 日期驱动：跨午夜自动重算（startedDaysAgo/consistency 依赖今天）
+            .combine(dateTicker()) { result, _ -> result }
+            .flowOn(Dispatchers.Default)
             // 统计结果同样共享：多个界面订阅同一分析流时只算一遍
             .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
     }
@@ -193,16 +196,22 @@ class HabitRepository(
                 )
             }
             .flowOn(Dispatchers.Default)
+            // 日期驱动：跨午夜自动重算
+            .combine(dateTicker()) { result, _ -> result }
+            .flowOn(Dispatchers.Default)
     }
 
     override fun getHabitsWithStatus(): Flow<List<Pair<Habit, Boolean>>> {
-        return habits.combine(habitStatuses) { habitsFlow, statusFlow ->
-            habitsFlow.map { habit ->
-                val dates = statusFlow.filter { it.habitId == habit.id }.map { it.date }
+        return habits
+            .combine(habitStatuses) { habitsFlow, statusFlow ->
+                habitsFlow.map { habit ->
+                    val dates = statusFlow.filter { it.habitId == habit.id }.map { it.date }
 
-                habit to dates.any { it == LocalDate.now() }
+                    habit to dates.any { it == LocalDate.now() }
+                }
             }
-        }
+            // 日期驱动：跨午夜自动刷新今日完成状态
+            .combine(dateTicker()) { result, _ -> result }
     }
 
     override suspend fun getStatusForHabit(id: Long): List<HabitStatus> {

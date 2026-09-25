@@ -161,8 +161,13 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
     override fun getWebDavPassword(): Flow<String> =
         datastore.data.map { prefs ->
             val stored = prefs[webDavPasswordKey] ?: ""
-            // 兼容旧明文：无法解密时原样返回，下次保存自动加密迁移
-            WebDavCipher.decrypt(stored) ?: stored
+            // 旧明文（无冒号分隔的 iv:密文 格式）原样返回，保存时自动迁移为密文；
+            // 密文解密失败（如密钥丢失）返回空串，不把密文当密码发给服务器（便于排查）
+            if (stored.contains(":")) {
+                WebDavCipher.decrypt(stored) ?: ""
+            } else {
+                stored
+            }
         }
 
     override suspend fun setWebDavPassword(password: String) {

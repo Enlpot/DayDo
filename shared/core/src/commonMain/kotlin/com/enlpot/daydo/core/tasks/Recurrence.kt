@@ -51,11 +51,21 @@ sealed interface Recurrence {
 fun Recurrence.nextDateAfter(from: LocalDate, base: LocalDate): LocalDate {
     return when (this) {
         Recurrence.Daily -> from.plusDaysSafe(1)
-        is Recurrence.EveryNDays -> from.plusDaysSafe(interval.toLong().coerceAtLeast(1))
+        is Recurrence.EveryNDays -> nextEveryNDays(from, base)
         is Recurrence.Weekly -> nextWeekly(from, base)
         is Recurrence.Monthly -> nextMonthly(from, base)
         is Recurrence.Yearly -> nextYearly(from, base)
     }
+}
+
+private fun Recurrence.EveryNDays.nextEveryNDays(from: LocalDate, base: LocalDate): LocalDate {
+    val interval = interval.toLong().coerceAtLeast(1)
+    // 锚定 base：返回 from 之后的下一个周期日（与 Monthly/Yearly 入口对齐一致，
+    // 避免未对齐调用方传入 from 后周期永久漂移）
+    val daysFromBase = from.toEpochDays() - base.toEpochDays()
+    val remainder = ((daysFromBase % interval) + interval) % interval
+    val offset = if (remainder == 0L) interval else interval - remainder
+    return from.plusDaysSafe(offset)
 }
 
 private fun Recurrence.Weekly.nextWeekly(from: LocalDate, base: LocalDate): LocalDate {

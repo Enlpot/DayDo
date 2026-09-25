@@ -354,7 +354,7 @@ private fun TaskListTopBar(
             }
             val motionScheme = MaterialTheme.motionScheme
             AnimatedVisibility(
-                visible = state.completedTasks.isNotEmpty() && !isExpanded,
+                visible = state.displayCompletedTasks.isNotEmpty() && !isExpanded,
                 enter = fadeIn(motionScheme.fastEffectsSpec()),
                 exit = fadeOut(motionScheme.fastEffectsSpec()),
             ) {
@@ -476,6 +476,13 @@ private fun TaskItemsSection(
                             to.index.coerceAtMost(activeCount - 1)
                         }
                     if (effectiveTo == from.index) {
+                        return@rememberReorderableLazyListState
+                    }
+                    // 普通任务/重复任务排序规则不同（普通按创建时间、重复按典型完成时间）：
+                    // 禁止跨区拖动，否则拖后任务会弹回原位
+                    val draggedIsRecurring = reorderableTasks.getOrNull(from.index)?.recurrence != null
+                    val targetIsRecurring = reorderableTasks.getOrNull(effectiveTo)?.recurrence != null
+                    if (draggedIsRecurring != targetIsRecurring) {
                         return@rememberReorderableLazyListState
                     }
                     reorderableTasks =

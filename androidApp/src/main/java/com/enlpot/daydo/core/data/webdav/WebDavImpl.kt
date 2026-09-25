@@ -50,6 +50,14 @@ class WebDavImpl(
         username: String,
         password: String,
     ): WebDavResult = withContext(Dispatchers.IO) {
+        val conn =
+            try {
+                openConnection(server, username, password, "PUT")
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                return@withContext WebDavResult.Failure("连接失败：${e.message}")
+            }
         try {
             val schema =
                 ExportSchema(
@@ -62,20 +70,24 @@ class WebDavImpl(
                 )
             val body = json.encodeToString(schema)
 
-            val conn = openConnection(server, username, password, "PUT")
             conn.doOutput = true
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
             conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
             val code = conn.responseCode
-            conn.disconnect()
 
             if (code in 200..299) {
                 WebDavResult.Success
             } else {
+                // 关闭错误流，避免连接复用泄漏
+                conn.errorStream?.close()
                 WebDavResult.Failure("上传失败（HTTP $code）")
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e // 协程取消不吞
         } catch (e: Exception) {
             WebDavResult.Failure("上传失败：${e.message}")
+        } finally {
+            conn.disconnect()
         }
     }
 
@@ -84,15 +96,21 @@ class WebDavImpl(
         username: String,
         password: String,
     ): WebDavResult = withContext(Dispatchers.IO) {
+        val conn =
+            try {
+                openConnection(server, username, password, "GET")
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                return@withContext WebDavResult.Failure("连接失败：${e.message}")
+            }
         try {
-            val conn = openConnection(server, username, password, "GET")
             val code = conn.responseCode
             if (code != 200) {
-                conn.disconnect()
+                conn.errorStream?.close()
                 WebDavResult.Failure("下载失败（HTTP $code）")
             } else {
                 val body = conn.inputStream.bufferedReader().use { it.readText() }
-                conn.disconnect()
                 when (val result = restoreRepo.restoreFromJson(body)) {
                     is RestoreResult.Success -> WebDavResult.Success
                     is RestoreResult.Failure ->
@@ -106,8 +124,12 @@ class WebDavImpl(
                         )
                 }
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e // 协程取消不吞
         } catch (e: Exception) {
             WebDavResult.Failure("下载失败：${e.message}")
+        } finally {
+            conn.disconnect()
         }
     }
 

@@ -160,15 +160,7 @@ class TasksViewModel(
                         )
                     }
                     upsertCategory(action.category)
-
-                    _state.update {
-                        it.copy(
-                            currentView =
-                                it.tasks.keys.firstOrNull()?.let { category ->
-                                    TaskView.Regular(category)
-                                } ?: TaskView.Smart(SmartCategory.ALL)
-                        )
-                    }
+                    // 新建/编辑/重命名分类都不再切换当前视图（避免编辑时被切走）
                 }
 
                 is ReorderTask -> {
@@ -227,17 +219,8 @@ class TasksViewModel(
                     for (category in action.mapping) {
                         upsertCategory(category.second.copy(index = category.first))
                     }
-
                     delay(REORDER_DELAY.milliseconds)
-
-                    _state.update {
-                        it.copy(
-                            currentView =
-                                it.tasks.keys.firstOrNull()?.let { category ->
-                                    TaskView.Regular(category)
-                                } ?: TaskView.Smart(SmartCategory.ALL)
-                        )
-                    }
+                    // 拖动排序分类不再切换当前视图
                 }
 
                 is DeleteCategory -> {
@@ -245,17 +228,23 @@ class TasksViewModel(
                         AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_DELETED.name,
                         emptyMap(),
                     )
+                    // 仅当删除的是当前查看的分类时才切换到其他分类；删除非当前分类保持视图
+                    val wasCurrent =
+                        (_state.value.currentView as? TaskView.Regular)
+                            ?.category?.id == action.category.id
                     deleteCategory(action.category)
 
                     delay(REORDER_DELAY.milliseconds)
 
-                    _state.update {
-                        it.copy(
-                            currentView =
-                                it.tasks.keys.firstOrNull()?.let { category ->
-                                    TaskView.Regular(category)
-                                } ?: TaskView.Smart(SmartCategory.ALL)
-                        )
+                    if (wasCurrent) {
+                        _state.update {
+                            it.copy(
+                                currentView =
+                                    it.tasks.keys.firstOrNull()?.let { category ->
+                                        TaskView.Regular(category)
+                                    } ?: TaskView.Smart(SmartCategory.ALL)
+                            )
+                        }
                     }
                 }
 
@@ -433,7 +422,8 @@ class TasksViewModel(
     }
 
     private suspend fun deleteCompletedTasks() {
-        for (task in _state.value.completedTasks) {
+        // 只清当前视图可见的已完成任务（避免"清空"范围超出用户所见）
+        for (task in _state.value.displayCompletedTasks) {
             analytics.trackEvent(
                 AnalyticsWrapper.Companion.AnalyticsEvent.TASK_DELETED.name,
                 mapOf("has_reminder" to (task.reminder != null)),
@@ -559,6 +549,16 @@ class TasksViewModel(
                                 homeTodayTasks = homeTodayActive,
                                 homeTodayCompleted = homeTodayCompleted,
                                 homeOverdueTasks = homeOverdueTasks,
+                                // 统计页数据回流：数据流更新时按当前 seriesId 重新计算（进程恢复后不再空白）
+                                seriesTasks =
+                                    if (it.statsSeriesId != null) {
+                                        allTasks.filter { task ->
+                                            task.seriesId == it.statsSeriesId &&
+                                                task.deletedAt == null
+                                        }
+                                    } else {
+                                        it.seriesTasks
+                                    },
                             )
                         }
                     }

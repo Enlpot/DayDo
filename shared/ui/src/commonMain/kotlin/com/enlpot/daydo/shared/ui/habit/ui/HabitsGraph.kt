@@ -40,6 +40,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -50,6 +51,9 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
 import com.enlpot.daydo.shared.ui.components.PageFill
@@ -110,12 +114,19 @@ fun HabitsGraph(
 
     LaunchedEffect(Unit) { onAction(HabitsAction.OnHabitsOpened) }
 
-    // 从首页跳转携带的初始统计习惯：先定位习惯并派发（handled 由各分支在完成入栈后调用）
+    // 从首页跳转携带的初始统计习惯：等目标习惯数据就绪后派发（handled 由各分支在完成入栈后调用）
+    // 冷启动时数据可能未加载完：snapshotFlow 挂起等待目标出现（最多 5 秒），避免永久卡在 habit_not_found
     LaunchedEffect(initialAnalyticsHabitId) {
         if (initialAnalyticsHabitId != null) {
-            state.habitsWithAnalytics
-                .firstOrNull { it.habit.id == initialAnalyticsHabitId }
-                ?.let { onAction(HabitsAction.PrepareAnalytics(it.habit)) }
+            val target =
+                withTimeoutOrNull(5_000) {
+                    snapshotFlow {
+                        state.habitsWithAnalytics.firstOrNull { it.habit.id == initialAnalyticsHabitId }
+                    }.filterNotNull().first()
+                }
+            if (target != null) {
+                onAction(HabitsAction.PrepareAnalytics(target.habit))
+            }
         }
     }
 

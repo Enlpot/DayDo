@@ -146,16 +146,21 @@ class SettingsViewModel(
                 }
 
                 is SetWebDavConfig -> {
-                    settingsDatastore.setWebDavServer(action.server)
-                    settingsDatastore.setWebDavUsername(action.username)
-                    settingsDatastore.setWebDavPassword(action.password)
-                    // 配置变更时重置 WebDAV 传输状态，避免残留上一次的上传/下载结果
-                    _state.update {
-                        it.copy(
-                            webdavUploadState = WebDavState.IDLE,
-                            webdavDownloadState = WebDavState.IDLE,
-                            webdavMessage = "",
-                        )
+                    try {
+                        settingsDatastore.setWebDavServer(action.server)
+                        settingsDatastore.setWebDavUsername(action.username)
+                        settingsDatastore.setWebDavPassword(action.password)
+                        // 配置变更时重置 WebDAV 传输状态，避免残留上一次的上传/下载结果
+                        _state.update {
+                            it.copy(
+                                webdavUploadState = WebDavState.IDLE,
+                                webdavDownloadState = WebDavState.IDLE,
+                                webdavMessage = "",
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // 加密/存储异常不崩溃，提示用户（如 Keystore 不可用）
+                        _state.update { it.copy(webdavMessage = "保存配置失败：${e.message}") }
                     }
                 }
 
@@ -169,7 +174,14 @@ class SettingsViewModel(
                             webdavMessage = "",
                         )
                     }
-                    val result = webDavRepo.upload(server, username, password)
+                    val result =
+                        try {
+                            webDavRepo.upload(server, username, password)
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e // 页面退出取消：不吞成失败提示
+                        } catch (e: Exception) {
+                            WebDavResult.Failure("上传失败：${e.message}")
+                        }
                     _state.update {
                         it.copy(
                             webdavUploadState =
@@ -192,7 +204,14 @@ class SettingsViewModel(
                             webdavMessage = "",
                         )
                     }
-                    val result = webDavRepo.download(server, username, password)
+                    val result =
+                        try {
+                            webDavRepo.download(server, username, password)
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e // 页面退出取消：不吞成失败提示
+                        } catch (e: Exception) {
+                            WebDavResult.Failure("下载失败：${e.message}")
+                        }
                     _state.update {
                         it.copy(
                             webdavDownloadState =
