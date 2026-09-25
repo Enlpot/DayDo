@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -206,7 +206,7 @@ fun TaskUpsertSheetContent(
                     ) {
                         Icon(
                             imageVector = vectorResource(Res.drawable.analytics),
-                            contentDescription = "统计",
+                            contentDescription = stringResource(Res.string.statistics),
                             modifier = Modifier.size(20.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -228,7 +228,7 @@ fun TaskUpsertSheetContent(
                         checked = newTask.categoryId == null,
                         onCheckedChange = { newTask = newTask.copy(categoryId = null) },
                         colors = ToggleButtonDefaults.tonalToggleButtonColors(),
-                        content = { Text(text = "收集箱") },
+                        content = { Text(text = stringResource(Res.string.smart_inbox)) },
                     )
                     categories.forEach { category ->
                         ToggleButton(
@@ -256,7 +256,7 @@ fun TaskUpsertSheetContent(
                     shape = MaterialTheme.shapes.medium,
                     textStyle = MaterialTheme.typography.titleLarge,
                     lineLimits = TextFieldLineLimits.SingleLine,
-                    placeholder = { Text(text = "标题") },
+                    placeholder = { Text(text = stringResource(Res.string.title)) },
                     keyboardOptions =
                         KeyboardOptions.Default.copy(
                             capitalization = KeyboardCapitalization.Sentences,
@@ -284,7 +284,7 @@ fun TaskUpsertSheetContent(
                     state = contentState,
                     shape = MaterialTheme.shapes.medium,
                     textStyle = MaterialTheme.typography.bodyMedium,
-                    placeholder = { Text(text = "内容") },
+                    placeholder = { Text(text = stringResource(Res.string.description)) },
                     keyboardOptions =
                         KeyboardOptions.Default.copy(
                             capitalization = KeyboardCapitalization.Sentences,
@@ -312,7 +312,7 @@ fun TaskUpsertSheetContent(
                             contentDescription = null,
                         )
                     },
-                    headlineContent = { Text(text = "时间") },
+                    headlineContent = { Text(text = stringResource(Res.string.time_label)) },
                     supportingContent = {
                         Text(
                             text = newTask.dueDateTimeText(is24Hr),
@@ -336,7 +336,7 @@ fun TaskUpsertSheetContent(
                             ) {
                                 Icon(
                                     imageVector = vectorResource(Res.drawable.close),
-                                    contentDescription = "清除时间",
+                                    contentDescription = stringResource(Res.string.clear_time),
                                 )
                             }
                         }
@@ -370,7 +370,7 @@ fun TaskUpsertSheetContent(
                             contentDescription = null,
                         )
                     },
-                    headlineContent = { Text(text = "提醒") },
+                    headlineContent = { Text(text = stringResource(Res.string.reminder)) },
                     supportingContent = {
                         Column {
                             if (newTask.reminder != null) {
@@ -387,7 +387,7 @@ fun TaskUpsertSheetContent(
                                 }
                             } else if (!hasDue) {
                                 Text(
-                                    text = "先设置时间后可提醒",
+                                    text = stringResource(Res.string.set_time_first),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -408,10 +408,10 @@ fun TaskUpsertSheetContent(
                             contentDescription = null,
                         )
                     },
-                    headlineContent = { Text(text = "重复") },
+                    headlineContent = { Text(text = stringResource(Res.string.repeat)) },
                     supportingContent = {
                         Text(
-                            text = newTask.recurrence?.toDisplayString() ?: "不重复",
+                            text = newTask.recurrence?.toDisplayString() ?: stringResource(Res.string.no_repeat),
                             color =
                                 if (newTask.recurrence != null) MaterialTheme.colorScheme.onSurface
                                 else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -523,7 +523,7 @@ fun TaskUpsertSheetContent(
                 ) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.schedule),
-                        contentDescription = "Select Time",
+                        contentDescription = stringResource(Res.string.select_time),
                     )
                 }
             },
@@ -572,9 +572,10 @@ fun TaskUpsertSheetContent(
     }
 }
 
+@Composable
 private fun Task.dueDateTimeText(is24Hr: Boolean): String {
     // 重复任务未设置日期时，默认当天（全天）作为锚点日期
-    val date = dueDate ?: if (recurrence != null) LocalDate.now() else return "无"
+    val date = dueDate ?: if (recurrence != null) LocalDate.now() else return stringResource(Res.string.none)
     val dateText = date.toFormattedString()
     return if (dueTime != null) {
         "$dateText ${dueTime!!.toFormattedString(is24Hr)}"
@@ -585,13 +586,14 @@ private fun Task.dueDateTimeText(is24Hr: Boolean): String {
 
 private val reminderPresets = listOf(0, 5, 15, 30, 60, 1440)
 
+@Composable
 private fun reminderPresetLabel(offsetMinutes: Int): String {
     return when (offsetMinutes) {
-        0 -> "到期时提醒"
-        5, 15, 30 -> "提前${offsetMinutes}分钟提醒"
-        60 -> "提前1小时提醒"
-        1440 -> "提前1天提醒"
-        else -> "提前${offsetMinutes}分钟提醒（自定义）"
+        0 -> stringResource(Res.string.remind_at_due)
+        5, 15, 30 -> stringResource(Res.string.remind_before_min, offsetMinutes)
+        60 -> stringResource(Res.string.remind_before_hour)
+        1440 -> stringResource(Res.string.remind_before_day)
+        else -> stringResource(Res.string.custom_before_min, offsetMinutes)
     }
 }
 
@@ -633,7 +635,7 @@ private fun ReminderPickerSheet(
             }
 
             Text(
-                text = "提醒",
+                text = stringResource(Res.string.reminder),
                 style = MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
             )
             Text(
@@ -668,12 +670,12 @@ private fun ReminderPickerSheet(
             ListItem(
                 modifier = Modifier.clip(detachedItemShape()),
                 colors = listItemColors(),
-                headlineContent = { Text(text = "自定义（提前N分钟）") },
+                headlineContent = { Text(text = stringResource(Res.string.custom_n_min)) },
                 trailingContent = {
                     OutlinedTextField(
                         value = customOffset,
                         onValueChange = { customOffset = it },
-                        placeholder = { Text(text = "分钟") },
+                        placeholder = { Text(text = stringResource(Res.string.minutes)) },
                         singleLine = true,
                         keyboardOptions =
                             KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -687,14 +689,14 @@ private fun ReminderPickerSheet(
                 enabled = customValue != null,
                 modifier = Modifier.align(Alignment.End),
             ) {
-                Text(text = "确定")
+                Text(text = stringResource(Res.string.confirm))
             }
 
             TextButton(
                 onClick = onRemove,
                 modifier = Modifier.align(Alignment.End),
             ) {
-                Text(text = "不提醒")
+                Text(text = stringResource(Res.string.no_reminder))
             }
         }
     }

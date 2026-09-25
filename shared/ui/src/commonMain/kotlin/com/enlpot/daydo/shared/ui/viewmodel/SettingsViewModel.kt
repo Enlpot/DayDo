@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -176,7 +176,7 @@ class SettingsViewModel(
                                 if (result is WebDavResult.Success) WebDavState.DONE
                                 else WebDavState.FAILURE,
                             webdavMessage =
-                                if (result is WebDavResult.Success) "备份已上传到 WebDAV 服务器"
+                                if (result is WebDavResult.Success) ""
                                 else (result as WebDavResult.Failure).message,
                         )
                     }
@@ -199,7 +199,7 @@ class SettingsViewModel(
                                 if (result is WebDavResult.Success) WebDavState.DONE
                                 else WebDavState.FAILURE,
                             webdavMessage =
-                                if (result is WebDavResult.Success) "已从 WebDAV 服务器恢复数据"
+                                if (result is WebDavResult.Success) ""
                                 else (result as WebDavResult.Failure).message,
                         )
                     }

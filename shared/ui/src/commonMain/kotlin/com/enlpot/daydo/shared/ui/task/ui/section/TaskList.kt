@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -327,7 +327,7 @@ private fun TaskListTopBar(
         scrollBehavior = scrollBehavior,
         title = {
             if (multiSelect) {
-                Text(text = "已选 $selectedCount 项", fontFamily = flexFontEmphasis())
+                Text(text = stringResource(Res.string.selected_count, selectedCount), fontFamily = flexFontEmphasis())
             } else {
                 Text(text = stringResource(Res.string.tasks), fontFamily = flexFontEmphasis())
             }
@@ -343,7 +343,7 @@ private fun TaskListTopBar(
         actions = {
             if (multiSelect) {
                 TextButton(onClick = onSelectAll) {
-                    Text(text = "全选")
+                    Text(text = stringResource(Res.string.select_all))
                 }
                 IconButton(onClick = onDeleteSelected) {
                     Icon(
@@ -581,11 +581,11 @@ private fun DeletedTaskCard(
             Text(text = task.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         supportingContent = {
-            Text(text = "已删除 · ${task.dueDate?.toFormattedString() ?: "无日期"}")
+            Text(text = stringResource(Res.string.deleted_with_date, task.dueDate?.toFormattedString() ?: stringResource(Res.string.none)))
         },
         trailingContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onRestore) { Text(text = "恢复") }
+                TextButton(onClick = onRestore) { Text(text = stringResource(Res.string.restore_task)) }
                 FilledTonalIconButton(onClick = onPurge) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.delete),
@@ -597,16 +597,17 @@ private fun DeletedTaskCard(
     )
 }
 
+@Composable
 private fun SmartCategory.label(): String {
     return when (this) {
-        SmartCategory.ALL -> "所有"
-        SmartCategory.TODAY -> "今天"
-        SmartCategory.TOMORROW -> "明天"
-        SmartCategory.NEXT_7_DAYS -> "最近7天"
-        SmartCategory.OVERDUE -> "已过期"
-        SmartCategory.COMPLETED -> "已完成"
-        SmartCategory.DELETED -> "已删除"
-        SmartCategory.INBOX -> "收集箱"
+        SmartCategory.ALL -> stringResource(Res.string.smart_all)
+        SmartCategory.TODAY -> stringResource(Res.string.smart_today)
+        SmartCategory.TOMORROW -> stringResource(Res.string.smart_tomorrow)
+        SmartCategory.NEXT_7_DAYS -> stringResource(Res.string.smart_next_7_days)
+        SmartCategory.OVERDUE -> stringResource(Res.string.smart_overdue)
+        SmartCategory.COMPLETED -> stringResource(Res.string.smart_completed)
+        SmartCategory.DELETED -> stringResource(Res.string.smart_deleted)
+        SmartCategory.INBOX -> stringResource(Res.string.smart_inbox)
     }
 }
 

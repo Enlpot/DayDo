@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,13 +95,13 @@ fun BackupPage(
         MediumFlexibleTopAppBar(
             scrollBehavior = scrollBehavior,
             title = {
-                Text(text = "备份与同步", fontFamily = flexFontEmphasis())
+                Text(text = stringResource(Res.string.backup_and_sync), fontFamily = flexFontEmphasis())
             },
             navigationIcon = {
                 FilledTonalIconButton(onClick = onNavigateBack) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.nav_arrow_back),
-                        contentDescription = "返回",
+                        contentDescription = stringResource(Res.string.navigation),
                     )
                 }
             },
@@ -137,7 +137,7 @@ fun BackupPage(
                                         IDLE ->
                                             Icon(
                                                 painter = painterResource(Res.drawable.play_arrow),
-                                                contentDescription = "Start",
+                                                contentDescription = stringResource(Res.string.start),
                                             )
 
                                         EXPORTING ->
@@ -146,7 +146,7 @@ fun BackupPage(
                                         EXPORTED ->
                                             Icon(
                                                 imageVector = vectorResource(Res.drawable.check_circle),
-                                                contentDescription = "Done",
+                                                contentDescription = stringResource(Res.string.done),
                                             )
                                     }
                                 }
@@ -178,7 +178,7 @@ fun BackupPage(
                                         IDLE ->
                                             Icon(
                                                 painter = painterResource(Res.drawable.play_arrow),
-                                                contentDescription = "Start",
+                                                contentDescription = stringResource(Res.string.start),
                                             )
 
                                         RESTORING ->
@@ -187,13 +187,13 @@ fun BackupPage(
                                         RESTORED ->
                                             Icon(
                                                 imageVector = vectorResource(Res.drawable.check_circle),
-                                                contentDescription = "Done",
+                                                contentDescription = stringResource(Res.string.done),
                                             )
 
                                         FAILURE ->
                                             Icon(
                                                 imageVector = vectorResource(Res.drawable.warning),
-                                                contentDescription = "Fail",
+                                                contentDescription = stringResource(Res.string.fail),
                                             )
                                     }
                                 }
@@ -219,9 +219,9 @@ fun BackupPage(
                                 contentDescription = null,
                             )
                         },
-                        headlineContent = { Text(text = "WebDAV 服务器") },
+                        headlineContent = { Text(text = stringResource(Res.string.webdav_server)) },
                         supportingContent = {
-                            Text(text = "配置 WebDAV 服务器用于云备份与恢复")
+                            Text(text = stringResource(Res.string.webdav_server_desc))
                         },
                         trailingContent = {
                             Button(
@@ -235,7 +235,7 @@ fun BackupPage(
                                     )
                                 },
                             ) {
-                                Text(text = "保存配置")
+                                Text(text = stringResource(Res.string.save_config))
                             }
                         },
                     )
@@ -243,30 +243,30 @@ fun BackupPage(
                         value = server,
                         onValueChange = { server = it },
                         placeholder = { Text(text = "https://dav.example.com/dav/") },
-                        label = { Text(text = "服务器地址") },
+                        label = { Text(text = stringResource(Res.string.server_address)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     )
                     OutlinedTextField(
                         value = username,
                         onValueChange = { username = it },
-                        placeholder = { Text(text = "用户名") },
-                        label = { Text(text = "用户名") },
+                        placeholder = { Text(text = stringResource(Res.string.username)) },
+                        label = { Text(text = stringResource(Res.string.username)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     )
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        placeholder = { Text(text = "应用专用密码") },
-                        label = { Text(text = "密码") },
+                        placeholder = { Text(text = stringResource(Res.string.app_password)) },
+                        label = { Text(text = stringResource(Res.string.password)) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     )
                     Text(
-                        text = "建议使用 HTTPS 地址，密码仅保存在本机",
+                        text = stringResource(Res.string.https_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 20.dp, top = 2.dp),
@@ -281,14 +281,18 @@ fun BackupPage(
                     Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
                         ListItem(
                             colors = listItemColors(),
-                            headlineContent = { Text(text = "上传备份") },
+                            headlineContent = { Text(text = stringResource(Res.string.upload_backup)) },
                             supportingContent = {
                                 Text(
                                     text =
                                         when (state.webdavUploadState) {
-                                            WebDavState.DONE -> "已上传到 ${server.ifBlank { "WebDAV 服务器" }}"
+                                            WebDavState.DONE ->
+                                    stringResource(
+                                        Res.string.uploaded_to,
+                                        server.ifBlank { stringResource(Res.string.webdav_server) },
+                                    )
                                             WebDavState.FAILURE -> state.webdavMessage
-                                            else -> "上传全部数据到 WebDAV"
+                                            else -> stringResource(Res.string.upload_all_to_webdav)
                                         }
                                 )
                             },
@@ -300,7 +304,7 @@ fun BackupPage(
                                     if (state.webdavUploadState == WebDavState.WORKING) {
                                         CircularProgressIndicator(modifier = Modifier.size(22.dp))
                                     } else {
-                                        Text(text = "上传")
+                                        Text(text = stringResource(Res.string.upload))
                                     }
                                 }
                             },
@@ -310,14 +314,14 @@ fun BackupPage(
                     Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
                         ListItem(
                             colors = listItemColors(),
-                            headlineContent = { Text(text = "下载恢复") },
+                            headlineContent = { Text(text = stringResource(Res.string.download_restore)) },
                             supportingContent = {
                                 Text(
                                     text =
                                         when (state.webdavDownloadState) {
-                                            WebDavState.DONE -> "已恢复"
+                                            WebDavState.DONE -> stringResource(Res.string.restored)
                                             WebDavState.FAILURE -> state.webdavMessage
-                                            else -> "从 WebDAV 下载恢复数据"
+                                            else -> stringResource(Res.string.download_from_webdav)
                                         }
                                 )
                             },
@@ -329,7 +333,7 @@ fun BackupPage(
                                     if (state.webdavDownloadState == WebDavState.WORKING) {
                                         CircularProgressIndicator(modifier = Modifier.size(22.dp))
                                     } else {
-                                        Text(text = "下载")
+                                        Text(text = stringResource(Res.string.download))
                                     }
                                 }
                             },
@@ -344,18 +348,18 @@ fun BackupPage(
                                 contentDescription = null,
                             )
                             Text(
-                                text = "下载恢复",
+                                text = stringResource(Res.string.download_restore),
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
-                                text = "将从 WebDAV 下载云端备份并覆盖本地全部数据，确定继续？",
+                                text = stringResource(Res.string.download_confirm),
                             )
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End,
                             ) {
                                 TextButton(onClick = { showDownloadConfirm = false }) {
-                                    Text(text = "取消")
+                                    Text(text = stringResource(Res.string.cancel))
                                 }
                                 TextButton(
                                     onClick = {
@@ -363,7 +367,7 @@ fun BackupPage(
                                         onAction(SettingsAction.WebDavDownload)
                                     },
                                 ) {
-                                    Text(text = "确定")
+                                    Text(text = stringResource(Res.string.confirm))
                                 }
                             }
                         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,15 +56,13 @@ import com.enlpot.daydo.shared.ui.habit.daysStartingFrom
 import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.CardArrows
 import com.enlpot.daydo.shared.ui.heatMapStreakShape
+import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import daydo.shared.ui.generated.resources.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
-import kotlinx.datetime.format
-import kotlinx.datetime.format.MonthNames
-import kotlinx.datetime.format.char
 import kotlinx.datetime.minus
 import org.jetbrains.compose.resources.stringResource
 
@@ -104,13 +102,13 @@ fun WeeklyBooleanHeatMap(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.padding(top = 10.dp)) {
-                val days = daysStartingFrom(heatMapState.firstDayOfWeek)
+                val weekDays = daysStartingFrom(heatMapState.firstDayOfWeek)
 
-                days.forEachIndexed { index, dayOfWeek ->
+                weekDays.forEachIndexed { index, dayOfWeek ->
                     val shape =
                         when (index) {
                             0 -> leadingItemShape(topRadius = 20)
-                            days.size - 1 -> endItemShape(bottomRadius = 20)
+                            weekDays.size - 1 -> endItemShape(bottomRadius = 20)
                             else -> RoundedCornerShape(4.dp)
                         }
                     Box(
@@ -123,7 +121,7 @@ fun WeeklyBooleanHeatMap(
                                 )
                     ) {
                         Text(
-                            text = dayOfWeek.name.take(1),
+                            text = weekdayShortLabels()[index],
                             style =
                                 MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurface
@@ -149,13 +147,8 @@ fun WeeklyBooleanHeatMap(
                         Box(modifier = Modifier.padding(2.dp)) {
                             Text(
                                 text =
-                                    it.yearMonth.format(
-                                        YearMonth.Format {
-                                            monthName(MonthNames.ENGLISH_ABBREVIATED)
-                                            char(' ')
-                                            year()
-                                        }
-                                    ),
+                                    stringResource(Res.string.month_n, it.yearMonth.month.ordinal + 1) +
+                                        " " + it.yearMonth.year,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.align(Alignment.Center),

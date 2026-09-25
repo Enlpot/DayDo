@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,3 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * 任务卡 / 首页卡 / 设置页卡片等统一引用，改一处全局同步。
  */
 val LocalCardCornerRadius = staticCompositionLocalOf { 20 }
-
-/**
- * 全局卡片高度档位（紧凑/常规/宽松），由 设置-卡片高度 控制，
- * 任务卡等统一引用，改一处全局同步。
- */

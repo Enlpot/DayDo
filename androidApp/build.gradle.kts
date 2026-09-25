@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,10 +25,16 @@ plugins {
 }
 
 val appName = "DayDo"
-val appVersionCode = 33
-val appVersionName = "1.4.8"
+val appVersionCode = 34
+val appVersionName = "1.4.9"
 
-val gitHash = execute("git", "rev-parse", "HEAD").take(7)
+val gitHash =
+    try {
+        providers.exec { commandLine("git", "rev-parse", "HEAD") }
+            .standardOutput.asText.get().trim().take(7)
+    } catch (_: Exception) {
+        "nogit"
+    }
 
 android {
     namespace = "com.enlpot.daydo"
@@ -117,17 +123,6 @@ signingConfigs {
         includeInApk = false
         includeInBundle = false
     }
-
-    sourceSets {
-        getByName("main") {
-            res.directories.addAll(
-                listOf(
-                    "src/main/res",
-                    "${project(":shared:ui").projectDir}/src/commonMain/composeResources",
-                )
-            )
-        }
-    }
 }
 
 kotlin {
@@ -183,6 +178,3 @@ dependencies {
 }
 
 room3 { schemaDirectory("$projectDir/schemas") }
-
-fun execute(vararg command: String): String =
-    providers.exec { commandLine(*command) }.standardOutput.asText.get().trim()

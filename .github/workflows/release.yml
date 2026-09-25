@@ -24,6 +24,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Run core unit tests
+        run: |
+          chmod +x gradlew
+          ./gradlew :shared:core:testAndroidHostTest --console=plain
+
       - name: Build release APK (signed)
         env:
           KEYSTORE_FILE: ${{ github.workspace }}/keystore-release.jks

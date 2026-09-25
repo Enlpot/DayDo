@@ -56,6 +56,160 @@
     <string name="consistency">Consistency</string>
     <string name="calendar">Calendar</string>
     <string name="monthly">Monthly</string>
-    <string name="yearly" >Yearly</string>
+    <string name="yearly">Yearly</string>
     <string name="home">Home</string>
+
+    <!-- 通用 -->
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="confirm">Confirm</string>
+    <string name="navigation">Navigate</string>
+    <string name="none">None</string>
+    <string name="select_all">Select all</string>
+    <string name="selected_count">%1$d selected</string>
+    <string name="restore_task">Restore</string>
+    <string name="statistics">Statistics</string>
+    <string name="deleted_with_date">Deleted · %1$s</string>
+    <string name="monday">Monday</string>
+    <string name="tuesday">Tuesday</string>
+    <string name="wednesday">Wednesday</string>
+    <string name="thursday">Thursday</string>
+    <string name="friday">Friday</string>
+    <string name="saturday">Saturday</string>
+    <string name="sunday">Sunday</string>
+    <string name="time_format">Time format</string>
+    <string name="hour_24">24-hour</string>
+    <string name="hour_12">12-hour</string>
+    <string name="choose_time_format_desc">Choose how time is displayed</string>
+    <string name="smart_category">Smart categories</string>
+    <string name="smart_category_desc">Choose smart categories to show on the tasks page</string>
+    <string name="default_start_page">Default start page</string>
+    <string name="choose_start_page_desc">Choose the page shown when opening the app</string>
+    <string name="start_week">Start of week</string>
+    <string name="choose_week_start_desc">Choose which day the week starts from</string>
+    <string name="haptics">Haptics</string>
+    <string name="sound">Sound</string>
+    <string name="start">Start</string>
+    <string name="fail">Failed</string>
+    <string name="drag_handle">Drag handle</string>
+    <string name="backup_and_sync">Backup &amp; Sync</string>
+    <string name="backup_and_sync_desc">Local file backup, restore and WebDAV cloud sync</string>
+    <string name="open_source_license">Open Source License</string>
+    <string name="gpl_desc">GNU GPL v3 license text</string>
+    <string name="hide_smart_category_desc">Uncheck to hide this category on the tasks page</string>
+    <string name="biometric_lock_desc">When enabled, fingerprint verification is required to enter</string>
+    <string name="smart_all">All</string>
+    <string name="smart_today">Today</string>
+    <string name="smart_tomorrow">Tomorrow</string>
+    <string name="smart_next_7_days">Next 7 days</string>
+    <string name="smart_overdue">Overdue</string>
+    <string name="smart_completed">Completed</string>
+    <string name="smart_deleted">Deleted</string>
+    <string name="smart_inbox">Inbox</string>
+
+    <!-- 备份与同步 -->
+    <string name="webdav_server">WebDAV Server</string>
+    <string name="webdav_server_desc">Configure a WebDAV server for cloud backup and restore</string>
+    <string name="save_config">Save config</string>
+    <string name="server_address">Server address</string>
+    <string name="username">Username</string>
+    <string name="app_password">App password</string>
+    <string name="password">Password</string>
+    <string name="https_hint">Use an HTTPS address. The password is stored locally only</string>
+    <string name="upload_backup">Upload backup</string>
+    <string name="uploaded_to">Uploaded to %1$s</string>
+    <string name="upload_all_to_webdav">Upload all data to WebDAV</string>
+    <string name="upload">Upload</string>
+    <string name="download_restore">Download &amp; restore</string>
+    <string name="restored">Restored</string>
+    <string name="download_from_webdav">Download and restore data from WebDAV</string>
+    <string name="download">Download</string>
+    <string name="download_confirm">The cloud backup will be downloaded from WebDAV and overwrite all local data. Continue?</string>
+    <string name="backup_uploaded">Backup uploaded to WebDAV server</string>
+    <string name="restored_from_webdav">Data restored from WebDAV server</string>
+    <string name="exporting">Exporting</string>
+
+    <!-- 触感反馈 -->
+    <string name="vibration_strength">Vibration strength</string>
+    <string name="haptics_desc">Vibrate on task completion and drag sorting</string>
+    <string name="sound_desc">Sound played when a task is completed</string>
+    <string name="sound_dingdong">Ding-dong</string>
+    <string name="sound_ding">Ding</string>
+    <string name="sound_di">Beep</string>
+    <string name="sound_beep">Bleep</string>
+
+    <!-- 外观与风格 -->
+    <string name="corner_radius">Corner radius</string>
+    <string name="corner_radius_desc">Drag to adjust card corner radius</string>
+    <string name="radius_preview">%1$ddp radius</string>
+    <string name="material_you">Material You theme</string>
+    <string name="amoled">Amoled palette</string>
+    <string name="wallpaper_palette_desc">Generate palette from wallpaper</string>
+    <string name="amoled_desc">Best effect on AMOLED screens</string>
+    <string name="choose_theme_desc">Choose app theme</string>
+
+    <!-- 任务统计 -->
+    <string name="repeat_task">Repeating task</string>
+    <string name="overview">Overview</string>
+    <string name="total_completed">Total completed</string>
+    <string name="completion_rate">Completion rate</string>
+    <string name="current_ongoing_streak">Current streak</string>
+    <string name="longest_ongoing_streak">Longest streak</string>
+    <string name="last_30_days">Last 30 days</string>
+    <string name="days_completed">%1$d days completed</string>
+    <string name="week_label">Week</string>
+    <string name="weekday_distribution">Weekday distribution</string>
+    <string name="hour_distribution">Completion time distribution</string>
+    <string name="no_completion_record">No completion records</string>
+
+    <!-- 任务编辑 -->
+    <string name="repeat">Repeat</string>
+    <string name="daily_repeat">Daily</string>
+    <string name="repeat_dates">Repeat dates</string>
+    <string name="repeat_months">Repeat months</string>
+    <string name="every_day">Every day</string>
+    <string name="every_week">Every week</string>
+    <string name="every_month">Every month</string>
+    <string name="every_year">Every year</string>
+    <string name="custom">Custom</string>
+    <string name="no_repeat">No repeat</string>
+    <string name="time_label">Time</string>
+    <string name="clear_time">Clear time</string>
+    <string name="reminder">Reminder</string>
+    <string name="set_time_first">Set a time first to enable reminders</string>
+    <string name="remind_at_due">Remind at due time</string>
+    <string name="remind_before_min">Remind %1$d minutes before</string>
+    <string name="remind_before_hour">Remind 1 hour before</string>
+    <string name="remind_before_day">Remind 1 day before</string>
+    <string name="custom_before_min">Remind %1$d minutes before (custom)</string>
+    <string name="custom_n_min">Custom (N minutes before)</string>
+    <string name="minutes">minutes</string>
+    <string name="no_reminder">No reminder</string>
+    <string name="every_n_days">Every %1$d days</string>
+    <string name="every_n_weeks">Every %1$d weeks</string>
+    <string name="every_n_months">Every %1$d months</string>
+    <string name="every_n_years">Every %1$d years</string>
+    <string name="month_n">%1$d</string>
+    <string name="day_n">%1$d</string>
+    <string name="day_unit">days</string>
+    <string name="week_unit">weeks</string>
+    <string name="month_unit">months</string>
+    <string name="month_unit_plural">months</string>
+    <string name="year_unit">years</string>
+    <string name="weekday_prefix"></string>
+    <string name="every_prefix">Every </string>
+    <string name="period_2m">2M</string>
+    <string name="period_4m">4M</string>
+    <string name="period_8m">8M</string>
+    <string name="period_1y">1Y</string>
+    <string name="hour_bucket_dawn">Late night</string>
+    <string name="hour_bucket_morning">Morning</string>
+    <string name="hour_bucket_noon">Noon</string>
+    <string name="hour_bucket_afternoon">Afternoon</string>
+    <string name="hour_bucket_evening">Evening</string>
+    <string name="hour_bucket_night">Night</string>
+    <string name="day_suffix"></string>
+
+    <!-- 习惯统计 -->
+    <string name="weekly_completions_avg">Completions per week (Avg)</string>
 </resources>

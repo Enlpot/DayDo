@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -179,12 +179,12 @@ class HabitDBMigrationTest {
     fun testAllMigrations() = runBlocking {
         helper.createDatabase(4).close()
 
-        Room.databaseBuilder(
-                InstrumentationRegistry.getInstrumentation().targetContext,
-                HabitDatabase::class.java,
-                DB_NAME,
+        // 全链验证 4→7：autoMigration(4→5) + 手动 migrate_5_6 / migrate_6_7
+        helper
+            .runMigrationsAndValidate(
+                7,
+                listOf(HabitDatabase.migrate_5_6, HabitDatabase.migrate_6_7),
             )
-            .build()
             .close()
     }
 

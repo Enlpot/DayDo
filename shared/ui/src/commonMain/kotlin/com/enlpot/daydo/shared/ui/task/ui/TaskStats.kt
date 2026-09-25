@@ -1,15 +1,32 @@
 /*
  * Copyright (C) 2026  Enlpot
  *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  * 重复任务系列统计：累计完成 / 完成率 / 连续完成 / 近 30 天日历 / 周几分布 / 完成时刻分布
  */
 package com.enlpot.daydo.shared.ui.task.ui
 
+import androidx.compose.runtime.Composable
 import com.enlpot.daydo.core.tasks.Task
+import daydo.shared.ui.generated.resources.Res
+import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import org.jetbrains.compose.resources.stringResource
 
 /** 近 30 天日历中的一天 */
 data class CalendarDay(val date: LocalDate, val completed: Boolean)
@@ -35,9 +52,35 @@ data class SeriesStats(
     val activeDays30: Int = 0,
 )
 
-val WEEKDAY_LABELS = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
+/** 周几标签（周一..周日），UI 层资源化，供统计图表表头使用 */
+@Composable
+fun weekdayLabels(): List<String> =
+    listOf(
+        stringResource(Res.string.monday),
+        stringResource(Res.string.tuesday),
+        stringResource(Res.string.wednesday),
+        stringResource(Res.string.thursday),
+        stringResource(Res.string.friday),
+        stringResource(Res.string.saturday),
+        stringResource(Res.string.sunday),
+    )
 
-val HOUR_BUCKET_LABELS = listOf("凌晨", "上午", "中午", "下午", "晚上", "深夜")
+/** 周几单字标签（一..日），供周选择器/热力图表头使用 */
+@Composable
+fun weekdayShortLabels(): List<String> =
+    weekdayLabels().map { it.removePrefix(stringResource(Res.string.weekday_prefix)) }
+
+/** 完成时刻标签（凌晨/上午/中午/下午/晚上/深夜） */
+@Composable
+fun hourBucketLabels(): List<String> =
+    listOf(
+        stringResource(Res.string.hour_bucket_dawn),
+        stringResource(Res.string.hour_bucket_morning),
+        stringResource(Res.string.hour_bucket_noon),
+        stringResource(Res.string.hour_bucket_afternoon),
+        stringResource(Res.string.hour_bucket_evening),
+        stringResource(Res.string.hour_bucket_night),
+    )
 
 fun computeSeriesStats(series: List<Task>, today: LocalDate): SeriesStats {
     val active = series.filter { it.deletedAt == null }

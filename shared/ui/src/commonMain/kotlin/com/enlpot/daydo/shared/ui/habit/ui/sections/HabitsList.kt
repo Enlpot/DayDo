@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.HabitUpsertSheet
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDateTime
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -97,7 +98,7 @@ fun HabitsList(
                         reorderHandle = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.drag_indicator),
-                                contentDescription = "拖动手柄",
+                                contentDescription = stringResource(Res.string.drag_handle),
                                 modifier =
                                     Modifier.draggableHandle(
                                         onDragStopped = { onAction(HabitsAction.ReorderHabits) }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.enlpot.daydo.R
 import com.enlpot.daydo.core.interfaces.BiometricUtils
 import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
@@ -128,7 +129,7 @@ class MainActivity : FragmentActivity() {
         val biometricUtils by inject<BiometricUtils>()
         val promptInfo =
             BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Biometric Lock")
+                .setTitle(getString(R.string.biometric_prompt_title))
                 .setAllowedAuthenticators(biometricUtils.getAuthenticators())
                 .build()
 
@@ -144,7 +145,7 @@ class MainActivity : FragmentActivity() {
             BiometricPrompt.ERROR_USER_CANCELED,
             BiometricPrompt.ERROR_NEGATIVE_BUTTON,
             BiometricPrompt.ERROR_CANCELED -> {
-                Toast.makeText(this, "Biometric Authentication Failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.biometric_auth_failed), Toast.LENGTH_SHORT).show()
                 finish()
             }
 
@@ -154,12 +155,12 @@ class MainActivity : FragmentActivity() {
                 mainViewModel.setAppUnlocked(true)
                 mainViewModel.setBiometricLock(false)
 
-                Toast.makeText(this, "Biometric Authentication Failed", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.biometric_auth_failed), Toast.LENGTH_LONG).show()
                 onComplete()
             }
 
             else -> {
-                Toast.makeText(this, "Authentication error: $errString", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.biometric_auth_error, errString), Toast.LENGTH_SHORT).show()
                 finish()
             }
         }

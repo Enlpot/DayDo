@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -100,9 +100,9 @@ fun RootPage(
 
 
                     ListItem(
-                        headlineContent = { Text(text = "智能分类") },
+                        headlineContent = { Text(text = stringResource(Res.string.smart_category)) },
                         supportingContent = {
-                            Text(text = "选择在任务页显示的智能分类")
+                            Text(text = stringResource(Res.string.smart_category_desc))
                         },
                         colors = listItemColors(),
                         modifier =
@@ -116,14 +116,14 @@ fun RootPage(
                     )
 
                     ListItem(
-                        headlineContent = { Text(text = "默认起始页面") },
+                        headlineContent = { Text(text = stringResource(Res.string.default_start_page)) },
                         supportingContent = {
                             Text(
                                 text =
                                     when (state.startingPage) {
-                                        Sections.Home -> "首页"
-                                        Sections.Tasks -> "任务"
-                                        Sections.Habits -> "习惯"
+                                        Sections.Home -> stringResource(Res.string.home)
+                                        Sections.Tasks -> stringResource(Res.string.tasks)
+                                        Sections.Habits -> stringResource(Res.string.habits)
                                     }
                             )
                         },
@@ -138,12 +138,12 @@ fun RootPage(
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { showStartingPageDialog = true },
                     )
                     ListItem(
-                        headlineContent = { Text(text = "周起始日") },
+                        headlineContent = { Text(text = stringResource(Res.string.start_week)) },
                         supportingContent = {
                             Text(
                                 text =
-                                    if (state.startOfTheWeek == DayOfWeek.SUNDAY) "周日"
-                                    else "周一"
+                                    if (state.startOfTheWeek == DayOfWeek.SUNDAY) stringResource(Res.string.sunday)
+                                    else stringResource(Res.string.monday)
                             )
                         },
                         trailingContent = {
@@ -160,9 +160,9 @@ fun RootPage(
 
 
                     ListItem(
-                        headlineContent = { Text(text = "触感反馈") },
+                        headlineContent = { Text(text = stringResource(Res.string.haptics)) },
                         supportingContent = {
-                            Text(text = if (state.hapticFeedback) "开启" else "关闭")
+                            Text(text = if (state.hapticFeedback) stringResource(Res.string.on) else stringResource(Res.string.off))
                         },
                         trailingContent = {
                             Icon(
@@ -184,8 +184,8 @@ fun RootPage(
                             supportingContent = {
                                 Text(
                                     text =
-                                        if (state.isBiometricLockOn == true) "开启"
-                                        else "关闭"
+                                        if (state.isBiometricLockOn == true) stringResource(Res.string.on)
+                                        else stringResource(Res.string.off)
                                 )
                             },
                             trailingContent = {
@@ -202,11 +202,11 @@ fun RootPage(
                     }
 
                     ListItem(
-                        headlineContent = { Text(text = "时间格式") },
+                        headlineContent = { Text(text = stringResource(Res.string.time_format)) },
                         supportingContent = {
                             Text(
                                 text =
-                                    if (state.is24Hr) "24小时制" else "12小时制"
+                                    if (state.is24Hr) stringResource(Res.string.hour_24) else stringResource(Res.string.hour_12)
                             )
                         },
                         trailingContent = {
@@ -238,13 +238,13 @@ fun RootPage(
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "导航",
+                                contentDescription = stringResource(Res.string.navigation),
                             )
                         },
                         leadingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.palette),
-                                contentDescription = "导航",
+                                contentDescription = stringResource(Res.string.navigation),
                             )
                         },
                         colors = listItemColors(),
@@ -253,18 +253,18 @@ fun RootPage(
                     ListItem(
                         modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { onNavigateToBackup() },
                         colors = listItemColors(),
-                        headlineContent = { Text(text = "备份与同步") },
-                        supportingContent = { Text(text = "本地文件备份、恢复与 WebDAV 云同步") },
+                        headlineContent = { Text(text = stringResource(Res.string.backup_and_sync)) },
+                        supportingContent = { Text(text = stringResource(Res.string.backup_and_sync_desc)) },
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "导航",
+                                contentDescription = stringResource(Res.string.navigation),
                             )
                         },
                         leadingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.download),
-                                contentDescription = "备份",
+                                contentDescription = stringResource(Res.string.backup_and_sync),
                             )
                         },
                     )
@@ -272,18 +272,18 @@ fun RootPage(
                     ListItem(
                         modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { showLicenseDialog = true },
                         colors = listItemColors(),
-                        headlineContent = { Text(text = "开源许可") },
-                        supportingContent = { Text(text = "GNU GPL v3 许可文本") },
+                        headlineContent = { Text(text = stringResource(Res.string.open_source_license)) },
+                        supportingContent = { Text(text = stringResource(Res.string.gpl_desc)) },
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = "导航",
+                                contentDescription = stringResource(Res.string.navigation),
                             )
                         },
                         leadingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.check_list),
-                                contentDescription = "许可",
+                                contentDescription = stringResource(Res.string.open_source_license),
                             )
                         },
                     )
@@ -308,11 +308,11 @@ fun RootPage(
         if (showSmartViewsDialog) {
             GritBottomSheet(onDismissRequest = { showSmartViewsDialog = false }) {
                 Text(
-                    text = "智能分类",
+                    text = stringResource(Res.string.smart_category),
                     style = MaterialTheme.typography.headlineSmall,
                 )
                 Text(
-                    text = "取消勾选以在任务页隐藏该分类",
+                    text = stringResource(Res.string.hide_smart_category_desc),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -344,20 +344,20 @@ fun RootPage(
         if (showStartingPageDialog) {
             GritBottomSheet(onDismissRequest = { showStartingPageDialog = false }) {
                 Text(
-                    text = "默认起始页面",
+                    text = stringResource(Res.string.default_start_page),
                     style = MaterialTheme.typography.headlineSmall,
                 )
                 Text(
-                    text = "选择打开 App 时显示的页面",
+                    text = stringResource(Res.string.choose_start_page_desc),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Sections.entries.forEach { section ->
                         val label =
                             when (section) {
-                                Sections.Home -> "首页"
-                                Sections.Tasks -> "任务"
-                                Sections.Habits -> "习惯"
+                                Sections.Home -> stringResource(Res.string.home)
+                                Sections.Tasks -> stringResource(Res.string.tasks)
+                                Sections.Habits -> stringResource(Res.string.habits)
                             }
                         ListItem(
                             headlineContent = { Text(text = label) },
@@ -385,15 +385,15 @@ fun RootPage(
         if (showStartOfWeekDialog) {
             GritBottomSheet(onDismissRequest = { showStartOfWeekDialog = false }) {
                 Text(
-                    text = "周起始日",
+                    text = stringResource(Res.string.start_week),
                     style = MaterialTheme.typography.headlineSmall,
                 )
                 Text(
-                    text = "选择一周从哪天开始",
+                    text = stringResource(Res.string.choose_week_start_desc),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    listOf(DayOfWeek.MONDAY to "周一", DayOfWeek.SUNDAY to "周日").forEach { (day, label) ->
+                    listOf(DayOfWeek.MONDAY to stringResource(Res.string.monday), DayOfWeek.SUNDAY to stringResource(Res.string.sunday)).forEach { (day, label) ->
                         ListItem(
                             headlineContent = { Text(text = label) },
                             colors = listItemColors(),
@@ -421,15 +421,15 @@ fun RootPage(
         if (show24HrDialog) {
             GritBottomSheet(onDismissRequest = { show24HrDialog = false }) {
                 Text(
-                    text = "时间格式",
+                    text = stringResource(Res.string.time_format),
                     style = MaterialTheme.typography.headlineSmall,
                 )
                 Text(
-                    text = "选择时间的显示方式",
+                    text = stringResource(Res.string.choose_time_format_desc),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    listOf(false to "12小时制", true to "24小时制").forEach { (is24, label) ->
+                    listOf(false to stringResource(Res.string.hour_12), true to stringResource(Res.string.hour_24)).forEach { (is24, label) ->
                         ListItem(
                             headlineContent = { Text(text = label) },
                             colors = listItemColors(),
@@ -457,15 +457,15 @@ fun RootPage(
         if (showBiometricDialog) {
             GritBottomSheet(onDismissRequest = { showBiometricDialog = false }) {
                 Text(
-                    text = "生物识别锁",
+                    text = stringResource(Res.string.biometric_lock),
                     style = MaterialTheme.typography.headlineSmall,
                 )
                 Text(
-                    text = "开启后需验证指纹等才能进入",
+                    text = stringResource(Res.string.biometric_lock_desc),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    listOf(false to "关闭", true to "开启").forEach { (on, label) ->
+                    listOf(false to stringResource(Res.string.off), true to stringResource(Res.string.on)).forEach { (on, label) ->
                         ListItem(
                             headlineContent = { Text(text = label) },
                             colors = listItemColors(),
@@ -496,16 +496,17 @@ fun RootPage(
     }
 }
 
+@Composable
 private fun SmartCategory.labelText(): String {
     return when (this) {
-        SmartCategory.ALL -> "所有"
-        SmartCategory.TODAY -> "今天"
-        SmartCategory.TOMORROW -> "明天"
-        SmartCategory.NEXT_7_DAYS -> "最近7天"
-        SmartCategory.OVERDUE -> "已过期"
-        SmartCategory.COMPLETED -> "已完成"
-        SmartCategory.DELETED -> "已删除"
-        SmartCategory.INBOX -> "收集箱"
+        SmartCategory.ALL -> stringResource(Res.string.smart_all)
+        SmartCategory.TODAY -> stringResource(Res.string.smart_today)
+        SmartCategory.TOMORROW -> stringResource(Res.string.smart_tomorrow)
+        SmartCategory.NEXT_7_DAYS -> stringResource(Res.string.smart_next_7_days)
+        SmartCategory.OVERDUE -> stringResource(Res.string.smart_overdue)
+        SmartCategory.COMPLETED -> stringResource(Res.string.smart_completed)
+        SmartCategory.DELETED -> stringResource(Res.string.smart_deleted)
+        SmartCategory.INBOX -> stringResource(Res.string.smart_inbox)
     }
 }
 

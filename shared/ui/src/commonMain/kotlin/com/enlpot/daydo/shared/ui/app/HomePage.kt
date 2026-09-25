@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -148,7 +148,7 @@ fun HomePage(
                 ),
             title = {
                 if (multiSelect) {
-                    Text(text = "已选 ${selectedTaskIds.size} 项", fontFamily = flexFontEmphasis())
+                    Text(text = stringResource(Res.string.selected_count, selectedTaskIds.size), fontFamily = flexFontEmphasis())
                 } else {
                     Text(text = stringResource(Res.string.home), fontFamily = flexFontEmphasis())
                 }
@@ -164,7 +164,7 @@ fun HomePage(
             actions = {
                 if (multiSelect) {
                     TextButton(onClick = { selectedTaskIds = currentListTasks.map { it.id }.toSet() }) {
-                        Text(text = "全选")
+                        Text(text = stringResource(Res.string.select_all))
                     }
                     IconButton(onClick = {
                         currentListTasks.filter { it.id in selectedTaskIds }
@@ -195,7 +195,7 @@ fun HomePage(
                 Tab(
                     selected = pagerState.currentPage == 0,
                     onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
-                    text = { Text(text = "已过期") },
+                    text = { Text(text = stringResource(Res.string.smart_overdue)) },
                 )
             }
             Tab(
@@ -203,12 +203,12 @@ fun HomePage(
                 onClick = {
                     scope.launch { pagerState.animateScrollToPage(if (hasOverdue) 1 else 0) }
                 },
-                text = { Text(text = "任务") },
+                text = { Text(text = stringResource(Res.string.tasks)) },
             )
             Tab(
                 selected = pagerState.currentPage == habitPageIndex,
                 onClick = { scope.launch { pagerState.animateScrollToPage(habitPageIndex) } },
-                text = { Text(text = "习惯") },
+                text = { Text(text = stringResource(Res.string.habits)) },
             )
         }
 

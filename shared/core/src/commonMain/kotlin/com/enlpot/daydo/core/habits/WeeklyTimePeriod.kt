@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,13 +32,5 @@ enum class WeeklyTimePeriod {
             }
         }
 
-        fun WeeklyTimePeriod.toDisplayString(): String {
-            return when (this) {
-                MONTHS_2 -> "2M"
-                MONTHS_4 -> "4M"
-                MONTHS_8 -> "8M"
-                YEARS_1 -> "1Y"
-            }
-        }
     }
 }

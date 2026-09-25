@@ -58,4 +58,158 @@
     <string name="monthly">每月</string>
     <string name="yearly">每年</string>
     <string name="home">首页</string>
+
+    <!-- 通用 -->
+    <string name="on">开启</string>
+    <string name="off">关闭</string>
+    <string name="confirm">确定</string>
+    <string name="navigation">导航</string>
+    <string name="none">无</string>
+    <string name="select_all">全选</string>
+    <string name="selected_count">已选 %1$d 项</string>
+    <string name="restore_task">恢复</string>
+    <string name="statistics">统计</string>
+    <string name="deleted_with_date">已删除 · %1$s</string>
+    <string name="monday">周一</string>
+    <string name="tuesday">周二</string>
+    <string name="wednesday">周三</string>
+    <string name="thursday">周四</string>
+    <string name="friday">周五</string>
+    <string name="saturday">周六</string>
+    <string name="sunday">周日</string>
+    <string name="time_format">时间格式</string>
+    <string name="hour_24">24小时制</string>
+    <string name="hour_12">12小时制</string>
+    <string name="choose_time_format_desc">选择时间的显示方式</string>
+    <string name="smart_category">智能分类</string>
+    <string name="smart_category_desc">选择在任务页显示的智能分类</string>
+    <string name="default_start_page">默认起始页面</string>
+    <string name="choose_start_page_desc">选择打开 App 时显示的页面</string>
+    <string name="start_week">周起始日</string>
+    <string name="choose_week_start_desc">选择一周从哪天开始</string>
+    <string name="haptics">触感反馈</string>
+    <string name="sound">提示音</string>
+    <string name="start">开始</string>
+    <string name="fail">失败</string>
+    <string name="drag_handle">拖动手柄</string>
+    <string name="backup_and_sync">备份与同步</string>
+    <string name="backup_and_sync_desc">本地文件备份、恢复与 WebDAV 云同步</string>
+    <string name="open_source_license">开源许可</string>
+    <string name="gpl_desc">GNU GPL v3 许可文本</string>
+    <string name="hide_smart_category_desc">取消勾选以在任务页隐藏该分类</string>
+    <string name="biometric_lock_desc">开启后需验证指纹等才能进入</string>
+    <string name="smart_all">所有</string>
+    <string name="smart_today">今天</string>
+    <string name="smart_tomorrow">明天</string>
+    <string name="smart_next_7_days">最近7天</string>
+    <string name="smart_overdue">已过期</string>
+    <string name="smart_completed">已完成</string>
+    <string name="smart_deleted">已删除</string>
+    <string name="smart_inbox">收集箱</string>
+
+    <!-- 备份与同步 -->
+    <string name="webdav_server">WebDAV 服务器</string>
+    <string name="webdav_server_desc">配置 WebDAV 服务器用于云备份与恢复</string>
+    <string name="save_config">保存配置</string>
+    <string name="server_address">服务器地址</string>
+    <string name="username">用户名</string>
+    <string name="app_password">应用专用密码</string>
+    <string name="password">密码</string>
+    <string name="https_hint">建议使用 HTTPS 地址，密码仅保存在本地</string>
+    <string name="upload_backup">上传备份</string>
+    <string name="uploaded_to">已上传到 %1$s</string>
+    <string name="upload_all_to_webdav">上传全部数据到 WebDAV</string>
+    <string name="upload">上传</string>
+    <string name="download_restore">下载恢复</string>
+    <string name="restored">已恢复</string>
+    <string name="download_from_webdav">从 WebDAV 下载恢复数据</string>
+    <string name="download">下载</string>
+    <string name="download_confirm">将从 WebDAV 下载云端备份并覆盖本地全部数据，确定继续？</string>
+    <string name="backup_uploaded">备份已上传到 WebDAV 服务器</string>
+    <string name="restored_from_webdav">已从 WebDAV 服务器恢复数据</string>
+    <string name="exporting">导出中</string>
+
+    <!-- 触感反馈 -->
+    <string name="vibration_strength">震动强度</string>
+    <string name="haptics_desc">完成任务震动、拖动排序震动</string>
+    <string name="sound_desc">完成任务时播放的提示音</string>
+    <string name="sound_dingdong">叮咚</string>
+    <string name="sound_ding">叮</string>
+    <string name="sound_di">嘀</string>
+    <string name="sound_beep">哔</string>
+
+    <!-- 外观与风格 -->
+    <string name="corner_radius">圆角大小</string>
+    <string name="corner_radius_desc">拖动调整卡片圆角</string>
+    <string name="radius_preview">%1$ddp 圆角</string>
+    <string name="material_you">Material You 主题</string>
+    <string name="amoled">Amoled 调色板</string>
+    <string name="wallpaper_palette_desc">基于壁纸生成配色方案</string>
+    <string name="amoled_desc">在 AMOLED 屏幕上效果最佳</string>
+    <string name="choose_theme_desc">选择应用主题</string>
+
+    <!-- 任务统计 -->
+    <string name="repeat_task">重复任务</string>
+    <string name="overview">概览</string>
+    <string name="total_completed">累计完成</string>
+    <string name="completion_rate">完成率</string>
+    <string name="current_ongoing_streak">当前连续</string>
+    <string name="longest_ongoing_streak">最长连续</string>
+    <string name="last_30_days">近 30 天</string>
+    <string name="days_completed">%1$d 天完成</string>
+    <string name="week_label">周</string>
+    <string name="weekday_distribution">周几完成分布</string>
+    <string name="hour_distribution">完成时刻分布</string>
+    <string name="no_completion_record">暂无完成记录</string>
+
+    <!-- 任务编辑 -->
+    <string name="repeat">重复</string>
+    <string name="daily_repeat">每天重复</string>
+    <string name="repeat_dates">重复日期</string>
+    <string name="repeat_months">重复月份</string>
+    <string name="every_day">每天</string>
+    <string name="every_week">每周</string>
+    <string name="every_month">每月</string>
+    <string name="every_year">每年</string>
+    <string name="custom">自定义</string>
+    <string name="no_repeat">不重复</string>
+    <string name="time_label">时间</string>
+    <string name="clear_time">清除时间</string>
+    <string name="reminder">提醒</string>
+    <string name="set_time_first">先设置时间后可提醒</string>
+    <string name="remind_at_due">到期时提醒</string>
+    <string name="remind_before_min">提前%1$d分钟提醒</string>
+    <string name="remind_before_hour">提前1小时提醒</string>
+    <string name="remind_before_day">提前1天提醒</string>
+    <string name="custom_before_min">提前%1$d分钟提醒（自定义）</string>
+    <string name="custom_n_min">自定义（提前N分钟）</string>
+    <string name="minutes">分钟</string>
+    <string name="no_reminder">不提醒</string>
+    <string name="every_n_days">每%1$d天</string>
+    <string name="every_n_weeks">每%1$d周</string>
+    <string name="every_n_months">每%1$d个月</string>
+    <string name="every_n_years">每%1$d年</string>
+    <string name="month_n">%1$d月</string>
+    <string name="day_n">%1$d日</string>
+    <string name="day_unit">天</string>
+    <string name="week_unit">周</string>
+    <string name="month_unit">月</string>
+    <string name="month_unit_plural">个月</string>
+    <string name="year_unit">年</string>
+    <string name="weekday_prefix">周</string>
+    <string name="every_prefix">每</string>
+    <string name="period_2m">近2个月</string>
+    <string name="period_4m">近4个月</string>
+    <string name="period_8m">近8个月</string>
+    <string name="period_1y">近1年</string>
+    <string name="hour_bucket_dawn">凌晨</string>
+    <string name="hour_bucket_morning">上午</string>
+    <string name="hour_bucket_noon">中午</string>
+    <string name="hour_bucket_afternoon">下午</string>
+    <string name="hour_bucket_evening">晚上</string>
+    <string name="hour_bucket_night">深夜</string>
+    <string name="day_suffix">日</string>
+
+    <!-- 习惯统计 -->
+    <string name="weekly_completions_avg">每周完成次数（平均）</string>
 </resources>

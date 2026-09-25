@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,6 @@ import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastRoundToInt
 import com.enlpot.daydo.core.habits.WeeklyTimePeriod
-import com.enlpot.daydo.core.habits.WeeklyTimePeriod.Companion.toDisplayString
 import com.enlpot.daydo.core.habits.WeeklyTimePeriod.Companion.toWeeks
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
@@ -111,7 +110,7 @@ fun WeeklyActivity(lineChartData: List<Double>, modifier: Modifier = Modifier) {
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                             ),
                     ) {
-                        Text(text = period.toDisplayString())
+                        Text(text = period.periodLabel())
                     }
                 }
             }
@@ -125,6 +124,7 @@ fun WeeklyActivity(lineChartData: List<Double>, modifier: Modifier = Modifier) {
                         .fastRoundToInt()
                 }
 
+            val avgLabel = stringResource(Res.string.weekly_completions_avg)
             Column {
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -146,7 +146,7 @@ fun WeeklyActivity(lineChartData: List<Double>, modifier: Modifier = Modifier) {
                                         .copy(fontFamily = flexFontEmphasis())
                                         .toSpanStyle()
                             ) {
-                                append("Completions per week (Avg)")
+                                append(avgLabel)
                             }
                         },
                     color = MaterialTheme.colorScheme.onSurface,
@@ -228,6 +228,15 @@ fun WeeklyActivity(lineChartData: List<Double>, modifier: Modifier = Modifier) {
         } else NotEnoughData()
     }
 }
+
+@Composable
+private fun WeeklyTimePeriod.periodLabel(): String =
+    when (this) {
+        WeeklyTimePeriod.MONTHS_2 -> stringResource(Res.string.period_2m)
+        WeeklyTimePeriod.MONTHS_4 -> stringResource(Res.string.period_4m)
+        WeeklyTimePeriod.MONTHS_8 -> stringResource(Res.string.period_8m)
+        WeeklyTimePeriod.YEARS_1 -> stringResource(Res.string.period_1y)
+    }
 
 @PreviewWrapper(GritPreviewWrapper::class)
 @Preview

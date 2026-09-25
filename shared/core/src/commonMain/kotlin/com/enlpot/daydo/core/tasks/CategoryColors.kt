@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  */
 package com.enlpot.daydo.core.tasks
 
-/** Unused default colors */
+/** 任务分类默认颜色（被 TaskList 等引用） */
 enum class CategoryColors(val color: String) {
     GRAY("gray"),
     BLUE("blue"),

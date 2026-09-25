@@ -1,6 +1,19 @@
 /*
  * Copyright (C) 2026  Enlpot
  *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  * 重复任务统计页：累计完成 / 完成率 / 连续完成 / 近 30 天日历 / 周几分布 / 完成时刻分布
  */
 package com.enlpot.daydo.shared.ui.task.ui
@@ -47,6 +60,7 @@ import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
 
@@ -58,7 +72,7 @@ fun TaskStatsPage(
     onAction: (TaskAction) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
-    val title = state.seriesTasks.firstOrNull()?.title ?: "重复任务"
+    val title = state.seriesTasks.firstOrNull()?.title ?: stringResource(Res.string.repeat_task)
     val today: LocalDate = LocalDate.now()
     val stats: SeriesStats = remember(state.seriesTasks, today) { computeSeriesStats(state.seriesTasks, today) }
 
@@ -129,14 +143,14 @@ private fun OverviewCard(stats: SeriesStats) {
                 .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        SectionTitle("概览")
+        SectionTitle(stringResource(Res.string.overview))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MetricCell(label = "累计完成", value = stats.totalCompleted.toString())
-            MetricCell(label = "完成率", value = "${stats.completionRate}%")
+            MetricCell(label = stringResource(Res.string.total_completed), value = stats.totalCompleted.toString())
+            MetricCell(label = stringResource(Res.string.completion_rate), value = "${stats.completionRate}%")
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MetricCell(label = "当前连续", value = stats.currentStreak.toString())
-            MetricCell(label = "最长连续", value = stats.longestStreak.toString())
+            MetricCell(label = stringResource(Res.string.current_ongoing_streak), value = stats.currentStreak.toString())
+            MetricCell(label = stringResource(Res.string.longest_ongoing_streak), value = stats.longestStreak.toString())
         }
     }
 }
@@ -176,9 +190,9 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
-            SectionTitle("近 30 天")
+            SectionTitle(stringResource(Res.string.last_30_days))
             Text(
-                text = "${stats.activeDays30} 天完成",
+                text = stringResource(Res.string.days_completed, stats.activeDays30),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.CenterVertically).padding(start = 8.dp),
@@ -186,9 +200,9 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
         }
 
         Row(modifier = Modifier.fillMaxWidth()) {
-            WEEKDAY_LABELS.forEach { label ->
+            weekdayLabels().forEach { label ->
                 Text(
-                    text = label.removePrefix("周"),
+                    text = label.removePrefix(stringResource(Res.string.weekday_prefix)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
@@ -245,10 +259,10 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
 @Composable
 private fun WeekdayCard(stats: SeriesStats) {
     BarChartCard(
-        title = "周几完成分布",
-        labels = WEEKDAY_LABELS,
+        title = stringResource(Res.string.weekday_distribution),
+        labels = weekdayLabels(),
         counts = stats.weekdayCounts,
-        emptyText = "暂无完成记录",
+        emptyText = stringResource(Res.string.no_completion_record),
     )
 }
 
@@ -256,10 +270,10 @@ private fun WeekdayCard(stats: SeriesStats) {
 @Composable
 private fun HourBucketCard(stats: SeriesStats) {
     BarChartCard(
-        title = "完成时刻分布",
-        labels = HOUR_BUCKET_LABELS,
+        title = stringResource(Res.string.hour_distribution),
+        labels = hourBucketLabels(),
         counts = stats.hourBucketCounts,
-        emptyText = "暂无完成记录",
+        emptyText = stringResource(Res.string.no_completion_record),
     )
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -141,12 +141,12 @@ class TaskDBMigrationTest {
     fun testAllMigrations() = runBlocking {
         helper.createDatabase(4).close()
 
-        Room.databaseBuilder(
-                InstrumentationRegistry.getInstrumentation().targetContext,
-                TaskDatabase::class.java,
-                DB_NAME,
+        // 全链验证 4→11：autoMigrations(4→9) + 手动 MIGRATION_9_10 / MIGRATION_10_11
+        helper
+            .runMigrationsAndValidate(
+                11,
+                listOf(TaskDatabase.MIGRATION_9_10, TaskDatabase.MIGRATION_10_11),
             )
-            .build()
             .close()
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,14 +56,16 @@ import com.enlpot.daydo.shared.ui.setting.SettingsState
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
 import kotlin.math.roundToInt
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
+@Composable
 private fun HapticSound.labelText(): String =
     when (this) {
-        HapticSound.NONE -> "无"
-        HapticSound.CHIME -> "叮咚"
-        HapticSound.DING -> "叮"
-        HapticSound.TICK -> "嘀"
+        HapticSound.NONE -> stringResource(Res.string.none)
+        HapticSound.CHIME -> stringResource(Res.string.sound_dingdong)
+        HapticSound.DING -> stringResource(Res.string.sound_ding)
+        HapticSound.TICK -> stringResource(Res.string.sound_di)
     }
 
 @Composable
@@ -80,7 +82,7 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
     ) {
         MediumFlexibleTopAppBar(
             scrollBehavior = scrollBehavior,
-            title = { Text(text = "触感反馈", fontFamily = flexFontEmphasis()) },
+            title = { Text(text = stringResource(Res.string.haptics), fontFamily = flexFontEmphasis()) },
             colors = TopAppBarDefaults.topAppBarColors(scrolledContainerColor = MaterialTheme.colorScheme.surface),
             navigationIcon = {
                 Icon(
@@ -99,8 +101,8 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     // 触感反馈总开关
                     ListItem(
-                        headlineContent = { Text(text = "触感反馈") },
-                        supportingContent = { Text(text = if (state.hapticFeedback) "开启" else "关闭") },
+                        headlineContent = { Text(text = stringResource(Res.string.haptics)) },
+                        supportingContent = { Text(text = if (state.hapticFeedback) stringResource(Res.string.on) else stringResource(Res.string.off)) },
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
@@ -117,7 +119,7 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
                     var sliderValue by remember(state.hapticStrength) { mutableFloatStateOf(state.hapticStrength.toFloat()) }
                     Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
                         ListItem(
-                            headlineContent = { Text(text = "震动强度") },
+                            headlineContent = { Text(text = stringResource(Res.string.vibration_strength)) },
                             supportingContent = { Text(text = "${sliderValue.roundToInt()}%") },
                             colors = listItemColors(),
                         )
@@ -148,7 +150,7 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
 
                     // 提示音
                     ListItem(
-                        headlineContent = { Text(text = "提示音") },
+                        headlineContent = { Text(text = stringResource(Res.string.sound)) },
                         supportingContent = { Text(text = state.hapticSound.labelText()) },
                         trailingContent = {
                             Icon(
@@ -168,13 +170,13 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
 
     if (showFeedbackDialog) {
         GritBottomSheet(onDismissRequest = { showFeedbackDialog = false }) {
-            Text(text = "触感反馈", style = MaterialTheme.typography.headlineSmall)
+            Text(text = stringResource(Res.string.haptics), style = MaterialTheme.typography.headlineSmall)
             Text(
-                text = "完成任务震动、拖动排序震动",
+                text = stringResource(Res.string.haptics_desc),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                listOf(true to "开启", false to "关闭").forEach { (value, label) ->
+                listOf(true to stringResource(Res.string.on), false to stringResource(Res.string.off)).forEach { (value, label) ->
                     ListItem(
                         headlineContent = { Text(text = label) },
                         colors = listItemColors(),
@@ -201,9 +203,9 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
 
     if (showSoundDialog) {
         GritBottomSheet(onDismissRequest = { showSoundDialog = false }) {
-            Text(text = "提示音", style = MaterialTheme.typography.headlineSmall)
+            Text(text = stringResource(Res.string.sound), style = MaterialTheme.typography.headlineSmall)
             Text(
-                text = "完成任务时播放的提示音",
+                text = stringResource(Res.string.sound_desc),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

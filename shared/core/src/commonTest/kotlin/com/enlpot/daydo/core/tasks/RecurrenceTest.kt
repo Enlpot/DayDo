@@ -1,6 +1,19 @@
 /*
  * Copyright (C) 2026  Enlpot
  *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
  * Recurrence 生成器单元测试：覆盖 P0-1~4 回归、输入防御（P1-14）与生成器-判定器一致性属性测试。
  */
 package com.enlpot.daydo.core.tasks

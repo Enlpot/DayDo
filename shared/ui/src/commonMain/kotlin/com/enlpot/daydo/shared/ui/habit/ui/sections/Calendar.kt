@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ fun Calendar(
                 FilledTonalIconButton(onClick = onNavigateBack) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.nav_arrow_back),
-                        contentDescription = "返回",
+                        contentDescription = stringResource(Res.string.navigation),
                     )
                 }
             },
@@ -169,7 +169,7 @@ private fun YearlyCalendar(
 ) {
     val calendarState =
         rememberYearCalendarState(
-            startYear = Year(2024),
+            startYear = Year(currentHabit.habit.time.date.year),
             endYear = Year(today.yearMonth.year),
             firstVisibleYear = Year(today.yearMonth.year),
             firstDayOfWeek = state.startingDay,
@@ -231,7 +231,7 @@ private fun MonthlyCalendar(
 ) {
     val calendarState =
         rememberCalendarState(
-            startMonth = YearMonth(year = 2024, month = Month.JANUARY),
+            startMonth = YearMonth(year = currentHabit.habit.time.date.year, month = currentHabit.habit.time.date.month),
             endMonth = YearMonth.now(),
             firstVisibleMonth = YearMonth.now(),
             firstDayOfWeek = state.startingDay,

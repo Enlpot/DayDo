@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_name">DayDo 通知</string>
+    <string name="notif_channel_desc">任务与习惯的通知渠道</string>
+    <string name="notif_mark_done">标记完成</string>
+    <string name="biometric_prompt_title">生物识别验证</string>
+    <string name="biometric_auth_failed">生物识别验证失败</string>
+    <string name="biometric_auth_error">认证错误：%1$s</string>
+</resources>

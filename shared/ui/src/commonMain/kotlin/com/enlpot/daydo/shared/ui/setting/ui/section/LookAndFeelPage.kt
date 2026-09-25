@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,7 +109,7 @@ fun LookAndFeelPage(
                 FilledTonalIconButton(onClick = onNavigateBack) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.nav_arrow_back),
-                        contentDescription = "返回",
+                        contentDescription = stringResource(Res.string.navigation),
                     )
                 }
             },
@@ -131,8 +131,8 @@ fun LookAndFeelPage(
                         remember(state.cornerRadius) { mutableFloatStateOf(state.cornerRadius.toFloat()) }
                     Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
                         ListItem(
-                            headlineContent = { Text(text = "圆角大小") },
-                            supportingContent = { Text(text = "拖动调整卡片圆角") },
+                            headlineContent = { Text(text = stringResource(Res.string.corner_radius)) },
+                            supportingContent = { Text(text = stringResource(Res.string.corner_radius_desc)) },
                             colors = listItemColors(),
                         )
                         Box(
@@ -151,7 +151,7 @@ fun LookAndFeelPage(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
-                                    text = "${sliderValue.roundToInt()}dp 圆角",
+                                    text = stringResource(Res.string.radius_preview, sliderValue.roundToInt()),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 )
                             }
@@ -229,12 +229,12 @@ fun LookAndFeelPage(
                     }
 
                     ListItem(
-                        headlineContent = { Text(text = "Material You 主题") },
+                        headlineContent = { Text(text = stringResource(Res.string.material_you)) },
                         supportingContent = {
                             Text(
                                 text =
-                                    if (state.theme.isMaterialYou) "开启"
-                                    else "关闭"
+                                    if (state.theme.isMaterialYou) stringResource(Res.string.on)
+                                    else stringResource(Res.string.off)
                             )
                         },
                         trailingContent = {
@@ -252,12 +252,12 @@ fun LookAndFeelPage(
                     if (!state.theme.isMaterialYou) {
                         // amoled toggle
                         ListItem(
-                            headlineContent = { Text(text = "Amoled 调色板") },
+                            headlineContent = { Text(text = stringResource(Res.string.amoled)) },
                             supportingContent = {
                                 Text(
                                     text =
-                                        if (state.theme.isAmoled) "开启"
-                                        else "关闭"
+                                        if (state.theme.isAmoled) stringResource(Res.string.on)
+                                        else stringResource(Res.string.off)
                                 )
                             },
                             trailingContent = {
@@ -292,7 +292,7 @@ fun LookAndFeelPage(
                                             ) {
                                     Icon(
                                         imageVector = vectorResource(Res.drawable.edit),
-                                        contentDescription = "Select Color",
+                                        contentDescription = stringResource(Res.string.select_seed),
                                     )
                                 }
                             },
@@ -319,15 +319,15 @@ fun LookAndFeelPage(
     if (showMaterialYouDialog) {
         GritBottomSheet(onDismissRequest = { showMaterialYouDialog = false }) {
             Text(
-                text = "Material You 主题",
+                text = stringResource(Res.string.material_you),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                text = "基于壁纸生成配色方案",
+                text = stringResource(Res.string.wallpaper_palette_desc),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                listOf(false to "关闭", true to "开启").forEach { (on, label) ->
+                listOf(false to stringResource(Res.string.off), true to stringResource(Res.string.on)).forEach { (on, label) ->
                     ListItem(
                         headlineContent = { Text(text = label) },
                         colors = listItemColors(),
@@ -355,15 +355,15 @@ fun LookAndFeelPage(
     if (showAmoledDialog) {
         GritBottomSheet(onDismissRequest = { showAmoledDialog = false }) {
             Text(
-                text = "Amoled 调色板",
+                text = stringResource(Res.string.amoled),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                text = "在 AMOLED 屏幕上效果最佳",
+                text = stringResource(Res.string.amoled_desc),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                listOf(false to "关闭", true to "开启").forEach { (on, label) ->
+                listOf(false to stringResource(Res.string.off), true to stringResource(Res.string.on)).forEach { (on, label) ->
                     ListItem(
                         headlineContent = { Text(text = label) },
                         colors = listItemColors(),
@@ -390,11 +390,11 @@ fun LookAndFeelPage(
     if (showAppThemeDialog) {
         GritBottomSheet(onDismissRequest = { showAppThemeDialog = false }) {
             Text(
-                text = "应用主题",
+                text = stringResource(Res.string.app_theme),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                text = "选择应用主题",
+                text = stringResource(Res.string.choose_theme_desc),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,12 +43,11 @@ import com.kizitonwose.calendar.core.minusDays
 import com.kizitonwose.calendar.core.plusDays
 import com.enlpot.daydo.core.habits.StreakPosition
 import com.enlpot.daydo.shared.ui.calendarMapStreakShape
+import daydo.shared.ui.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
-import kotlinx.datetime.format
-import kotlinx.datetime.format.MonthNames
-import kotlinx.datetime.format.char
 
 @Composable
 fun CalendarMonthHeader(
@@ -60,13 +59,8 @@ fun CalendarMonthHeader(
     Box(modifier = modifier.padding(padding)) {
         Text(
             text =
-                calendarMonth.yearMonth.format(
-                    YearMonth.Format {
-                        monthName(MonthNames.ENGLISH_FULL)
-                        char(' ')
-                        year()
-                    }
-                ),
+                stringResource(Res.string.month_n, calendarMonth.yearMonth.month.ordinal + 1) +
+                    " " + calendarMonth.yearMonth.year,
             style =
                 style.copy(
                     color = MaterialTheme.colorScheme.secondary,
@@ -89,83 +83,20 @@ fun YearlyCalendarDayContent(
         MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontFamily = flexFontEmphasis()),
     onDateClick: (LocalDate) -> Unit,
 ) {
-    if (day.position != DayPosition.MonthDate) return
-
-    val done = day.date in doneDates
-    val validDate = day.date <= today && day.date.dayOfWeek in habitDays
-
-    val donePrevious = day.date.minusDays(1) in doneDates
-    val doneAfter = day.date.plusDays(1) in doneDates
-    val streakPosition: StreakPosition =
-        when {
-            donePrevious && doneAfter -> MIDDLE
-            donePrevious -> END
-            doneAfter -> START
-            else -> ISOLATED
-        }
-
-    Box(
-        modifier =
-            modifier
-                .padding(top = 1.dp, bottom = 1.dp)
-                .fillMaxWidth()
-                .height(20.dp)
-                .clip(
-                    calendarMapStreakShape(
-                        streakPosition = streakPosition,
-                        isFirstDayOfWeek = day.date.dayOfWeek == edgeWeeks.first(),
-                        isLastDayOfWeek = day.date.dayOfWeek == edgeWeeks.last(),
-                        isFirstDayOfMonth = day.date.day == 1,
-                        isLastDayOfMonth = day.date.plusDays(1).day == 1,
-                    )
-                )
-                .clickable(enabled = validDate) { onDateClick(day.date) },
-        contentAlignment = Alignment.Center,
-    ) {
-        if (done) {
-            Box(
-                modifier =
-                    Modifier.fillMaxSize().background(color = MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center,
-            ) {
-                val isStreakEnd = streakPosition == START || streakPosition == END
-
-                if (isStreakEnd) {
-                    Box(
-                        modifier =
-                            Modifier.fillMaxSize()
-                                .padding(1.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    shape = CircleShape,
-                                ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = day.date.day.toString(),
-                            style = style,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                } else {
-                    Text(
-                        text = day.date.day.toString(),
-                        style = style,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                }
-            }
-        } else if (validDate) {
-            Box(
-                modifier =
-                    Modifier.matchParentSize()
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceContainerLow,
-                            shape = CircleShape,
-                        )
-            )
-        }
-    }
+    CalendarStreakCell(
+        day = day,
+        doneDates = doneDates,
+        today = today,
+        habitDays = habitDays,
+        edgeWeeks = edgeWeeks,
+        onDateClick = onDateClick,
+        modifier = modifier,
+        height = 20.dp,
+        style = style,
+        showUndoneDay = false,
+        startPadding = 0.dp,
+        endPadding = 0.dp,
+    )
 }
 
 @Composable
@@ -179,6 +110,38 @@ fun MonthlyCalendarDayContent(
     modifier: Modifier = Modifier,
     height: Dp = 40.dp,
     style: TextStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = flexFontEmphasis()),
+) {
+    CalendarStreakCell(
+        day = day,
+        doneDates = doneDates,
+        today = today,
+        habitDays = habitDays,
+        edgeWeeks = edgeWeeks,
+        onDateClick = onDateClick,
+        modifier = modifier,
+        height = height,
+        style = style,
+        showUndoneDay = true,
+        startPadding = if (day.date.dayOfWeek == edgeWeeks.first()) 4.dp else 0.dp,
+        endPadding = if (day.date.dayOfWeek == edgeWeeks.last()) 4.dp else 0.dp,
+    )
+}
+
+/** 年视图与月视图日历格子的公共实现（完成状态、连续标记、可点性） */
+@Composable
+private fun CalendarStreakCell(
+    day: CalendarDay,
+    doneDates: Set<LocalDate>,
+    today: LocalDate,
+    habitDays: Set<DayOfWeek>,
+    edgeWeeks: List<DayOfWeek>,
+    onDateClick: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
+    height: Dp,
+    style: TextStyle,
+    showUndoneDay: Boolean,
+    startPadding: Dp,
+    endPadding: Dp,
 ) {
     if (day.position != DayPosition.MonthDate) return
 
@@ -201,8 +164,8 @@ fun MonthlyCalendarDayContent(
                 .padding(
                     top = 1.dp,
                     bottom = 1.dp,
-                    start = if (day.date.dayOfWeek == edgeWeeks.first()) 4.dp else 0.dp,
-                    end = if (day.date.dayOfWeek == edgeWeeks.last()) 4.dp else 0.dp,
+                    start = startPadding,
+                    end = endPadding,
                 )
                 .fillMaxWidth()
                 .height(height)
@@ -251,13 +214,22 @@ fun MonthlyCalendarDayContent(
                     )
                 }
             }
-        } else {
+        } else if (showUndoneDay) {
             Text(
                 text = day.date.day.toString(),
                 style = style,
                 color =
                     if (!validDate) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     else MaterialTheme.colorScheme.onSurface,
+            )
+        } else if (validDate) {
+            Box(
+                modifier =
+                    Modifier.matchParentSize()
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                            shape = CircleShape,
+                        )
             )
         }
     }

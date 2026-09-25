@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,8 +44,8 @@ class GritNotificationManager(private val context: Context) {
         fun createNotificationChannel(context: Context) {
             val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel =
-                NotificationChannel("1", "Grit Notifications", importance).apply {
-                    description = "Notification Channel for Habits and Tasks"
+                NotificationChannel("1", context.getString(R.string.notif_channel_name), importance).apply {
+                    description = context.getString(R.string.notif_channel_desc)
                 }
             val notificationManager: NotificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -80,7 +80,7 @@ class GritNotificationManager(private val context: Context) {
                 .setContentText(habit.description)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
-                .addAction(R.drawable.notif_icon, "Mark Done", pendingBroadcast)
+                .addAction(R.drawable.notif_icon, context.getString(R.string.notif_mark_done), pendingBroadcast)
 
         if (
             ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
@@ -112,7 +112,7 @@ class GritNotificationManager(private val context: Context) {
                 .setContentTitle(task.title)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
-                .addAction(R.drawable.notif_icon, "Mark Done", pendingBroadcast)
+                .addAction(R.drawable.notif_icon, context.getString(R.string.notif_mark_done), pendingBroadcast)
 
         if (
             ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==

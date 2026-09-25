@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -148,7 +148,7 @@ fun CalendarHeatMap(
                 FilledTonalIconButton(onClick = onNavigateBack) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.nav_arrow_back),
-                        contentDescription = "返回",
+                        contentDescription = stringResource(Res.string.navigation),
                     )
                 }
             },
@@ -217,7 +217,7 @@ private fun YearlyMap(
 ) {
     val calendarState =
         rememberYearCalendarState(
-            startYear = Year(2024),
+            startYear = Year(state.habitsWithAnalytics.minOfOrNull { it.habit.time.date.year } ?: today.year),
             endYear = Year(today.yearMonth.year),
             firstVisibleYear = Year(today.yearMonth.year),
             firstDayOfWeek = state.startingDay,

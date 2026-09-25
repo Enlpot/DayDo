@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026  Shubham Gorai
+ * Copyright (C) 2026  Enlpot
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ import com.enlpot.daydo.core.tasks.Recurrence
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
 private enum class RecurrenceType { DAILY, WEEKLY, MONTHLY, YEARLY, CUSTOM }
@@ -114,7 +115,7 @@ fun RecurrencePickerSheet(
             }
 
             Text(
-                text = "重复",
+                text = stringResource(Res.string.repeat),
                 style = MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
             )
         }
@@ -140,7 +141,7 @@ fun RecurrencePickerSheet(
             }
 
             when (type) {
-                RecurrenceType.DAILY -> Text(text = "每天重复", style = MaterialTheme.typography.bodyLarge)
+                RecurrenceType.DAILY -> Text(text = stringResource(Res.string.daily_repeat), style = MaterialTheme.typography.bodyLarge)
 
                 RecurrenceType.CUSTOM -> {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -157,15 +158,15 @@ fun RecurrencePickerSheet(
                     when (customUnit) {
                         CustomUnit.DAY ->
                             IntervalRow(
-                                text = "每",
-                                unit = "天",
+                                text = stringResource(Res.string.every_prefix),
+                                unit = stringResource(Res.string.day_unit),
                                 value = interval,
                             ) { interval = it }
 
                         CustomUnit.WEEK -> {
                             IntervalRow(
-                                text = "每",
-                                unit = "周",
+                                text = stringResource(Res.string.every_prefix),
+                                unit = stringResource(Res.string.week_unit),
                                 value = interval,
                             ) { interval = it }
                             WeekDaySelector(days = days, onChange = { days = it })
@@ -173,29 +174,29 @@ fun RecurrencePickerSheet(
 
                         CustomUnit.MONTH -> {
                             IntervalRow(
-                                text = "每",
-                                unit = "个月",
+                                text = stringResource(Res.string.every_prefix),
+                                unit = stringResource(Res.string.month_unit_plural),
                                 value = interval,
                             ) { interval = it }
-                            DaySelector(title = "重复日期", selected = days, onChange = { days = it })
+                            DaySelector(title = stringResource(Res.string.repeat_dates), selected = days, onChange = { days = it })
                         }
 
                         CustomUnit.YEAR -> {
                             IntervalRow(
-                                text = "每",
-                                unit = "年",
+                                text = stringResource(Res.string.every_prefix),
+                                unit = stringResource(Res.string.year_unit),
                                 value = interval,
                             ) { interval = it }
                             MonthSelector(selected = months, onChange = { months = it })
-                            DaySelector(title = "重复日期", selected = days, onChange = { days = it })
+                            DaySelector(title = stringResource(Res.string.repeat_dates), selected = days, onChange = { days = it })
                         }
                     }
                 }
 
                 RecurrenceType.WEEKLY -> {
                     IntervalRow(
-                        text = "每",
-                        unit = "周",
+                        text = stringResource(Res.string.every_prefix),
+                        unit = stringResource(Res.string.week_unit),
                         value = interval,
                     ) { interval = it }
                     WeekDaySelector(days = days, onChange = { days = it })
@@ -203,21 +204,21 @@ fun RecurrencePickerSheet(
 
                 RecurrenceType.MONTHLY -> {
                     IntervalRow(
-                        text = "每",
-                        unit = "个月",
+                        text = stringResource(Res.string.every_prefix),
+                        unit = stringResource(Res.string.month_unit_plural),
                         value = interval,
                     ) { interval = it }
-                    DaySelector(title = "重复日期", selected = days, onChange = { days = it })
+                    DaySelector(title = stringResource(Res.string.repeat_dates), selected = days, onChange = { days = it })
                 }
 
                 RecurrenceType.YEARLY -> {
                     IntervalRow(
-                        text = "每",
-                        unit = "年",
+                        text = stringResource(Res.string.every_prefix),
+                        unit = stringResource(Res.string.year_unit),
                         value = interval,
                     ) { interval = it }
                     MonthSelector(selected = months, onChange = { months = it })
-                    DaySelector(title = "重复日期", selected = days, onChange = { days = it })
+                    DaySelector(title = stringResource(Res.string.repeat_dates), selected = days, onChange = { days = it })
                 }
             }
 
@@ -227,7 +228,7 @@ fun RecurrencePickerSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextButton(onClick = onRemove) {
-                    Text(text = "不重复", color = MaterialTheme.colorScheme.error)
+                    Text(text = stringResource(Res.string.no_repeat), color = MaterialTheme.colorScheme.error)
                 }
                 Button(
                     onClick = {
@@ -278,7 +279,7 @@ fun RecurrencePickerSheet(
                             pressedShape = MaterialTheme.shapes.small,
                         ),
                 ) {
-                    Text(text = "确定")
+                    Text(text = stringResource(Res.string.confirm))
                 }
             }
         }
@@ -317,7 +318,16 @@ private fun IntervalRow(
 
 @Composable
 private fun WeekDaySelector(days: Set<Int>, onChange: (Set<Int>) -> Unit) {
-    val labels = listOf("一", "二", "三", "四", "五", "六", "日")
+    val labels =
+        listOf(
+            stringResource(Res.string.monday).removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.tuesday).removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.wednesday).removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.thursday).removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.friday).removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.saturday).removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.sunday).removePrefix(stringResource(Res.string.weekday_prefix)),
+        )
     FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         labels.forEachIndexed { index, label ->
             val day = index + 1
@@ -356,10 +366,9 @@ private fun DaySelector(title: String, selected: Set<Int>, onChange: (Set<Int>) 
 
 @Composable
 private fun MonthSelector(selected: Set<Int>, onChange: (Set<Int>) -> Unit) {
-    val labels =
-        listOf("1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月")
+    val labels = (1..12).map { stringResource(Res.string.month_n, it) }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(text = "重复月份", style = MaterialTheme.typography.bodyLarge)
+        Text(text = stringResource(Res.string.repeat_months), style = MaterialTheme.typography.bodyLarge)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             labels.forEachIndexed { index, label ->
                 val month = index + 1
@@ -396,46 +405,66 @@ private fun Recurrence?.customUnit(): CustomUnit {
     }
 }
 
+@Composable
 private fun RecurrenceType.label(): String {
     return when (this) {
-        RecurrenceType.DAILY -> "每天"
-        RecurrenceType.WEEKLY -> "每周"
-        RecurrenceType.MONTHLY -> "每月"
-        RecurrenceType.YEARLY -> "每年"
-        RecurrenceType.CUSTOM -> "自定义"
+        RecurrenceType.DAILY -> stringResource(Res.string.every_day)
+        RecurrenceType.WEEKLY -> stringResource(Res.string.every_week)
+        RecurrenceType.MONTHLY -> stringResource(Res.string.every_month)
+        RecurrenceType.YEARLY -> stringResource(Res.string.every_year)
+        RecurrenceType.CUSTOM -> stringResource(Res.string.custom)
     }
 }
 
+@Composable
 private fun CustomUnit.label(): String {
     return when (this) {
-        CustomUnit.DAY -> "天"
-        CustomUnit.WEEK -> "周"
-        CustomUnit.MONTH -> "月"
-        CustomUnit.YEAR -> "年"
+        CustomUnit.DAY -> stringResource(Res.string.day_unit)
+        CustomUnit.WEEK -> stringResource(Res.string.week_unit)
+        CustomUnit.MONTH -> stringResource(Res.string.month_unit)
+        CustomUnit.YEAR -> stringResource(Res.string.year_unit)
     }
 }
 
 /** Human-readable recurrence summary, e.g. "每2周 · 周一、周三". */
+@Composable
 fun Recurrence.toDisplayString(): String {
     return when (this) {
-        Recurrence.Daily -> "每天"
-        is Recurrence.EveryNDays -> "每${interval}天"
+        Recurrence.Daily -> stringResource(Res.string.every_day)
+        is Recurrence.EveryNDays -> stringResource(Res.string.every_n_days, interval)
         is Recurrence.Weekly -> {
-            val daysText = if (days.isEmpty()) "" else " · " + days.sorted().joinToString("、") { weekDayLabel(it) }
-            "每${interval}周$daysText"
+            val dayLabels = days.sorted().map { weekDayLabel(it) }
+            val daysText = if (dayLabels.isEmpty()) "" else " · " + dayLabels.joinToString("、")
+            stringResource(Res.string.every_n_weeks, interval) + daysText
         }
         is Recurrence.Monthly -> {
-            val daysText = if (days.isEmpty()) "" else " · 每月${days.sorted().joinToString("、")}日"
-            "每${interval}个月$daysText"
+            val daysText =
+                if (days.isEmpty()) "" else
+                    " · " + stringResource(Res.string.monthly) +
+                    days.sorted().joinToString("、") + stringResource(Res.string.day_suffix)
+            stringResource(Res.string.every_n_months, interval) + daysText
         }
         is Recurrence.Yearly -> {
-            val monthsText = months.sorted().joinToString("、") { "${it}月" }.ifEmpty { "每年" }
-            val daysText = if (days.isEmpty()) "" else " · ${days.sorted().joinToString("、")}日"
+            val monthLabels = months.sorted().map { stringResource(Res.string.month_n, it) }
+            val monthsText =
+                monthLabels.joinToString("、").ifEmpty { stringResource(Res.string.every_year) }
+            val daysText =
+                if (days.isEmpty()) "" else
+                    " · " + days.sorted().joinToString("、") + stringResource(Res.string.day_suffix)
             "$monthsText$daysText"
         }
     }
 }
 
+@Composable
 private fun weekDayLabel(isoDay: Int): String {
-    return listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")[(isoDay - 1).coerceIn(0, 6)]
+    return listOf(
+        stringResource(Res.string.monday),
+        stringResource(Res.string.tuesday),
+        stringResource(Res.string.wednesday),
+        stringResource(Res.string.thursday),
+        stringResource(Res.string.friday),
+        stringResource(Res.string.saturday),
+        stringResource(Res.string.sunday),
+    )[(isoDay - 1).coerceIn(0, 6)]
 }
