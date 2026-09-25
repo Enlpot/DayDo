@@ -159,6 +159,21 @@ fun TaskCard(
                                 modifier = Modifier.size(14.dp),
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
+
+                            if (task.dueDate != null) {
+                                Text(
+                                    text = task.dueDate!!.toFormattedString(),
+                                    style =
+                                        MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Light,
+                                        ),
+                                    color =
+                                        if (task.dueDate!! < LocalDate.now() && !task.status)
+                                            MaterialTheme.colorScheme.error
+                                        else Color.Unspecified,
+                                )
+                            }
                         }
                     }
 
