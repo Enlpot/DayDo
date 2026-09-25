@@ -31,6 +31,9 @@ kotlin {
         compileSdk = libs.versions.compileSdk.get().toInt()
         minSdk = libs.versions.minSdk.get().toInt()
 
+        // 启用 Android host 单元测试（commonTest 挂载到 androidHostTest）
+        withHostTest {}
+
         androidResources { enable = true }
     }
 
@@ -39,6 +42,9 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines)
+        }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
     }
 }

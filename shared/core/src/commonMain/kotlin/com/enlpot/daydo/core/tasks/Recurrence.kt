@@ -70,23 +70,34 @@ fun Recurrence.occursOn(date: LocalDate, anchor: LocalDate): Boolean {
             (date.toEpochDays() - anchor.toEpochDays()) % interval.coerceAtLeast(1).toLong() == 0L
 
         is Recurrence.Weekly -> {
-            val weekDays = days.ifEmpty { setOf(anchor.dayOfWeek.toIso()) }
+            // 防御：非法周几（非 1..7）直接过滤，全部非法则回退 anchor 周几
+            val weekDays = days.filter { it in 1..7 }.ifEmpty { setOf(anchor.dayOfWeek.toIso()) }
             val weeksDiff = (date.toEpochDays() - anchor.toEpochDays()) / 7
             date.dayOfWeek.toIso() in weekDays && weeksDiff % interval.coerceAtLeast(1).toLong() == 0L
         }
 
         is Recurrence.Monthly -> {
-            val monthDays = days.ifEmpty { setOf(anchor.dayOfMonth) }
+            // 防御：非法配置日（非 1..31）直接过滤，全部非法则回退 anchor 日
+            val monthDays = days.filter { it in 1..31 }.ifEmpty { setOf(anchor.dayOfMonth) }
             val monthDiff = date.monthOrdinal() - anchor.monthOrdinal()
-            date.dayOfMonth in monthDays && monthDiff >= 0 && monthDiff % interval.coerceAtLeast(1) == 0
+            // 配置日超出当月天数时，月末视同发生日（与生成器 clamp 语义一致）
+            val clamped =
+                date.dayOfMonth == date.daysInMonth() && monthDays.any { it > date.dayOfMonth }
+            (date.dayOfMonth in monthDays || clamped) &&
+                monthDiff >= 0 &&
+                monthDiff % interval.coerceAtLeast(1) == 0
         }
 
         is Recurrence.Yearly -> {
-            val months = months.ifEmpty { setOf(anchor.month.ordinal + 1) }
-            val monthDays = days.ifEmpty { setOf(anchor.dayOfMonth) }
+            // 防御：非法月份/配置日直接过滤，全部非法则回退 anchor 值
+            val months = months.filter { it in 1..12 }.ifEmpty { setOf(anchor.month.ordinal + 1) }
+            val monthDays = days.filter { it in 1..31 }.ifEmpty { setOf(anchor.dayOfMonth) }
             val yearDiff = date.year - anchor.year
+            // 配置日超出当月天数时，月末视同发生日（与生成器 clamp 语义一致）
+            val clamped =
+                date.dayOfMonth == date.daysInMonth() && monthDays.any { it > date.dayOfMonth }
             date.month.ordinal + 1 in months &&
-                date.dayOfMonth in monthDays &&
+                (date.dayOfMonth in monthDays || clamped) &&
                 yearDiff >= 0 &&
                 yearDiff % interval.coerceAtLeast(1) == 0
         }
@@ -95,7 +106,8 @@ fun Recurrence.occursOn(date: LocalDate, anchor: LocalDate): Boolean {
 
 private fun Recurrence.Weekly.nextWeekly(from: LocalDate, base: LocalDate): LocalDate {
     val interval = interval.coerceAtLeast(1)
-    val weekDays = days.ifEmpty { setOf(base.dayOfWeek.toIso()) }
+    // 防御：非法周几（非 1..7）直接过滤，全部非法则回退 base 周几，避免死循环
+    val weekDays = days.filter { it in 1..7 }.ifEmpty { setOf(base.dayOfWeek.toIso()) }
     val baseDays = base.toEpochDays()
     var candidateDays = from.toEpochDays() + 1
     while (true) {
@@ -109,31 +121,67 @@ private fun Recurrence.Weekly.nextWeekly(from: LocalDate, base: LocalDate): Loca
 
 private fun Recurrence.Monthly.nextMonthly(from: LocalDate, base: LocalDate): LocalDate {
     val interval = interval.coerceAtLeast(1)
-    val monthDays = days.ifEmpty { setOf(base.dayOfMonth) }
-    var candidate = from.plusDaysSafe(1)
+    // 防御：非法配置日（非 1..31）直接过滤，全部非法则回退 base 日，避免死循环/抛异常
+    val monthDays = days.filter { it in 1..31 }.ifEmpty { setOf(base.dayOfMonth) }
+    // 从 from 所在月向后按 interval 个月推进；同月（monthOffset = 0）且配置日仍晚于 from 时也需发生。
+    // 配置日超出当月天数时 clamp 到月末（每月必有候选，保证终止）。
+    var year = from.year
+    var month = from.month.ordinal + 1
     while (true) {
-        val monthOffset = candidate.monthOrdinal() - base.monthOrdinal()
-        if (monthOffset > 0 && monthOffset % interval == 0) {
-            val day = monthDays.min().coerceAtMost(candidate.daysInMonth())
-            val target = LocalDate(candidate.year, candidate.month, day)
-            if (target.toEpochDays() >= candidate.toEpochDays()) return target
+        val monthOffset = (year * 12 + month) - (base.year * 12 + base.month.ordinal + 1)
+        if (monthOffset >= 0 && monthOffset % interval == 0) {
+            val monthEnd = LocalDate(year, month, 1).daysInMonth()
+            val day =
+                monthDays
+                    .filter { it <= monthEnd }
+                    .sorted()
+                    .firstOrNull { LocalDate(year, month, it) > from }
+                    ?: monthDays
+                        .filter { it > monthEnd }
+                        .maxOrNull()
+                        ?.let { monthEnd }
+                        ?.takeIf { LocalDate(year, month, it) > from }
+            if (day != null) return LocalDate(year, month, day)
         }
-        candidate = candidate.plusDaysSafe(1)
+        // 推进 interval 个月
+        val total = year * 12 + (month - 1) + interval
+        year = total / 12
+        month = total % 12 + 1
     }
 }
 
 private fun Recurrence.Yearly.nextYearly(from: LocalDate, base: LocalDate): LocalDate {
-    val months = months.ifEmpty { setOf(base.month.ordinal + 1) }
-    val monthDays = days.ifEmpty { setOf(base.dayOfMonth) }
-    var candidate = from.plusDaysSafe(1)
+    val interval = interval.coerceAtLeast(1)
+    // 防御：非法月份/配置日直接过滤，全部非法则回退 base 值，避免死循环/抛异常
+    val months = months.filter { it in 1..12 }.ifEmpty { setOf(base.month.ordinal + 1) }
+    val monthDays = days.filter { it in 1..31 }.ifEmpty { setOf(base.dayOfMonth) }
+    // 从 from 所在年向后按 interval 年推进；同年（yearDiff = 0）且配置组合仍晚于 from 时也需发生。
+    // 配置日超出当月天数时 clamp 到月末（候选月必有候选，保证终止）。
+    var year = from.year
     while (true) {
-        val yearDiff = candidate.year - base.year
-        if (yearDiff > 0 && candidate.month.ordinal + 1 in months) {
-            val day = monthDays.min().coerceAtMost(candidate.daysInMonth())
-            val target = LocalDate(candidate.year, candidate.month, day)
-            if (target.toEpochDays() >= candidate.toEpochDays()) return target
+        val yearDiff = year - base.year
+        if (yearDiff >= 0 && yearDiff % interval == 0) {
+            val candidate =
+                months
+                    .sorted()
+                    .firstNotNullOfOrNull { m ->
+                        val monthEnd = LocalDate(year, m, 1).daysInMonth()
+                        val direct =
+                            monthDays
+                                .filter { it <= monthEnd }
+                                .sorted()
+                                .map { d -> LocalDate(year, m, d) }
+                                .firstOrNull { it > from }
+                        direct
+                            ?: monthDays
+                                .filter { it > monthEnd }
+                                .maxOrNull()
+                                ?.let { LocalDate(year, m, monthEnd) }
+                                ?.takeIf { it > from }
+                    }
+            if (candidate != null) return candidate
         }
-        candidate = candidate.plusDaysSafe(1)
+        year += interval
     }
 }
 
