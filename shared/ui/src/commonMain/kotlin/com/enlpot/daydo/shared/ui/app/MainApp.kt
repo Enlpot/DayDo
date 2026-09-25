@@ -99,7 +99,6 @@ fun MainApp(state: MainAppState) {
                 initialAnalyticsHabitId = habitAnalyticsHabitId,
                 onInitialAnalyticsHandled = { habitAnalyticsHabitId = null },
                 onOpenHabitAnalytics = { habit ->
-                    println("DBG onOpenHabitAnalytics id=${habit.id} title=${habit.title}")
                     habitAnalyticsHabitId = habit.id
                     appBackStack.removeAll { true }
                     appBackStack.add(AppSections.HabitPages)

@@ -43,8 +43,9 @@ abstract class TaskDatabase : RoomDatabase() {
     open suspend fun replaceAll(tasks: List<TaskEntity>, categories: List<CategoryEntity>) {
         taskDao().deleteAllTasks()
         categoryDao().deleteAllCategories()
-        tasks.forEach { taskDao().upsertTask(it) }
+        // 父表先插：task.categoryId 外键引用 categories，先插 tasks 会导致 FOREIGN KEY constraint failed
         categories.forEach { categoryDao().upsertCategory(it) }
+        tasks.forEach { taskDao().upsertTask(it) }
     }
 
     companion object {

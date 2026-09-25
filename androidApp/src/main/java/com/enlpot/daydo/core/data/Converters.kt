@@ -41,7 +41,8 @@ object Converters {
     @ColumnTypeConverter
     fun dayOfWeekFromString(value: String): Set<DayOfWeek> {
         return if (value.isBlank()) emptySet()
-        else value.split(",").map { DayOfWeek.valueOf(it) }.toSet()
+        // 容错：单条脏数据不崩掉整个习惯数据流，非法条目跳过
+        else value.split(",").mapNotNull { runCatching { DayOfWeek.valueOf(it) }.getOrNull() }.toSet()
     }
 
     @ColumnTypeConverter

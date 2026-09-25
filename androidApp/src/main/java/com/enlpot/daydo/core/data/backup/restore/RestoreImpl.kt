@@ -73,16 +73,17 @@ class RestoreImpl(
 
     override suspend fun restoreFromJson(json: String): RestoreResult {
         return try {
-            val jsonDeserialized = Json { ignoreUnknownKeys = true }.decodeFromString<ExportSchema>(json)
-
-            if (
-                jsonDeserialized.tasksSchemaVersion != TaskDatabase.SCHEMA_VERSION ||
-                    jsonDeserialized.habitsSchemaVersion != HabitDatabase.SCHEMA_VERSION
-            ) {
-                throw SchemaMismatchException()
-            }
-
             withContext(Dispatchers.IO) {
+                // 解码 + schema 校验 + 全量实体映射都在 IO 线程：几十万行的大备份避免卡住主线程（ANR）
+                val jsonDeserialized =
+                    Json { ignoreUnknownKeys = true }.decodeFromString<ExportSchema>(json)
+
+                if (
+                    jsonDeserialized.tasksSchemaVersion != TaskDatabase.SCHEMA_VERSION ||
+                        jsonDeserialized.habitsSchemaVersion != HabitDatabase.SCHEMA_VERSION
+                ) {
+                    throw SchemaMismatchException()
+                }
                 // 先取消全部旧闹钟，再清空重建（清库不会自动清 AlarmManager 里已调度的提醒）
                 alarmScheduler.cancelAll()
 

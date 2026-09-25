@@ -36,6 +36,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
@@ -94,7 +95,8 @@ class GritIntentReceiver : BroadcastReceiver(), KoinComponent {
             return
         }
 
-        taskRepo.upsertTask(task.copy(status = true, reminder = null))
+        // 与 UI 完成路径一致：记录完成时间（通知栏完成不设 completedAt 会污染统计口径）
+        taskRepo.upsertTask(task.copy(status = true, reminder = null, completedAt = LocalDateTime.now()))
 
         Log.d(TAG, "Task marked as complete successfully")
 

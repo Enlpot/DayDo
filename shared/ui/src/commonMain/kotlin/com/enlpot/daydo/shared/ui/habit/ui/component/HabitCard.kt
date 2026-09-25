@@ -203,7 +203,6 @@ fun HabitCard(
 
                     IconButton(
                         onClick = {
-                            println("DBG habit card stats onClick fired")
                             action(HabitsAction.PrepareAnalytics(habitWithAnalytics.habit))
                             onNavigateToAnalytics()
                         },

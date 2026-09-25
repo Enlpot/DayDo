@@ -101,7 +101,6 @@ import com.enlpot.daydo.shared.ui.components.middleItemShape
 import com.enlpot.daydo.shared.ui.components.taskItemShape
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.label
-import com.enlpot.daydo.shared.ui.task.label
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.TaskView
 import com.enlpot.daydo.shared.ui.task.ui.component.CategoryUpsertSheet

@@ -109,7 +109,10 @@ fun prepareLineChartData(
 
     // Find the start date of the 15-week period
     val startDateOfTodayWeek =
-        today.minus(today.dayOfWeek.isoDayNumber - firstDay.isoDayNumber, DateTimeUnit.DAY)
+        today.minus(
+            (today.dayOfWeek.isoDayNumber - firstDay.isoDayNumber + 7) % 7,
+            DateTimeUnit.DAY,
+        )
     val startDateOfPeriod = startDateOfTodayWeek.minus(totalWeeks, DateTimeUnit.WEEK)
 
     val habitCompletionByWeek =

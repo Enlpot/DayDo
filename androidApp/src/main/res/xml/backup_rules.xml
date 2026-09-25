@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   云备份规则：排除 DataStore（含 WebDAV 凭据，密钥在 Keystore 中不可迁移），
-  数据库（任务/习惯）保留在备份中
+  数据库（任务/习惯）保留在备份中。
+  注意：preferences 文件实际位于 filesDir 根目录（grit.preferences_pb），
+  必须按文件名排除，而非子目录路径。
 -->
 <full-backup-content>
-    <exclude domain="file" path="datastore/"/>
+    <exclude domain="file" path="grit.preferences_pb"/>
 </full-backup-content>

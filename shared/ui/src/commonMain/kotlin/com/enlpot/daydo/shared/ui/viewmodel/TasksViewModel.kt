@@ -264,6 +264,8 @@ class TasksViewModel(
                         AnalyticsWrapper.Companion.AnalyticsEvent.TASK_DELETED.name,
                         mapOf("has_reminder" to (action.task.reminder != null)),
                     )
+                    // 移入回收站也取消已挂闹钟：否则到点照样弹通知，Purge 后残留幽灵闹钟
+                    scheduler.cancel(action.task)
                     repo.softDeleteTask(action.task)
                 }
 
@@ -273,6 +275,7 @@ class TasksViewModel(
                 }
 
                 is PurgeTask -> {
+                    scheduler.cancel(action.task)
                     repo.purgeTask(action.task)
                 }
 
@@ -320,10 +323,14 @@ class TasksViewModel(
 
     private suspend fun handleUpsertTask(task: Task) {
         if (task.status) {
-            analytics.trackEvent(
-                AnalyticsWrapper.Companion.AnalyticsEvent.TASK_COMPLETED.name,
-                mapOf("has_reminder" to (task.reminder != null)),
-            )
+            // 仅首次完成时记埋点；编辑已完成的存量任务不重复记
+            val isNewlyCompleted = task.completedAt == null
+            if (isNewlyCompleted) {
+                analytics.trackEvent(
+                    AnalyticsWrapper.Companion.AnalyticsEvent.TASK_COMPLETED.name,
+                    mapOf("has_reminder" to (task.reminder != null)),
+                )
+            }
             // 老数据（无 seriesId）首次完成时初始化系列，后续周期继承；随机 seriesId 需查重避免撞号
             val seriesTask =
                 if (task.recurrence != null && task.seriesId == null) {
@@ -335,7 +342,13 @@ class TasksViewModel(
                 } else {
                     task
                 }
-            repo.upsertTask(seriesTask.copy(reminder = null, completedAt = LocalDateTime.now()))
+            // 已完成任务编辑（改标题等）不刷新 completedAt：否则过期任务编辑后重新出现在首页已过期、统计被污染
+            repo.upsertTask(
+                seriesTask.copy(
+                    reminder = null,
+                    completedAt = if (isNewlyCompleted) LocalDateTime.now() else task.completedAt,
+                )
+            )
 
             // Recurring task: backfill missed occurrences and schedule the next one
             seriesTask.recurrence?.let { recurrence ->

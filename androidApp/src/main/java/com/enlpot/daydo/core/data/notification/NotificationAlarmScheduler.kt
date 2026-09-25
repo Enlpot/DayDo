@@ -108,7 +108,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             scheduleTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
             pendingIntent,
         )
-        scheduledIntents.add(pendingIntent)
+        synchronized(scheduledIntents) { scheduledIntents.add(pendingIntent) }
 
         Log.d(TAG, "Scheduled: Habit '$habit' at $scheduleTime")
     }
@@ -143,7 +143,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             scheduleTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
             pendingIntent,
         )
-        scheduledIntents.add(pendingIntent)
+        synchronized(scheduledIntents) { scheduledIntents.add(pendingIntent) }
 
         Log.d(TAG, "Scheduled: Task '$task' at $scheduleTime")
     }
@@ -163,7 +163,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             )
 
         alarmManager.cancel(pendingIntent)
-        scheduledIntents.remove(pendingIntent)
+        synchronized(scheduledIntents) { scheduledIntents.remove(pendingIntent) }
         Log.d(TAG, "Cancelled: Habit '${habit.title}'")
     }
 
@@ -182,7 +182,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             )
 
         alarmManager.cancel(pendingIntent)
-        scheduledIntents.remove(pendingIntent)
+        synchronized(scheduledIntents) { scheduledIntents.remove(pendingIntent) }
         Log.d(TAG, "Cancelled: Task '${task.title}'")
     }
 
