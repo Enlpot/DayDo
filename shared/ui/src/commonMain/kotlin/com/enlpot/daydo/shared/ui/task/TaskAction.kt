@@ -42,7 +42,8 @@ sealed interface TaskAction {
     /** Permanently remove a task from the "Deleted" view */
     data class PurgeTask(val task: Task) : TaskAction
 
-    data class ReorderTasks(val mapping: List<Pair<Int, Task>>) : TaskAction
+    /** 拖动排序：只记录被拖任务的目标位置（仅普通任务生效，重复任务按典型完成时间自动排） */
+    data class ReorderTask(val taskId: Long, val aboveId: Long?, val belowId: Long?) : TaskAction
 
     data class ReorderCategories(val mapping: List<Pair<Int, Category>>) : TaskAction
 

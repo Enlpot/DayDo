@@ -41,7 +41,6 @@ data class TaskState(
     val completedTasks: List<Task> = emptyList(),
     val hiddenSmartViews: Set<SmartCategory> = emptySet(),
     val is24Hour: Boolean = false,
-    val reorderTasks: Boolean = true,
     val hapticFeedback: Boolean = true,
     /** 当前查看统计的重复任务系列 ID */
     val statsSeriesId: Long? = null,

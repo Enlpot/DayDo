@@ -36,6 +36,8 @@ fun Task.toTaskEntity(): TaskEntity {
         deletedAt = deletedAt,
         seriesId = seriesId,
         completedAt = completedAt,
+        createdAt = createdAt,
+        sortKey = sortKey,
     )
 }
 
@@ -54,6 +56,8 @@ fun TaskEntity.toTask(): Task {
         deletedAt = deletedAt,
         seriesId = seriesId,
         completedAt = completedAt,
+        createdAt = createdAt,
+        sortKey = sortKey,
     )
 }
 

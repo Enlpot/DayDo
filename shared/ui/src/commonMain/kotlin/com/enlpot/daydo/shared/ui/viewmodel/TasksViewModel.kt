@@ -31,6 +31,10 @@ import com.enlpot.daydo.core.tasks.nextDateAfter
 import com.enlpot.daydo.core.tasks.occursOn
 import com.enlpot.daydo.core.tasks.reminderFor
 import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
+import com.enlpot.daydo.core.tasks.sortActiveTasks
+import com.enlpot.daydo.core.tasks.sortCompletedTasks
+import com.enlpot.daydo.core.tasks.sortOverdueTasks
+import com.enlpot.daydo.core.tasks.taskSortKeyOrCreated
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.TaskView
@@ -155,9 +159,26 @@ class TasksViewModel(
                     }
                 }
 
-                is ReorderTasks -> {
-                    for (pair in action.mapping) {
-                        repo.updateTaskIndexById(pair.second.id, pair.first)
+                is ReorderTask -> {
+                    // 已完成任务固定按完成时间倒序，不接受拖动
+                    val moved = _state.value.allTasks.firstOrNull { it.id == action.taskId }
+                    if (moved != null && !moved.status) {
+                        val all = _state.value.allTasks
+                        val aboveKey =
+                            action.aboveId?.let { id -> all.firstOrNull { it.id == id } }
+                                ?.let { taskSortKeyOrCreated(it) }
+                        val belowKey =
+                            action.belowId?.let { id -> all.firstOrNull { it.id == id } }
+                                ?.let { taskSortKeyOrCreated(it) }
+                        val newKey =
+                            when {
+                                aboveKey != null && belowKey != null ->
+                                    belowKey + (aboveKey - belowKey) / 2
+                                aboveKey != null -> aboveKey - 1
+                                belowKey != null -> belowKey + 1
+                                else -> taskSortKeyOrCreated(moved)
+                            }
+                        repo.updateTaskSortKeyById(action.taskId, newKey)
                     }
                 }
 
@@ -304,6 +325,7 @@ class TasksViewModel(
                                 deletedAt = null,
                                 dueDate = cursor,
                                 reminder = null,
+                                createdAt = LocalDateTime.now(),
                             )
                     }
                     cursor = recurrence.nextDateAfter(cursor, base)
@@ -318,6 +340,7 @@ class TasksViewModel(
                             deletedAt = null,
                             dueDate = cursor,
                             reminder = reminderFor(seriesTask.dueDateTimeFor(cursor), offset),
+                            createdAt = LocalDateTime.now(),
                         )
                 }
 
@@ -339,7 +362,12 @@ class TasksViewModel(
                 )
             }
             val baseTask =
-                if (task.recurrence != null && task.seriesId == null) {
+                if (task.id == 0L) {
+                    task.copy(
+                        seriesId = if (task.recurrence != null && task.seriesId == null) Random.nextLong() else task.seriesId,
+                        createdAt = LocalDateTime.now(),
+                    )
+                } else if (task.recurrence != null && task.seriesId == null) {
                     task.copy(seriesId = Random.nextLong())
                 } else if (task.completedAt != null) {
                     task.copy(completedAt = null)
@@ -402,14 +430,12 @@ class TasksViewModel(
             viewModelScope.launch {
                 combine(
                     datastore.getIs24Hr(),
-                    datastore.getTaskReorderPref(),
                     datastore.getHiddenSmartViewsFlow(),
                     datastore.getHapticFeedbackPref(),
-                ) { is24Hr, reorderTasks, hidden, hapticFeedback ->
+                ) { is24Hr, hidden, hapticFeedback ->
                         _state.update {
                             it.copy(
                                 is24Hour = is24Hr,
-                                reorderTasks = reorderTasks,
                                 hapticFeedback = hapticFeedback,
                                 hiddenSmartViews = hidden,
                             )
@@ -465,27 +491,27 @@ class TasksViewModel(
         deletedTasks: List<Task>,
         today: LocalDate,
     ): Pair<List<Task>, List<Task>> {
-        val active = allTasks.filter { !it.status }.sortedBy { it.index }
-        val completed = allTasks.filter { it.status }.sortedBy { it.index }
+        val active = allTasks.filter { !it.status }
+        val completed = allTasks.filter { it.status }
         return when (view) {
             is TaskView.Regular -> {
                 val categoryTasks = allTasks.filter { it.categoryId == view.category.id }
-                categoryTasks.filter { !it.status }.sortedBy { it.index } to
-                    categoryTasks.filter { it.status }.sortedBy { it.index }
+                sortActiveTasks(categoryTasks.filter { !it.status }, allTasks) to
+                    sortCompletedTasks(categoryTasks.filter { it.status })
             }
 
             is TaskView.Smart ->
                 when (view.category) {
-                    SmartCategory.ALL -> active to completed
+                    SmartCategory.ALL -> sortActiveTasks(active, allTasks) to sortCompletedTasks(completed)
 
                     SmartCategory.TODAY ->
-                        active.filter { it.dueDate == today } to
-                            completed.filter { it.dueDate == today }
+                        sortActiveTasks(active.filter { it.dueDate == today }, allTasks) to
+                            sortCompletedTasks(completed.filter { it.dueDate == today })
 
                     SmartCategory.TOMORROW -> {
                         val tomorrow = today.plusDaysSafe(1)
-                        active.filter { it.dueDate == tomorrow } to
-                            completed.filter { it.dueDate == tomorrow }
+                        sortActiveTasks(active.filter { it.dueDate == tomorrow }, allTasks) to
+                            sortCompletedTasks(completed.filter { it.dueDate == tomorrow })
                     }
 
                     SmartCategory.NEXT_7_DAYS -> {
@@ -493,8 +519,8 @@ class TasksViewModel(
                         val endDays = startDays + 7
                         fun dueInRange(task: Task): Boolean =
                             task.dueDate?.toEpochDays()?.let { it in startDays..endDays } == true
-                        active.filter { dueInRange(it) } to
-                            completed.filter { dueInRange(it) }
+                        sortActiveTasks(active.filter { dueInRange(it) }, allTasks) to
+                            sortCompletedTasks(completed.filter { dueInRange(it) })
                     }
 
                     SmartCategory.OVERDUE -> {
@@ -506,16 +532,17 @@ class TasksViewModel(
                                 val due = it.dueDate
                                 due != null && due < today && it.completedAt?.date == today
                             }
-                        (overdueActive + overdueCompletedToday).sortedBy { it.index } to
+                        sortOverdueTasks(overdueActive + overdueCompletedToday) to
                             emptyList()
                     }
 
-                    SmartCategory.COMPLETED -> completed to emptyList()
+                    SmartCategory.COMPLETED -> sortCompletedTasks(completed) to emptyList()
 
                     SmartCategory.DELETED -> deletedTasks to emptyList()
 
                     SmartCategory.INBOX ->
-                        active.filter { it.categoryId == null && it.dueDate == null } to emptyList()
+                        sortActiveTasks(active.filter { it.categoryId == null && it.dueDate == null }, allTasks) to
+                            emptyList()
                 }
         }
     }

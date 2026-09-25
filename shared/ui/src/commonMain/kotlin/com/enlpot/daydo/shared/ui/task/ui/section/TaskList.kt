@@ -122,7 +122,6 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
         var showCategoryAddSheet by rememberSaveable { mutableStateOf(false) }
         var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
         var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
-        var editState by rememberSaveable { mutableStateOf(false) }
         var editTask by remember { mutableStateOf<Task?>(null) }
         var multiSelect by rememberSaveable { mutableStateOf(false) }
         var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
@@ -149,7 +148,6 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
             TaskListTopBar(
                 state = state,
                 scrollBehavior = scrollBehavior,
-                isReorderMode = editState,
                 onDeleteClick = { showDeleteDialog = true },
                 isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded,
                 multiSelect = multiSelect,
@@ -163,19 +161,16 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
 
             CategorySelector(
                 state = state,
-                isReorderMode = editState,
                 onAction = onAction,
                 onAddCategoryClick = {
                     onAction(TaskAction.OnTaskCategorySheetOpened)
                     showCategoryAddSheet = true
                 },
                 onEditCategoriesClick = onEditCategories,
-                onReorderModeChange = { editState = it },
             )
 
             TaskItemsSection(
                 state = state,
-                isReorderMode = editState,
                 onAction = onAction,
                 onEditTask = { editTask = it },
                 isDeletedView = isDeletedView,
@@ -205,7 +200,7 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                         else Modifier.navigationBarsPadding()
                     )
                     .animateFloatingActionButton(
-                        visible = !editState && !isDeletedView && !multiSelect,
+                        visible = !isDeletedView && !multiSelect,
                         alignment = Alignment.BottomEnd,
                         scaleAnimationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
                         alphaAnimationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
@@ -317,7 +312,6 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
 private fun TaskListTopBar(
     state: TaskState,
     scrollBehavior: TopAppBarScrollBehavior,
-    isReorderMode: Boolean,
     onDeleteClick: () -> Unit,
     isExpanded: Boolean,
     multiSelect: Boolean,
@@ -395,11 +389,9 @@ private fun TaskListTopBar(
 @Composable
 private fun CategorySelector(
     state: TaskState,
-    isReorderMode: Boolean,
     onAction: (TaskAction) -> Unit,
     onAddCategoryClick: () -> Unit,
     onEditCategoriesClick: () -> Unit,
-    onReorderModeChange: (Boolean) -> Unit,
 ) {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
@@ -416,7 +408,6 @@ private fun CategorySelector(
                                 (state.currentView as TaskView.Smart).category == smart,
                         onCheckedChange = {
                             onAction(TaskAction.ChangeView(TaskView.Smart(smart)))
-                            onReorderModeChange(false)
                         },
                     ) {
                         Text(text = smart.label())
@@ -431,7 +422,6 @@ private fun CategorySelector(
                         (state.currentView as TaskView.Regular).category == category,
                 onCheckedChange = {
                     onAction(TaskAction.ChangeCategory(category))
-                    onReorderModeChange(false)
                 },
             ) {
                 Text(text = category.name)
@@ -440,13 +430,13 @@ private fun CategorySelector(
 
         item {
             Spacer(modifier = Modifier.width(4.dp))
-            FilledTonalIconButton(onClick = onAddCategoryClick, enabled = !isReorderMode) {
+            FilledTonalIconButton(onClick = onAddCategoryClick) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.add),
                     contentDescription = null,
                 )
             }
-            FilledTonalIconButton(onClick = onEditCategoriesClick, enabled = !isReorderMode) {
+            FilledTonalIconButton(onClick = onEditCategoriesClick) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.edit),
                     contentDescription = null,
@@ -459,7 +449,6 @@ private fun CategorySelector(
 @Composable
 private fun TaskItemsSection(
     state: TaskState,
-    isReorderMode: Boolean,
     onAction: (TaskAction) -> Unit,
     onEditTask: (Task) -> Unit,
     isDeletedView: Boolean,
@@ -479,12 +468,10 @@ private fun TaskItemsSection(
             },
         ) { view ->
             val lazyListState = rememberLazyListState()
+            var draggedTaskId by remember { mutableStateOf<Long?>(null) }
             var reorderableTasks by
                 remember(state.displayTasks, state.displayCompletedTasks, view) {
-                    mutableStateOf(
-                        if (state.reorderTasks || isDeletedView) state.displayTasks
-                        else (state.displayTasks + state.displayCompletedTasks).sortedBy { it.index }
-                    )
+                    mutableStateOf(state.displayTasks + state.displayCompletedTasks)
                 }
             val reorderableListState =
                 rememberReorderableLazyListState(lazyListState) { from, to ->
@@ -492,13 +479,6 @@ private fun TaskItemsSection(
                         reorderableTasks.toMutableList().apply {
                             add(to.index, removeAt(from.index))
                         }
-                    if (multiSelect) {
-                        onAction(
-                            TaskAction.ReorderTasks(
-                                reorderableTasks.mapIndexed { i, t -> i to t }
-                            )
-                        )
-                    }
                 }
 
             LazyColumn(
@@ -528,7 +508,7 @@ private fun TaskItemsSection(
 
                             TaskCard(
                                 task = task,
-                                dragState = isReorderMode || multiSelect,
+                                dragState = multiSelect,
                                 reorderIcon = {
                                     Icon(
                                         imageVector = vectorResource(Res.drawable.drag_indicator),
@@ -536,18 +516,25 @@ private fun TaskItemsSection(
                                         modifier =
                                             Modifier.draggableHandle(
                                                 onDragStarted = {
+                                                    draggedTaskId = task.id
                                                     if (state.hapticFeedback) {
                                                         haptic(HapticKind.DRAG_START)
                                                     }
                                                 },
                                                 onDragStopped = {
-                                                    onAction(
-                                                        TaskAction.ReorderTasks(
-                                                            reorderableTasks.mapIndexed { i, t ->
-                                                                i to t
-                                                            }
-                                                        )
-                                                    )
+                                                    draggedTaskId?.let { id ->
+                                                        val pos = reorderableTasks.indexOfFirst { it.id == id }
+                                                        if (pos >= 0) {
+                                                            onAction(
+                                                                TaskAction.ReorderTask(
+                                                                    id,
+                                                                    reorderableTasks.getOrNull(pos - 1)?.id,
+                                                                    reorderableTasks.getOrNull(pos + 1)?.id,
+                                                                )
+                                                            )
+                                                        }
+                                                    }
+                                                    draggedTaskId = null
                                                 }
                                             ),
                                     )
@@ -565,45 +552,12 @@ private fun TaskItemsSection(
                                 },
                                 onClick = {
                                     if (multiSelect) onToggleSelect(task)
-                                    else if (!isReorderMode) onEditTask(task)
+                                    else onEditTask(task)
                                 },
                             )
                         }
                     }
 
-                    if (state.reorderTasks && !isDeletedView) {
-                        val completedTasks = state.displayCompletedTasks
-                        if (reorderableTasks.isNotEmpty() && completedTasks.isNotEmpty()) {
-                            item { Spacer(modifier = Modifier.height(16.dp)) }
-                        }
-                        itemsIndexed(
-                            items = completedTasks,
-                            key = { _, it -> "completed_task_${it.id}" },
-                        ) { index, task ->
-                            val cardShape = taskItemShape(index, completedTasks.size)
-
-                            TaskCard(
-                                task = task,
-                                dragState = false,
-                                reorderIcon = {},
-                                is24Hr = state.is24Hour,
-                                shape = cardShape,
-                                modifier = Modifier.fillMaxWidth().clip(cardShape),
-                                selectionMode = multiSelect,
-                                selected = task.id in selectedTaskIds,
-                                hapticFeedback = state.hapticFeedback,
-                                onLongClick = { onToggleSelect(task) },
-                                onCheck = {
-                                    if (multiSelect) onToggleSelect(task)
-                                    else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
-                                },
-                                onClick = {
-                                    if (multiSelect) onToggleSelect(task)
-                                    else if (!isReorderMode) onEditTask(task)
-                                },
-                            )
-                        }
-                    }
 
                     if (reorderableTasks.isEmpty() && state.displayCompletedTasks.isEmpty()) {
                         item { Empty(modifier = Modifier.padding(top = 150.dp)) }

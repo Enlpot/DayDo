@@ -20,13 +20,16 @@ import androidx.room3.AutoMigration
 import androidx.room3.ColumnTypeConverters
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
+import androidx.room3.migration.Migration
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.execSQL
 import com.enlpot.daydo.core.data.Converters
 
 @Database(
     entities = [TaskEntity::class, CategoryEntity::class],
     version = TaskDatabase.SCHEMA_VERSION,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8)],
+    autoMigrations = [AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9)],
 )
 @ColumnTypeConverters(Converters::class)
 abstract class TaskDatabase : RoomDatabase() {
@@ -36,6 +39,12 @@ abstract class TaskDatabase : RoomDatabase() {
 
     companion object {
         const val DB_NAME = "task_database"
-        const val SCHEMA_VERSION = 8
+        const val SCHEMA_VERSION = 10
+        val MIGRATION_9_10 =
+            object : Migration(9, 10) {
+                override suspend fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL("ALTER TABLE task RENAME COLUMN sortIndex TO sortKey")
+                }
+            }
     }
 }

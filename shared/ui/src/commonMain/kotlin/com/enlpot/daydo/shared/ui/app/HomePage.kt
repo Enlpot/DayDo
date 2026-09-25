@@ -65,6 +65,9 @@ import com.enlpot.daydo.core.habits.Habit
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.tasks.taskOccursOn
+import com.enlpot.daydo.core.tasks.sortActiveTasks
+import com.enlpot.daydo.core.tasks.sortCompletedTasks
+import com.enlpot.daydo.core.tasks.sortOverdueTasks
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.Empty
 import com.enlpot.daydo.shared.ui.components.PageFill
@@ -74,6 +77,8 @@ import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import com.enlpot.daydo.shared.ui.habit.ui.component.HabitCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.HabitUpsertSheet
+import com.enlpot.daydo.shared.ui.HapticKind
+import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskCard
@@ -103,7 +108,7 @@ fun HomePage(
     val today = LocalDate.now()
     val todayTasks =
         remember(taskState.allTasks, today) {
-            taskState.allTasks.filter { taskOccursOn(it, today, today) }.sortedBy { it.index }
+            taskState.allTasks.filter { taskOccursOn(it, today, today) }
         }
     // 已过期：未完成 或 今天刚完成的过期任务（完成后当天仍显示，次日消失）
     val overdueTasks =
@@ -115,7 +120,6 @@ fun HomePage(
                         due < today &&
                         (!it.status || it.completedAt?.date == today)
                 }
-                .sortedBy { it.index }
         }
     val hasOverdue = overdueTasks.isNotEmpty()
     val habitPageIndex = if (hasOverdue) 2 else 1
@@ -350,26 +354,19 @@ private fun TodayTasksSection(
     onExitMultiSelect: () -> Unit,
     onEditTask: (Task) -> Unit,
 ) {
-    val completed = remember(tasks) { tasks.filter { it.status } }
+    val haptic = LocalHapticPerformer.current
+    val activeTasks = remember(tasks) { sortActiveTasks(tasks.filter { !it.status }, tasks) }
+    val completed = remember(tasks) { sortCompletedTasks(tasks.filter { it.status }) }
 
     val lazyListState = rememberLazyListState()
-    var reorderableTasks by
-        remember(tasks) {
-            mutableStateOf(tasks.filter { !it.status }.sortedBy { it.index })
-        }
+    var draggedTaskId by remember { mutableStateOf<Long?>(null) }
+    var reorderableTasks by remember(activeTasks) { mutableStateOf(activeTasks) }
     val reorderableListState =
         rememberReorderableLazyListState(lazyListState) { from, to ->
             reorderableTasks =
                 reorderableTasks.toMutableList().apply {
                     add(to.index, removeAt(from.index))
                 }
-            if (multiSelect) {
-                onAction(
-                    TaskAction.ReorderTasks(
-                        reorderableTasks.mapIndexed { i, t -> i to t }
-                    )
-                )
-            }
         }
 
     LazyColumn(
@@ -390,12 +387,26 @@ private fun TodayTasksSection(
                             contentDescription = null,
                             modifier =
                                 Modifier.draggableHandle(
+                                    onDragStarted = {
+                                        draggedTaskId = task.id
+                                        if (state.hapticFeedback) {
+                                            haptic(HapticKind.DRAG_START)
+                                        }
+                                    },
                                     onDragStopped = {
-                                        onAction(
-                                            TaskAction.ReorderTasks(
-                                                reorderableTasks.mapIndexed { i, t -> i to t }
-                                            )
-                                        )
+                                        draggedTaskId?.let { id ->
+                                            val pos = reorderableTasks.indexOfFirst { it.id == id }
+                                            if (pos >= 0) {
+                                                onAction(
+                                                    TaskAction.ReorderTask(
+                                                        id,
+                                                        reorderableTasks.getOrNull(pos - 1)?.id,
+                                                        reorderableTasks.getOrNull(pos + 1)?.id,
+                                                    )
+                                                )
+                                            }
+                                        }
+                                        draggedTaskId = null
                                     }
                                 ),
                         )

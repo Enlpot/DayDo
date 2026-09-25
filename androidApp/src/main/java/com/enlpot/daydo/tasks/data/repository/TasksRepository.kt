@@ -92,6 +92,10 @@ class TasksRepository(
         tasksDao.updateTaskIndexById(id, index)
     }
 
+    override suspend fun updateTaskSortKeyById(id: Long, newKey: Long) {
+        tasksDao.updateTaskSortKeyById(id, newKey)
+    }
+
     override suspend fun upsertTask(task: Task): Long {
         return if (task.id == 0L) {
             tasksDao.upsertTask(task.toTaskEntity())

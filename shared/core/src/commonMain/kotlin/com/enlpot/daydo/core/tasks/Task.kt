@@ -39,6 +39,10 @@ data class Task(
     val seriesId: Long? = null,
     /** 完成时间戳：勾选完成时记录，取消勾选时清空 */
     val completedAt: LocalDateTime? = null,
+    /** 创建时间：写入数据库的时刻（编辑不改变），用于创建时间排序 */
+    val createdAt: LocalDateTime? = null,
+    /** 手动拖拽排序键：null=未拖过（按创建时间排），非 null=拖过后按相对位置固定 */
+    val sortKey: Long? = null,
 )
 
 /** Convenience accessor: full due date-time, or null when no due date set */
