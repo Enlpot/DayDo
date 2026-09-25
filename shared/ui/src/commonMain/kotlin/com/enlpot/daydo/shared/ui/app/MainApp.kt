@@ -47,6 +47,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.enlpot.daydo.core.habits.Habit
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
 import com.enlpot.daydo.shared.ui.app.AppSections.Companion.toIconRes
@@ -79,6 +80,7 @@ fun MainApp(state: MainAppState) {
 
     var subPage by remember { mutableStateOf(false) }
     var taskStatsSeriesId by remember { mutableStateOf<Long?>(null) }
+    var habitAnalyticsHabitId by remember { mutableStateOf<Long?>(null) }
     CompositionLocalProvider(
         LocalCardCornerRadius provides state.cornerRadius,
     ) {
@@ -93,6 +95,14 @@ fun MainApp(state: MainAppState) {
                         appBackStack.removeAll { true }
                         appBackStack.add(AppSections.TaskPages)
                     }
+                },
+                initialAnalyticsHabitId = habitAnalyticsHabitId,
+                onInitialAnalyticsHandled = { habitAnalyticsHabitId = null },
+                onOpenHabitAnalytics = { habit ->
+                    println("DBG onOpenHabitAnalytics id=${habit.id} title=${habit.title}")
+                    habitAnalyticsHabitId = habit.id
+                    appBackStack.removeAll { true }
+                    appBackStack.add(AppSections.HabitPages)
                 },
             )
 
@@ -159,6 +169,9 @@ private fun mainEntryProvider(
     initialStatsSeriesId: Long?,
     onInitialStatsHandled: () -> Unit,
     onOpenTaskStats: (Task) -> Unit,
+    initialAnalyticsHabitId: Long?,
+    onInitialAnalyticsHandled: () -> Unit,
+    onOpenHabitAnalytics: (Habit) -> Unit,
 ): (NavKey) -> NavEntry<NavKey> =
     entryProvider {
         entry<AppSections.HomePages>(metadata = fadeTransitionMetadata()) {
@@ -173,6 +186,7 @@ private fun mainEntryProvider(
                 onTaskAction = tvm::onAction,
                 onHabitAction = hvm::onAction,
                 onOpenTaskStats = onOpenTaskStats,
+                onOpenHabitAnalytics = onOpenHabitAnalytics,
             )
         }
 
@@ -207,6 +221,8 @@ private fun mainEntryProvider(
             HabitsGraph(
                 state = habitsPageState,
                 onAction = hvm::onAction,
+                initialAnalyticsHabitId = initialAnalyticsHabitId,
+                onInitialAnalyticsHandled = onInitialAnalyticsHandled,
             )
         }
     }

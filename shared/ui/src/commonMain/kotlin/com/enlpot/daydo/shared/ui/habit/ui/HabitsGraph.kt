@@ -101,6 +101,8 @@ fun HabitsGraph(
     state: HabitState,
     onAction: (HabitsAction) -> Unit,
     modifier: Modifier = Modifier,
+    initialAnalyticsHabitId: Long? = null,
+    onInitialAnalyticsHandled: () -> Unit = {},
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
 
@@ -108,8 +110,27 @@ fun HabitsGraph(
 
     LaunchedEffect(Unit) { onAction(HabitsAction.OnHabitsOpened) }
 
+    // 从首页跳转携带的初始统计习惯：先定位习惯并派发（handled 由各分支在完成入栈后调用）
+    LaunchedEffect(initialAnalyticsHabitId) {
+        if (initialAnalyticsHabitId != null) {
+            state.habitsWithAnalytics
+                .firstOrNull { it.habit.id == initialAnalyticsHabitId }
+                ?.let { onAction(HabitsAction.PrepareAnalytics(it.habit)) }
+        }
+    }
+
     if (windowSizeClass.widthSizeClass != WindowWidthSizeClass.Expanded) {
         val backstack = rememberNavBackStack(config, HabitRoutes.HabitList)
+
+        // 首页跳转：打开对应习惯的统计页（已打开则不重复入栈），完成后清除初始标记
+        LaunchedEffect(initialAnalyticsHabitId) {
+            if (initialAnalyticsHabitId != null) {
+                if (backstack.lastOrNull() != HabitRoutes.HabitAnalytics) {
+                    backstack.add(HabitRoutes.HabitAnalytics)
+                }
+                onInitialAnalyticsHandled()
+            }
+        }
 
         NavDisplay(
             modifier = modifier,
@@ -214,6 +235,10 @@ fun HabitsGraph(
                 },
         )
     } else {
+        LaunchedEffect(initialAnalyticsHabitId) {
+            if (initialAnalyticsHabitId != null) onInitialAnalyticsHandled()
+        }
+
         ExpandedScreen(
             modifier = modifier,
             state = state,

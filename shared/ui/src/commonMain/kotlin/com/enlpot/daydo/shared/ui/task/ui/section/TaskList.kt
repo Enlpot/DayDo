@@ -332,14 +332,6 @@ private fun TaskListTopBar(
                 Text(text = stringResource(Res.string.tasks), fontFamily = flexFontEmphasis())
             }
         },
-        subtitle = {
-            if (!multiSelect) {
-                Text(
-                    text = "${state.completedTasks.size} " + stringResource(Res.string.items_completed),
-                    fontFamily = flexFontEmphasis(),
-                )
-            }
-        },
         actions = {
             if (multiSelect) {
                 TextButton(onClick = onSelectAll) {

@@ -99,6 +99,7 @@ fun HomePage(
     onTaskAction: (TaskAction) -> Unit,
     onHabitAction: (HabitsAction) -> Unit,
     onOpenTaskStats: ((Task) -> Unit)? = null,
+    onOpenHabitAnalytics: (Habit) -> Unit = {},
 ) = PageFill {
     val today = LocalDate.now()
     // 首页三组列表已由 TasksViewModel 预计算并排好序（避免每次重组全量过滤）
@@ -156,7 +157,9 @@ fun HomePage(
             subtitle = {
                 if (!multiSelect) {
                     Text(
-                        text = today.toFormattedString(),
+                        text =
+                            "${today.toFormattedString()} · ${taskState.homeTodayCompleted.size} " +
+                                stringResource(Res.string.items_completed),
                         fontFamily = flexFontEmphasis(),
                     )
                 }
@@ -253,7 +256,11 @@ fun HomePage(
                         onEditTask = { editTask = it },
                     )
 
-                else -> TodayHabitsSection(state = habitState, onAction = onHabitAction)
+                else -> TodayHabitsSection(
+                    state = habitState,
+                    onAction = onHabitAction,
+                    onOpenHabitAnalytics = onOpenHabitAnalytics,
+                )
             }
         }
     }
@@ -269,7 +276,7 @@ fun HomePage(
         modifier =
             Modifier.align(Alignment.BottomEnd)
                 .padding(16.dp)
-                .size(45.dp)
+                .size(48.dp)
                 .animateFloatingActionButton(
                     visible = !multiSelect,
                     alignment = Alignment.BottomEnd,
@@ -454,6 +461,7 @@ private fun TodayTasksSection(
 private fun TodayHabitsSection(
     state: HabitState,
     onAction: (HabitsAction) -> Unit,
+    onOpenHabitAnalytics: (Habit) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -468,7 +476,9 @@ private fun TodayHabitsSection(
                 habitWithAnalytics = habitWithAnalytics,
                 completed = completed,
                 action = onAction,
-                onNavigateToAnalytics = {},
+                onNavigateToAnalytics = {
+                    onOpenHabitAnalytics(habitWithAnalytics.habit)
+                },
                 editState = false,
                 compactView = state.compactHabitView,
                 analyticsEnabled = true,
