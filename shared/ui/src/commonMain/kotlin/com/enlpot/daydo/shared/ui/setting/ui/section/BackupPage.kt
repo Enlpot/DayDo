@@ -127,7 +127,7 @@ fun BackupPage(
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
                                     .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                            horizontalArrangement = Arrangement.Center,
+                            horizontalArrangement = Arrangement.End,
                         ) {
                             Button(
                                 onClick = { onAction(SettingsAction.OnExport) },
@@ -173,7 +173,7 @@ fun BackupPage(
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
                                     .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                            horizontalArrangement = Arrangement.Center,
+                            horizontalArrangement = Arrangement.End,
                         ) {
                             Button(
                                 onClick = { onAction(SettingsAction.OnRestore) },
@@ -229,6 +229,21 @@ fun BackupPage(
                         supportingContent = {
                             Text(text = "配置 WebDAV 服务器用于云备份与恢复")
                         },
+                        trailingContent = {
+                            Button(
+                                onClick = {
+                                    onAction(
+                                        SettingsAction.SetWebDavConfig(
+                                            server = server,
+                                            username = username,
+                                            password = password,
+                                        )
+                                    )
+                                },
+                            ) {
+                                Text(text = "保存配置")
+                            }
+                        },
                     )
                     OutlinedTextField(
                         value = server,
@@ -262,24 +277,7 @@ fun BackupPage(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 20.dp, top = 2.dp),
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        Button(
-                            onClick = {
-                                onAction(
-                                    SettingsAction.SetWebDavConfig(
-                                        server = server,
-                                        username = username,
-                                        password = password,
-                                    )
-                                )
-                            },
-                        ) {
-                            Text(text = "保存配置")
-                        }
-                    }
+
                 }
             }
 
@@ -307,7 +305,7 @@ fun BackupPage(
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
                                     .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                            horizontalArrangement = Arrangement.Center,
+                            horizontalArrangement = Arrangement.End,
                         ) {
                             Button(
                                 onClick = { onAction(SettingsAction.WebDavUpload) },
@@ -343,7 +341,7 @@ fun BackupPage(
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
                                     .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                            horizontalArrangement = Arrangement.Center,
+                            horizontalArrangement = Arrangement.End,
                         ) {
                             OutlinedButton(
                                 onClick = { onAction(SettingsAction.WebDavDownload) },
