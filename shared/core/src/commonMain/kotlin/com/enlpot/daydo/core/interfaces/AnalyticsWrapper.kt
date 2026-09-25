@@ -26,8 +26,6 @@ interface AnalyticsWrapper {
         value class AnalyticsEvent(val name: String) {
             companion object {
                 val APP_OPENED = AnalyticsEvent("app_opened")
-                val PAYWALL_OPENED = AnalyticsEvent("paywall_opened")
-                val PAYWALL_PURCHASED = AnalyticsEvent("paywall_purchased")
 
                 val TASKS_OPENED = AnalyticsEvent("tasks_opened")
                 val TASK_SHEET_OPENED = AnalyticsEvent("task_sheet_opened")
@@ -59,8 +57,6 @@ interface AnalyticsWrapper {
                 val LOOK_AND_FEEL_UPDATED = AnalyticsEvent("look_and_feel_updated")
                 val BACKUP_CREATED = AnalyticsEvent("backup_created")
                 val BACKUP_RESTORED = AnalyticsEvent("backup_restored")
-                val ABOUT_VIEWED = AnalyticsEvent("about_viewed")
-                val CHANGELOG_VIEWED = AnalyticsEvent("changelog_viewed")
             }
         }
     }

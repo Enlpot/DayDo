@@ -14,10 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-@file:OptIn(ExperimentalWasmDsl::class)
-
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
@@ -30,19 +26,12 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
-    jvm()
-
     android {
         namespace = "com.enlpot.daydo.shared.core"
         compileSdk = libs.versions.compileSdk.get().toInt()
         minSdk = libs.versions.minSdk.get().toInt()
 
         androidResources { enable = true }
-    }
-
-    wasmJs {
-        browser()
-        binaries.executable()
     }
 
     sourceSets {

@@ -76,6 +76,8 @@ fun TaskSchema.toTask(): Task {
         deletedAt = deletedAt,
         seriesId = seriesId,
         completedAt = completedAt?.let { Converters.dateFromTimestamp(it) },
+        createdAt = createdAt?.let { Converters.dateFromTimestamp(it) },
+        sortKey = sortKey,
     )
 }
 
@@ -94,6 +96,8 @@ fun Task.toTaskSchema(): TaskSchema {
         deletedAt = deletedAt,
         seriesId = seriesId,
         completedAt = completedAt?.let { Converters.dateToTimestamp(it) },
+        createdAt = createdAt?.let { Converters.dateToTimestamp(it) },
+        sortKey = sortKey,
     )
 }
 

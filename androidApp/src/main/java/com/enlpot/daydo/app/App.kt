@@ -17,50 +17,28 @@
 package com.enlpot.daydo.app
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.enlpot.daydo.billing.PaywallPage
 import com.enlpot.daydo.shared.ui.app.MainApp
 import com.enlpot.daydo.shared.ui.app.MainAppState
-import com.enlpot.daydo.shared.ui.navigation.verticalTransitionMetadata
 import kotlinx.serialization.Serializable
 
 private sealed interface GlobalRoutes : NavKey {
-    @Serializable data object PaywallPage : GlobalRoutes
-
     @Serializable data object App : GlobalRoutes
 }
 
 @Composable
-fun App(state: MainAppState, onPaywallOpened: () -> Unit, onRefreshSub: () -> Unit) {
+fun App(state: MainAppState) {
     val mainBackStack = rememberNavBackStack(GlobalRoutes.App)
 
     NavDisplay(
         backStack = mainBackStack,
         entryProvider =
             entryProvider {
-                entry<GlobalRoutes.PaywallPage>(metadata = verticalTransitionMetadata()) {
-                    DisposableEffect(Unit) { onDispose { onRefreshSub() } }
-
-                    PaywallPage(
-                        isPlusUser = state.isUserSubscribed,
-                        onDismissRequest = {
-                            if (mainBackStack.size != 1) mainBackStack.removeLastOrNull()
-                        },
-                    )
-                }
-
                 entry<GlobalRoutes.App> {
-                    MainApp(
-                        state = state,
-                        onNavigateToPaywall = {
-                            onPaywallOpened()
-                            mainBackStack.add(GlobalRoutes.PaywallPage)
-                        },
-                    )
+                    MainApp(state = state)
                 }
             },
     )

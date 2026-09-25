@@ -36,8 +36,6 @@ interface TaskRepo {
 
     suspend fun getCategories(): List<Category>
 
-    suspend fun updateTaskIndexById(id: Long, index: Int)
-
     suspend fun updateTaskSortKeyById(id: Long, newKey: Long)
 
     suspend fun upsertTask(task: Task): Long

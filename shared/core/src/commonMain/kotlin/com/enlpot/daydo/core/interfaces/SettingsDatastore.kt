@@ -44,10 +44,6 @@ interface SettingsDatastore {
 
     suspend fun setBiometricPref(pref: Boolean)
 
-    fun getTaskReorderPref(): Flow<Boolean>
-
-    suspend fun setTaskReorderPref(pref: Boolean)
-
     fun getCompactViewPref(): Flow<Boolean>
 
     suspend fun setCompactView(pref: Boolean)

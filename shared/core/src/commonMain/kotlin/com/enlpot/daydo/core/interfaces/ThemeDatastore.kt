@@ -17,7 +17,6 @@
 package com.enlpot.daydo.core.interfaces
 
 import com.enlpot.daydo.core.theme.AppTheme
-import com.enlpot.daydo.core.theme.Fonts
 import com.enlpot.daydo.core.theme.PaletteStyle
 import kotlinx.coroutines.flow.Flow
 
@@ -43,8 +42,4 @@ interface ThemeDatastore {
     fun getMaterialYouFlow(): Flow<Boolean>
 
     suspend fun setMaterialYou(pref: Boolean)
-
-    fun getFontPrefFlow(): Flow<Fonts>
-
-    suspend fun setFontPref(font: Fonts)
 }

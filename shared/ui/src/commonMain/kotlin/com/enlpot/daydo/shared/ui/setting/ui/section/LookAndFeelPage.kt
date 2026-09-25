@@ -31,13 +31,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumFlexibleTopAppBar
@@ -79,7 +76,6 @@ import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.toDisplayString
 import daydo.shared.ui.generated.resources.*
-import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
@@ -87,8 +83,6 @@ import org.jetbrains.compose.resources.vectorResource
 fun LookAndFeelPage(
     state: SettingsState,
     onAction: (SettingsAction) -> Unit,
-    isUserSubscribed: Boolean,
-    onNavigateToPaywall: () -> Unit,
     onNavigateBack: () -> Unit,
 ) {
     var colorPickerDialog by remember { mutableStateOf(false) }
@@ -255,24 +249,6 @@ fun LookAndFeelPage(
                                 .clickable { showMaterialYouDialog = true },
                     )
 
-                    // plus redirect
-                    if (!isUserSubscribed) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillParentMaxWidth().height(60.dp),
-                        ) {
-                            LinearWavyProgressIndicator(
-                                progress = { 0.90f },
-                                modifier = Modifier.fillParentMaxWidth(),
-                            )
-
-                            Button(onClick = onNavigateToPaywall) {
-                                Text(text = stringResource(Res.string.unlock_more_plus))
-                            }
-                        }
-                    }
-
-
                     if (!state.theme.isMaterialYou) {
                         // amoled toggle
                         ListItem(
@@ -331,7 +307,6 @@ fun LookAndFeelPage(
                             seedColor = Color(state.theme.seedColor),
                             appTheme = state.theme.appTheme,
                             isAmoled = state.theme.isAmoled,
-                            isUserSubscribed = isUserSubscribed,
                             onClick = { onAction(SettingsAction.ChangePaletteStyle(it)) },
                         )
                     }
@@ -458,20 +433,12 @@ fun LookAndFeelPage(
 }
 
 @Composable
-expect fun MaterialYouToggle(
-    isUserSubscribed: Boolean,
-    isMaterialYou: Boolean,
-    onClick: (Boolean) -> Unit,
-)
-
-@Composable
 expect fun PaletteStylePicker(
     paletteStyle: PaletteStyle,
     isMaterialYou: Boolean,
     seedColor: Color,
     appTheme: AppTheme,
     isAmoled: Boolean,
-    isUserSubscribed: Boolean,
     onClick: (PaletteStyle) -> Unit,
 )
 
@@ -482,10 +449,8 @@ private fun Preview() {
         Surface {
             LookAndFeelPage(
                 state = SettingsState(),
-                isUserSubscribed = false,
                 onAction = {},
                 onNavigateBack = {},
-                onNavigateToPaywall = {},
             )
         }
     }

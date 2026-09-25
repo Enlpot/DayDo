@@ -18,7 +18,6 @@ package com.enlpot.daydo.shared.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.enlpot.daydo.core.billing.BillingHandler
 import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.interfaces.ThemeDatastore
@@ -41,7 +40,6 @@ import org.koin.core.annotation.Provided
 class MainViewModel(
     @Provided private val themeDatastore: ThemeDatastore,
     @Provided private val settingsDatastore: SettingsDatastore,
-    @Provided private val billingHandler: BillingHandler,
     @Provided private val analytics: AnalyticsWrapper,
 ) : ViewModel() {
     var observerJob: Job? = null
@@ -56,7 +54,6 @@ class MainViewModel(
                     AnalyticsWrapper.Companion.AnalyticsEvent.APP_OPENED.name,
                     emptyMap(),
                 )
-                checkSubscription(appStart = true)
                 observeDatastore()
             }
             .stateIn(
@@ -73,10 +70,6 @@ class MainViewModel(
         viewModelScope.launch { settingsDatastore.setBiometricPref(value) }
     }
 
-    fun updateSubscription() {
-        viewModelScope.launch { checkSubscription() }
-    }
-
     private fun observeDatastore() {
         observerJob?.cancel()
         observerJob =
@@ -84,17 +77,15 @@ class MainViewModel(
                 combine(
                         themeDatastore.getPaletteStyle(),
                         themeDatastore.getSeedColorFlow(),
-                        themeDatastore.getFontPrefFlow(),
                         themeDatastore.getMaterialYouFlow(),
                         themeDatastore.getAppThemeFlow(),
-                    ) { palette, seedColor, font, materialYou, appTheme ->
+                    ) { palette, seedColor, materialYou, appTheme ->
                         _state.update {
                             it.copy(
                                 theme =
                                     it.theme.copy(
                                         paletteStyle = palette,
                                         seedColor = seedColor,
-                                        font = font,
                                         isMaterialYou = materialYou,
                                         appTheme = appTheme,
                                     )
@@ -141,31 +132,5 @@ class MainViewModel(
                     .onEach { pref -> _state.update { it.copy(isBiometricLockOn = pref) } }
                     .launchIn(this)
             }
-    }
-
-    private suspend fun checkSubscription(appStart: Boolean = false) {
-        _state.update { it.copy(isFoss = billingHandler.isFoss()) }
-
-        val isSubscribed = billingHandler.userResult()
-
-        when (isSubscribed) {
-            Subscribed -> {
-                if (!_state.value.isUserSubscribed && !appStart) {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.PAYWALL_PURCHASED.name,
-                        emptyMap(),
-                    )
-                }
-                _state.update { it.copy(isUserSubscribed = true) }
-            }
-            else -> {}
-        }
-    }
-
-    fun trackPaywallOpened() {
-        analytics.trackEvent(
-            AnalyticsWrapper.Companion.AnalyticsEvent.PAYWALL_OPENED.name,
-            emptyMap(),
-        )
     }
 }

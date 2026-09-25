@@ -53,18 +53,15 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * Boolean Calendar highlighting completed days and streaks
  *
- * @param canSeeContent is user subbed?
  * @param calendarState calendar state object
  * @param statuses list of [com.enlpot.daydo.core.habits.HabitStatus]
  * @param days set of [DayOfWeek]
  */
 @Composable
 fun CalendarMap(
-    canSeeContent: Boolean,
     calendarState: CalendarState,
     statuses: List<HabitStatus>,
     days: Set<DayOfWeek>,
-    onNavigateToPaywall: () -> Unit,
     onNavigateToCalendar: () -> Unit,
     onDateClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
@@ -79,8 +76,6 @@ fun CalendarMap(
     AnalyticsCard(
         title = stringResource(Res.string.monthly_progress),
         icon = Res.drawable.calendar_month,
-        canSeeContent = canSeeContent,
-        onPlusClick = onNavigateToPaywall,
         header = {
             CardArrows(
                 onBackAction = {
@@ -98,7 +93,6 @@ fun CalendarMap(
                     }
                 },
                 onExpandAction = onNavigateToCalendar,
-                enabled = canSeeContent,
             )
         },
         modifier = modifier,
@@ -113,7 +107,6 @@ fun CalendarMap(
                     .animateContentSize()
                     .padding(vertical = 16.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
-            userScrollEnabled = canSeeContent,
             monthHeader = {
                 CalendarMonthHeader(
                     calendarMonth = it,
@@ -140,7 +133,6 @@ fun CalendarMap(
 @Composable
 private fun Preview() {
     CalendarMap(
-        canSeeContent = true,
         calendarState =
             rememberCalendarState(
                 startMonth = YearMonth.now().minusYears(1),
@@ -152,7 +144,6 @@ private fun Preview() {
                 HabitStatus(habitId = 1, date = LocalDate.now().minus(it, DateTimeUnit.DAY))
             },
         days = DayOfWeek.entries.toSet(),
-        onNavigateToPaywall = {},
         onDateClick = {},
         onNavigateToCalendar = {},
     )

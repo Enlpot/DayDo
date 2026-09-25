@@ -23,10 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.habits.CalendarType
 import com.enlpot.daydo.core.habits.StreakPosition
 import com.enlpot.daydo.core.theme.AppTheme
-import com.enlpot.daydo.core.theme.Fonts
 import com.enlpot.daydo.core.theme.PaletteStyle
 import daydo.shared.ui.generated.resources.*
-import org.jetbrains.compose.resources.FontResource
 import org.jetbrains.compose.resources.StringResource
 
 fun AppTheme.toDisplayString(): StringResource {
@@ -34,34 +32,6 @@ fun AppTheme.toDisplayString(): StringResource {
         SYSTEM -> Res.string.system
         DARK -> Res.string.dark
         LIGHT -> Res.string.light
-    }
-}
-
-/** Used in UI Buttons */
-fun Fonts.toDisplayString(): String {
-    return when (this) {
-        POPPINS -> "Poppins"
-        INTER -> "Inter"
-        MANROPE -> "Manrope"
-        MONTSERRAT -> "Montserrat"
-        FIGTREE -> "Figtree"
-        OUTFIT -> "Outfit"
-        GOOGLE_SANS -> "Google Sans"
-        SYSTEM_DEFAULT -> "System Default"
-    }
-}
-
-/** Enum to [FontResource] used internally */
-fun Fonts.toFontRes(): FontResource? {
-    return when (this) {
-        POPPINS -> Res.font.figtree
-        INTER -> Res.font.figtree
-        MANROPE -> Res.font.figtree
-        MONTSERRAT -> Res.font.figtree
-        FIGTREE -> Res.font.figtree
-        OUTFIT -> Res.font.figtree
-        GOOGLE_SANS -> Res.font.figtree
-        SYSTEM_DEFAULT -> null
     }
 }
 

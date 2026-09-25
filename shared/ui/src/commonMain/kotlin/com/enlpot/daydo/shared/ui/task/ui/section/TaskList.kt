@@ -489,7 +489,7 @@ private fun TaskItemsSection(
             ) {
                 if (isDeletedView) {
                     itemsIndexed(items = state.displayTasks, key = { _, it -> it.id }) { index, task ->
-                        val cardShape = taskItemShape(index, state.displayTasks.size)
+                        val cardShape = taskItemShape()
                         DeletedTaskCard(
                             task = task,
                             shape = cardShape,
@@ -504,7 +504,7 @@ private fun TaskItemsSection(
                 } else {
                     itemsIndexed(items = reorderableTasks, key = { _, it -> it.id }) { index, task ->
                         ReorderableItem(reorderableListState, key = task.id) {
-                            val cardShape = taskItemShape(index, reorderableTasks.size)
+                            val cardShape = taskItemShape()
 
                             TaskCard(
                                 task = task,

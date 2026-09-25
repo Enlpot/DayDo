@@ -101,8 +101,6 @@ private val config = SavedStateConfiguration {
 fun HabitsGraph(
     state: HabitState,
     onAction: (HabitsAction) -> Unit,
-    onNavigateToPaywall: () -> Unit,
-    isUserSubscribed: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
@@ -157,8 +155,6 @@ fun HabitsGraph(
                                     state = state,
                                     fabVisible = fabVisible && !state.editState,
                                     onAction = onAction,
-                                    onNavigateToPaywall = onNavigateToPaywall,
-                                    isUserSubscribed = isUserSubscribed,
                                 )
                             }
                         }
@@ -171,9 +167,7 @@ fun HabitsGraph(
                             onNavigateBack = {
                                 if (backstack.size != 1) backstack.removeLastOrNull()
                             },
-                            onNavigateToPaywall = onNavigateToPaywall,
                             onNavigateToCalendar = { backstack.add(HabitRoutes.Calendar) },
-                            isUserSubscribed = isUserSubscribed,
                             modifier = Modifier.background(MaterialTheme.colorScheme.background),
                         )
                     }
@@ -185,8 +179,6 @@ fun HabitsGraph(
                             onNavigateBack = {
                                 if (backstack.size != 1) backstack.removeLastOrNull()
                             },
-                            onNavigateToPaywall = onNavigateToPaywall,
-                            isUserSubscribed = isUserSubscribed,
                             onAction = onAction,
                             modifier = Modifier.background(MaterialTheme.colorScheme.background),
                             onNavigateToCalendarHeatMap = {
@@ -228,8 +220,6 @@ fun HabitsGraph(
             state = state,
             onAction = onAction,
             scrollBehavior = scrollBehavior,
-            onNavigateToPaywall = onNavigateToPaywall,
-            isUserSubscribed = isUserSubscribed,
         )
     }
 }
@@ -240,8 +230,6 @@ private fun ExpandedScreen(
     state: HabitState,
     onAction: (HabitsAction) -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
-    onNavigateToPaywall: () -> Unit,
-    isUserSubscribed: Boolean,
 ) {
     Column(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
         HabitsTopAppBar(state = state, onAction = onAction, scrollBehavior = scrollBehavior)
@@ -274,8 +262,6 @@ private fun ExpandedScreen(
                     state = state,
                     fabVisible = fabVisible,
                     onAction = onAction,
-                    onNavigateToPaywall = onNavigateToPaywall,
-                    isUserSubscribed = isUserSubscribed,
                 )
             }
 
@@ -309,9 +295,7 @@ private fun ExpandedScreen(
                                     onNavigateBack = {
                                         onAction(HabitsAction.PrepareAnalytics(null))
                                     },
-                                    onNavigateToPaywall = onNavigateToPaywall,
                                     onNavigateToCalendar = { backstack.add(HabitRoutes.Calendar) },
-                                    isUserSubscribed = isUserSubscribed,
                                     modifier =
                                         Modifier.background(
                                             MaterialTheme.colorScheme.surfaceContainerHighest
@@ -342,8 +326,6 @@ private fun ExpandedScreen(
                                     state = state,
                                     onNavigateBack = {},
                                     showNavigateBack = false,
-                                    onNavigateToPaywall = onNavigateToPaywall,
-                                    isUserSubscribed = isUserSubscribed,
                                     onAction = onAction,
                                     onNavigateToCalendarHeatMap = {
                                         backstack.add(HabitRoutes.CalendarHeatMap)

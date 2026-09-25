@@ -21,9 +21,9 @@ import androidx.compose.ui.unit.dp
 
 /**
  * 任务卡片统一圆角矩形样式，任务页与首页共用，改一处全局同步。
- * index/size 参数保留以兼容调用处；圆角大小由设置-外观与风格-圆角大小控制。
+ * 圆角大小由设置-外观与风格-圆角大小控制。
  */
 @Composable
-fun taskItemShape(index: Int, size: Int): RoundedCornerShape {
+fun taskItemShape(): RoundedCornerShape {
     return RoundedCornerShape(LocalCardCornerRadius.current.dp)
 }

@@ -21,7 +21,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
 import com.enlpot.daydo.core.interfaces.BiometricUtils
-import com.enlpot.daydo.core.interfaces.ChangelogManager
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.interfaces.ThemeDatastore
 import com.enlpot.daydo.core.settings.backup.ExportRepo
@@ -53,7 +52,6 @@ class SettingsViewModel(
     @Provided private val webDavRepo: WebDavRepo,
     @Provided private val themeDatastore: ThemeDatastore,
     @Provided private val settingsDatastore: SettingsDatastore,
-    @Provided private val changelogManager: ChangelogManager,
     @Provided private val biometricUtils: BiometricUtils,
     @Provided private val analytics: AnalyticsWrapper,
 ) : ViewModel() {
@@ -66,7 +64,6 @@ class SettingsViewModel(
             .asStateFlow()
             .onStart {
                 observeJob()
-                getChangeLogs()
                 getBiometricStatus()
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsState())
@@ -246,22 +243,6 @@ class SettingsViewModel(
                     }
                 }
 
-                is ChangePauseNotifications -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.SETTINGS_UPDATED.name,
-                        mapOf("setting" to "ChangePauseNotifications", "value" to action.pref),
-                    )
-                    settingsDatastore.setNotifications(action.pref)
-                }
-
-                is ChangeFontPref -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.LOOK_AND_FEEL_UPDATED.name,
-                        mapOf("setting" to "ChangeFontPref", "value" to action.font.name),
-                    )
-                    themeDatastore.setFontPref(action.font)
-                }
-
                 is ChangeBiometricLock -> {
                     analytics.trackEvent(
                         AnalyticsWrapper.Companion.AnalyticsEvent.SETTINGS_UPDATED.name,
@@ -290,13 +271,6 @@ class SettingsViewModel(
                 is ChangeHapticSound -> {
                     settingsDatastore.setHapticSound(action.sound)
                 }
-                is ChangeReorderTasks -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.SETTINGS_UPDATED.name,
-                        mapOf("setting" to "ChangeReorderTasks", "value" to action.pref),
-                    )
-                    settingsDatastore.setTaskReorderPref(action.pref)
-                }
 
                 is ToggleSmartViewVisibility -> {
                     val hidden = _state.value.hiddenSmartViews
@@ -315,20 +289,6 @@ class SettingsViewModel(
                         emptyMap(),
                     )
                 }
-
-                OnAboutViewed -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.ABOUT_VIEWED.name,
-                        emptyMap(),
-                    )
-                }
-
-                OnChangelogViewed -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.CHANGELOG_VIEWED.name,
-                        emptyMap(),
-                    )
-                }
             }
         }
 
@@ -338,41 +298,14 @@ class SettingsViewModel(
         }
     }
 
-    private suspend fun getChangeLogs() {
-        val currentChangelog = changelogManager.changelogs.first()
-        _state.update {
-            it.copy(
-                changelog = currentChangelog,
-                currentVersion = currentChangelog.firstOrNull()?.version,
-            )
-        }
-    }
-
     private fun observeJob() =
         viewModelScope.launch {
             observeJob?.cancel()
             observeJob = launch {
-                settingsDatastore
-                    .getTaskReorderPref()
-                    .onEach { pref -> _state.update { it.copy(reorderTasks = pref) } }
-                    .launchIn(this)
-
-                settingsDatastore
-                    .getNotificationsFlow()
-                    .onEach { pref -> _state.update { it.copy(pauseNotifications = pref) } }
-                    .launchIn(this)
-
                 themeDatastore
                     .getAppThemeFlow()
                     .onEach { flow ->
                         _state.update { it.copy(theme = it.theme.copy(appTheme = flow)) }
-                    }
-                    .launchIn(this)
-
-                themeDatastore
-                    .getFontPrefFlow()
-                    .onEach { flow ->
-                        _state.update { it.copy(theme = it.theme.copy(font = flow)) }
                     }
                     .launchIn(this)
 
@@ -419,7 +352,6 @@ class SettingsViewModel(
                     .onEach { flow -> _state.update { it.copy(startOfTheWeek = flow) } }
                     .launchIn(this)
 
-                settingsDatastore
                 settingsDatastore
                     .getCornerRadiusPref()
                     .onEach { flow -> _state.update { it.copy(cornerRadius = flow) } }

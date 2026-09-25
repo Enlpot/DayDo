@@ -95,11 +95,7 @@ class MainActivity : FragmentActivity() {
 
                 GritTheme(theme = state.theme) {
                     if (showContent) {
-                        App(
-                            state = state,
-                            onRefreshSub = { mainViewModel.updateSubscription() },
-                            onPaywallOpened = { mainViewModel.trackPaywallOpened() },
-                        )
+                        App(state = state)
                     } else {
                         InitialLoading()
                     }

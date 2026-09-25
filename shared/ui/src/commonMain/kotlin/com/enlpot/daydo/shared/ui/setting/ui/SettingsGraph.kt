@@ -36,9 +36,7 @@ import com.enlpot.daydo.shared.ui.components.PageFill
 import com.enlpot.daydo.shared.ui.navigation.horizontalTransitionMetadata
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
-import com.enlpot.daydo.shared.ui.setting.ui.section.About
 import com.enlpot.daydo.shared.ui.setting.ui.section.BackupPage
-import com.enlpot.daydo.shared.ui.setting.ui.section.Changelog
 import com.enlpot.daydo.shared.ui.setting.ui.section.HapticsPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.LookAndFeelPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.RootPage
@@ -56,12 +54,6 @@ private sealed interface SettingsRoutes : NavKey {
     @Serializable data object Backup : SettingsRoutes
 
     @Serializable data object Haptics : SettingsRoutes
-
-    @Serializable data object Changelog : SettingsRoutes
-
-    @Serializable data object About : SettingsRoutes
-
-
 }
 
 private val configuration = SavedStateConfiguration {
@@ -71,9 +63,6 @@ private val configuration = SavedStateConfiguration {
             subclass(SettingsRoutes.LookAndFeel::class, SettingsRoutes.LookAndFeel.serializer())
             subclass(SettingsRoutes.Backup::class, SettingsRoutes.Backup.serializer())
             subclass(SettingsRoutes.Haptics::class, SettingsRoutes.Haptics.serializer())
-            subclass(SettingsRoutes.Changelog::class, SettingsRoutes.Changelog.serializer())
-            subclass(SettingsRoutes.About::class, SettingsRoutes.About.serializer())
-
         }
     }
 }
@@ -82,8 +71,6 @@ private val configuration = SavedStateConfiguration {
 fun SettingsGraph(
     state: SettingsState,
     onAction: (SettingsAction) -> Unit,
-    isUserSubscribed: Boolean,
-    onNavigateToPaywall: () -> Unit,
     onSubPageChange: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) =
@@ -107,7 +94,6 @@ fun SettingsGraph(
                             onNavigateToBackup = { backStack.add(SettingsRoutes.Backup) },
 
                             onNavigateToHaptics = { backStack.add(SettingsRoutes.Haptics) },
-                            onNavigateToPaywall = onNavigateToPaywall,
                         )
                     }
 
@@ -115,8 +101,6 @@ fun SettingsGraph(
                         LookAndFeelPage(
                             state = state,
                             onAction = onAction,
-                            isUserSubscribed = isUserSubscribed,
-                            onNavigateToPaywall = onNavigateToPaywall,
                             onNavigateBack = {
                                 if (backStack.size != 1) backStack.removeLastOrNull()
                             },
@@ -142,28 +126,6 @@ fun SettingsGraph(
                             },
                         )
                     }
-
-                    entry<SettingsRoutes.Changelog>(metadata = horizontalTransitionMetadata()) {
-                        LaunchedEffect(Unit) { onAction(SettingsAction.OnChangelogViewed) }
-                        Changelog(
-                            changelog = state.changelog,
-                            onNavigateBack = {
-                                if (backStack.size != 1) backStack.removeLastOrNull()
-                            },
-                        )
-                    }
-
-
-
-                    entry<SettingsRoutes.About>(metadata = horizontalTransitionMetadata()) {
-                        LaunchedEffect(Unit) { onAction(SettingsAction.OnAboutViewed) }
-                        About(
-                            versionName = state.currentVersion ?: "1.0.00-Demo",
-                            onNavigateBack = {
-                                if (backStack.size != 1) backStack.removeLastOrNull()
-                            },
-                        )
-                    }
                 },
         )
     }
@@ -175,7 +137,5 @@ private fun Preview() {
     SettingsGraph(
         state = SettingsState(),
         onAction = {},
-        onNavigateToPaywall = {},
-        isUserSubscribed = true,
     )
 }

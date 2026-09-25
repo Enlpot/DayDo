@@ -62,7 +62,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
+fun MainApp(state: MainAppState) {
     val windowSizeClass = LocalWindowSizeClass.current
 
     val appBackStack =
@@ -147,8 +147,6 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                 SettingsGraph(
                                     state = settingsState,
                                     onAction = svm::onAction,
-                                    isUserSubscribed = state.isUserSubscribed,
-                                    onNavigateToPaywall = onNavigateToPaywall,
                                     onSubPageChange = { subPage = it },
                                 )
                             }
@@ -160,8 +158,6 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                 HabitsGraph(
                                     state = habitsPageState,
                                     onAction = hvm::onAction,
-                                    isUserSubscribed = state.isUserSubscribed,
-                                    onNavigateToPaywall = onNavigateToPaywall,
                                 )
                             }
                         },
@@ -229,8 +225,6 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                 SettingsGraph(
                                     state = settingsState,
                                     onAction = svm::onAction,
-                                    isUserSubscribed = state.isUserSubscribed,
-                                    onNavigateToPaywall = onNavigateToPaywall,
                                     onSubPageChange = { subPage = it },
                                 )
                             }
@@ -242,8 +236,6 @@ fun MainApp(state: MainAppState, onNavigateToPaywall: () -> Unit) {
                                 HabitsGraph(
                                     state = habitsPageState,
                                     onAction = hvm::onAction,
-                                    isUserSubscribed = state.isUserSubscribed,
-                                    onNavigateToPaywall = onNavigateToPaywall,
                                 )
                             }
                         },

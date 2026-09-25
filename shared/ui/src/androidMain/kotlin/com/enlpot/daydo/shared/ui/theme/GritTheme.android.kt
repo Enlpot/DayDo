@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.materialkolor.rememberDynamicColorScheme
 import com.enlpot.daydo.core.theme.Theme
-import com.enlpot.daydo.shared.ui.toFontRes
 import com.enlpot.daydo.shared.ui.toMPaletteStyle
 
 @Composable
@@ -60,7 +59,7 @@ actual fun GritTheme(theme: Theme, content: @Composable (() -> Unit)) {
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
         motionScheme = MotionScheme.expressive(),
-        typography = provideTypography(theme.font.toFontRes()),
+        typography = provideTypography(),
         content = content,
     )
 }

@@ -25,10 +25,8 @@ import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
-import com.enlpot.daydo.core.tasks.taskOccursOn
 import com.enlpot.daydo.core.tasks.TaskRepo
 import com.enlpot.daydo.core.tasks.nextDateAfter
-import com.enlpot.daydo.core.tasks.occursOn
 import com.enlpot.daydo.core.tasks.reminderFor
 import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
 import com.enlpot.daydo.core.tasks.sortActiveTasks

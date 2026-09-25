@@ -65,10 +65,8 @@ fun OverallAnalytics(
     state: HabitState,
     onAction: (HabitsAction) -> Unit,
     onNavigateBack: () -> Unit,
-    onNavigateToPaywall: () -> Unit,
     onNavigateToCalendarHeatMap: () -> Unit,
     showNavigateBack: Boolean = true,
-    isUserSubscribed: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
@@ -215,9 +213,7 @@ fun OverallAnalytics(
 
             item {
                 WeekDayBreakdown(
-                    canSeeContent = isUserSubscribed,
                     weekDayData = state.overallAnalytics.weekDayFrequencyData,
-                    onNavigateToPaywall = onNavigateToPaywall,
                     modifier = Modifier.widthIn(max = maxWidth),
                 )
             }

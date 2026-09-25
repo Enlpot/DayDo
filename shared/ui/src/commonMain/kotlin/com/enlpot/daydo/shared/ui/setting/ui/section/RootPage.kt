@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
@@ -53,7 +52,6 @@ import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
-import com.enlpot.daydo.shared.ui.setting.ui.component.LocalePickerSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
@@ -68,9 +66,7 @@ fun RootPage(
     onNavigateToLookAndFeel: () -> Unit,
     onNavigateToHaptics: () -> Unit,
     onNavigateToBackup: () -> Unit,
-    onNavigateToPaywall: () -> Unit,
 ) {
-    var showLocalePicker by rememberSaveable { mutableStateOf(false) }
     var showSmartViewsDialog by rememberSaveable { mutableStateOf(false) }
     var showStartingPageDialog by rememberSaveable { mutableStateOf(false) }
     var showStartOfWeekDialog by rememberSaveable { mutableStateOf(false) }
@@ -472,9 +468,6 @@ fun RootPage(
                 }
             }
         }
-        if (showLocalePicker) {
-            LocalePickerSheet(onDismissRequest = { showLocalePicker = false })
-        }
     }
 }
 
@@ -491,8 +484,6 @@ private fun SmartCategory.labelText(): String {
     }
 }
 
-expect fun LazyListScope.languagePicker(onClick: () -> Unit)
-
 @PreviewWrapper(GritPreviewWrapper::class)
 @PreviewLightDark
 @Composable
@@ -503,6 +494,5 @@ private fun Preview() {
         onNavigateToLookAndFeel = {},
         onNavigateToHaptics = {},
         onNavigateToBackup = {},
-        onNavigateToPaywall = {},
     )
 }

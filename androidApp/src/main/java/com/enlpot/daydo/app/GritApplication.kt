@@ -19,7 +19,6 @@ package com.enlpot.daydo.app
 import android.app.Application
 import android.os.Build
 import com.enlpot.daydo.analytics.AnalyticsInitializer
-import com.enlpot.daydo.billing.BillingInitializer
 import com.enlpot.daydo.core.data.notification.GritNotificationManager
 import com.enlpot.daydo.di.GritModules
 import org.koin.android.ext.koin.androidContext
@@ -38,9 +37,6 @@ class GritApplication : Application() {
             androidContext(this@GritApplication)
         }
 
-        BillingInitializer().initialize(this)
         AnalyticsInitializer().setup(this)
-
-
     }
 }

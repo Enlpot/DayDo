@@ -8,11 +8,9 @@ espresso-core = "3.7.0"
 junit = "4.13.2"
 junit-version = "1.3.0"
 kotlinx-datetime = "0.8.0"
-purchases = "10.21.0"
 splashscreen = "1.2.0"
 datastore = "1.2.1"
 colorpicker = "1.2.0"
-glance = "1.2.0"
 koin = "4.2.2"
 koin-plugin = "1.2.1"
 kotlin = "2.4.20"
@@ -32,17 +30,12 @@ kotlinx-serialization-json = "1.11.0"
 spotless = "8.10.2"
 filekit = "0.16.0"
 ktfmt = "0.61"
-browser-preloader = "1.0.3"
 
 [libraries]
 # Android and compose stuff
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso-core" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junit-version" }
 androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
-androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }
-androidx-glance-appwidget-preview = { module = "androidx.glance:glance-appwidget-preview", version.ref = "glance" }
-androidx-glance-material3 = { module = "androidx.glance:glance-material3", version.ref = "glance" }
-androidx-glance-preview = { module = "androidx.glance:glance-preview", version.ref = "glance" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
 androidx-room-compiler = { module = "androidx.room3:room3-compiler", version.ref = "room3" }
 androidx-room-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room3" }
@@ -73,15 +66,12 @@ koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "
 # Others
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 junit = { module = "junit:junit", version.ref = "junit" }
-purchases = { module = "com.revenuecat.purchases:purchases", version.ref = "purchases" }
-purchases-ui = { module = "com.revenuecat.purchases:purchases-ui", version.ref = "purchases" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 materialkolor = { module = "com.materialkolor:material-kolor", version.ref = "materialkolor" }
 colorpicker-compose = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpicker" }
 calendar = { module = "com.kizitonwose.calendar:compose-multiplatform", version.ref = "calendar" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
-kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 
 [plugins]
@@ -95,4 +85,3 @@ compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-m
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koin-plugin" }
-kotlin-browser-preloader = { id = "com.ryinex.kotlin.browser.preloader", version.ref = "browser-preloader" }

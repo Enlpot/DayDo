@@ -108,7 +108,7 @@ fun HomePage(
     val today = LocalDate.now()
     val todayTasks =
         remember(taskState.allTasks, today) {
-            taskState.allTasks.filter { taskOccursOn(it, today, today) }
+            taskState.allTasks.filter { taskOccursOn(it, today) }
         }
     // 已过期：未完成 或 今天刚完成的过期任务（完成后当天仍显示，次日消失）
     val overdueTasks =
@@ -377,7 +377,7 @@ private fun TodayTasksSection(
     ) {
         itemsIndexed(items = reorderableTasks, key = { _, it -> it.id }) { index, task ->
             ReorderableItem(reorderableListState, key = task.id) {
-                val cardShape = taskItemShape(index, reorderableTasks.size)
+                val cardShape = taskItemShape()
                 TaskCard(
                     task = task,
                     dragState = multiSelect,
@@ -433,7 +433,7 @@ private fun TodayTasksSection(
         if (completed.isNotEmpty()) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
             itemsIndexed(items = completed, key = { _, it -> it.id }) { index, task ->
-                val cardShape = taskItemShape(index, completed.size)
+                val cardShape = taskItemShape()
                 TaskCard(
                     task = task,
                     dragState = false,

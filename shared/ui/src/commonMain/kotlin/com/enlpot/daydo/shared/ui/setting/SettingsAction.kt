@@ -21,7 +21,6 @@ import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.theme.AppTheme
-import com.enlpot.daydo.core.theme.Fonts
 import com.enlpot.daydo.core.theme.PaletteStyle
 import kotlinx.datetime.DayOfWeek
 
@@ -46,10 +45,6 @@ data object OnResetWebDavState : SettingsAction
 
     data class ChangeStartingPage(val page: Sections) : SettingsAction
 
-    data class ChangePauseNotifications(val pref: Boolean) : SettingsAction
-
-    data class ChangeReorderTasks(val pref: Boolean) : SettingsAction
-
     data class ChangeCornerRadius(val radius: Int) : SettingsAction
 
     data class ChangeHapticFeedback(val pref: Boolean) : SettingsAction
@@ -59,8 +54,6 @@ data object OnResetWebDavState : SettingsAction
     data class ChangeHapticSound(val sound: HapticSound) : SettingsAction
 
     data class ChangeAppTheme(val appTheme: AppTheme) : SettingsAction
-
-    data class ChangeFontPref(val font: Fonts) : SettingsAction
 
     data class ChangeSeedColor(val color: Color) : SettingsAction
 
@@ -75,8 +68,4 @@ data object OnResetWebDavState : SettingsAction
     data class ToggleSmartViewVisibility(val category: SmartCategory) : SettingsAction
 
     data object OnSettingsOpened : SettingsAction
-
-    data object OnAboutViewed : SettingsAction
-
-    data object OnChangelogViewed : SettingsAction
 }

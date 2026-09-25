@@ -55,9 +55,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun WeekDayBreakdown(
-    canSeeContent: Boolean,
     weekDayData: WeekDayFrequencyData,
-    onNavigateToPaywall: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val max = weekDayData.values.takeIf { it.any { value -> value != 0 } }?.maxOrNull()
@@ -65,8 +63,6 @@ fun WeekDayBreakdown(
     AnalyticsCard(
         title = stringResource(Res.string.week_breakdown),
         icon = Res.drawable.view_day,
-        canSeeContent = canSeeContent,
-        onPlusClick = onNavigateToPaywall,
         modifier = modifier.heightIn(min = 200.dp),
     ) {
         if (max != null) {
@@ -160,9 +156,7 @@ fun WeekDayBreakdown(
 @Composable
 private fun Preview() {
     WeekDayBreakdown(
-        canSeeContent = true,
         weekDayData =
             DayOfWeekNames.ENGLISH_ABBREVIATED.names.associateWith { Random.nextInt(0..100) },
-        onNavigateToPaywall = {},
     )
 }

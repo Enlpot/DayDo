@@ -53,8 +53,6 @@ fun AnalyticsCard(
     title: String,
     icon: DrawableResource,
     modifier: Modifier = Modifier,
-    canSeeContent: Boolean = true,
-    onPlusClick: () -> Unit = {},
     header: @Composable (RowScope.() -> Unit) = {},
     content: @Composable () -> Unit,
 ) {
@@ -86,31 +84,6 @@ fun AnalyticsCard(
             header()
         }
 
-        if (!canSeeContent) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.heightIn(300.dp).fillMaxWidth(),
-            ) {
-                if (blurPossible()) {
-                    Column(
-                        modifier =
-                            Modifier.fillMaxSize()
-                                .blur(
-                                    radius = 10.dp,
-                                    edgeTreatment = BlurredEdgeTreatment.Unbounded,
-                                )
-                                .clickable { onPlusClick() }
-                    ) {
-                        content()
-                    }
-                }
-
-                Button(onClick = onPlusClick) {
-                    Text(text = stringResource(Res.string.unlock_plus))
-                }
-            }
-        } else {
-            content()
-        }
+        content()
     }
 }

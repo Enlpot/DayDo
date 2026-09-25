@@ -41,7 +41,6 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val is24HrKey = booleanPreferencesKey("is_24Hr")
         private val notificationsKey = booleanPreferencesKey("notifications")
         private val biometricLockKey = booleanPreferencesKey("biometric")
-        private val taskReorderKey = booleanPreferencesKey("task_reorder")
         private val compactHabitView = booleanPreferencesKey("compact_habit_view")
         private val hiddenSmartViewsKey = stringPreferencesKey("hidden_smart_views")
         private val cornerRadiusKey = intPreferencesKey("corner_radius")
@@ -93,13 +92,6 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
 
     override suspend fun setBiometricPref(pref: Boolean) {
         datastore.edit { prefs -> prefs[biometricLockKey] = pref }
-    }
-
-    override fun getTaskReorderPref(): Flow<Boolean> =
-        datastore.data.map { prefs -> prefs[taskReorderKey] ?: true }
-
-    override suspend fun setTaskReorderPref(pref: Boolean) {
-        datastore.edit { prefs -> prefs[taskReorderKey] = pref }
     }
 
     override fun getCompactViewPref(): Flow<Boolean> =

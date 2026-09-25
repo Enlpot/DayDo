@@ -28,7 +28,6 @@ import com.enlpot.daydo.core.theme.Theme
 data class MainAppState(
     val isAppUnlocked: Boolean = false,
     val isBiometricLockOn: Boolean? = null,
-    val isUserSubscribed: Boolean = false,
     val startingSection: Sections = Sections.Home,
     val cornerRadius: Int = 20,
     val hapticFeedback: Boolean = true,
@@ -36,5 +35,4 @@ data class MainAppState(
     val hapticStrength: Int = 50,
     val hapticSound: HapticSound = HapticSound.DING,
     val theme: Theme = Theme(),
-    val isFoss: Boolean = false,
 )

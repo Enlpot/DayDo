@@ -36,9 +36,6 @@ interface TasksDao {
     @Query("SELECT * FROM task WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
     suspend fun getDeletedTasks(): List<TaskEntity>
 
-    @Query("UPDATE task SET `index` = :newIndex WHERE id = :id")
-    suspend fun updateTaskIndexById(id: Long, newIndex: Int)
-
     @Query("UPDATE task SET sortKey = :newKey WHERE id = :id")
     suspend fun updateTaskSortKeyById(id: Long, newKey: Long)
 

@@ -26,7 +26,6 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.enlpot.daydo.core.interfaces.ThemeDatastore
 import com.enlpot.daydo.core.theme.AppTheme
-import com.enlpot.daydo.core.theme.Fonts
 import com.enlpot.daydo.core.theme.PaletteStyle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -40,7 +39,6 @@ class ThemeDatastoreImpl(private val datastore: DataStore<Preferences>) : ThemeD
         private val amoledKey = booleanPreferencesKey("amoled")
         private val paletteKey = stringPreferencesKey("palette")
         private val materialYouKey = booleanPreferencesKey("material_you")
-        private val fontPrefKey = stringPreferencesKey("font")
         private val hapticPrefKey = booleanPreferencesKey("haptic")
     }
 
@@ -50,7 +48,6 @@ class ThemeDatastoreImpl(private val datastore: DataStore<Preferences>) : ThemeD
             settings[amoledKey] = false
             settings[paletteKey] = PaletteStyle.TONALSPOT.name
             settings[materialYouKey] = false
-            settings[fontPrefKey] = Fonts.FIGTREE.name
         }
     }
 
@@ -97,15 +94,5 @@ class ThemeDatastoreImpl(private val datastore: DataStore<Preferences>) : ThemeD
 
     override suspend fun setMaterialYou(pref: Boolean) {
         datastore.edit { prefs -> prefs[materialYouKey] = pref }
-    }
-
-    override fun getFontPrefFlow(): Flow<Fonts> =
-        datastore.data.map { prefs ->
-            val font = prefs[fontPrefKey] ?: Fonts.FIGTREE.name
-            Fonts.valueOf(font)
-        }
-
-    override suspend fun setFontPref(font: Fonts) {
-        datastore.edit { prefs -> prefs[fontPrefKey] = font.name }
     }
 }

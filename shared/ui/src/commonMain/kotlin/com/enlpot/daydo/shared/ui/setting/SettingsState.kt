@@ -18,7 +18,6 @@ package com.enlpot.daydo.shared.ui.setting
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import com.enlpot.daydo.core.app.Changelog
 import com.enlpot.daydo.core.settings.CardHeight
 import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
@@ -32,8 +31,6 @@ import kotlinx.datetime.DayOfWeek
 @Stable
 @Immutable
 data class SettingsState(
-    val changelog: Changelog = emptyList(),
-    val currentVersion: String? = null,
     val backupState: BackupState = BackupState(),
 val webdavServer: String = "",
 val webdavUsername: String = "",
@@ -45,9 +42,7 @@ val webdavMessage: String = "",
     // datastore
     val theme: Theme = Theme(),
     val is24Hr: Boolean = false,
-    val reorderTasks: Boolean = false,
     val startOfTheWeek: DayOfWeek = DayOfWeek.MONDAY,
-    val pauseNotifications: Boolean = false,
     val startingPage: Sections = Sections.Home,
     val isBiometricLockOn: Boolean? = null,
     val isBiometricLockAvailable: Boolean = false,

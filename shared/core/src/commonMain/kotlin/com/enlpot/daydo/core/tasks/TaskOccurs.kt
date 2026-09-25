@@ -21,10 +21,9 @@ import kotlinx.datetime.LocalDate
 /**
  * Whether [task] occurs on [date].
  *
- * 非重复任务：dueDate 等于 [date]；重复任务：按重复规则（锚点 = dueDate 或 [today]）判定。
+ * 统一按实例日期判定：重复任务是否出现在某天，取决于该日期的实例是否存在（完成驱动）。
  * 任务页"今天/明天/最近7天"智能分类与首页"今天"列表共用此判定，修改此处即全局生效。
  */
-fun taskOccursOn(task: Task, date: LocalDate, today: LocalDate): Boolean {
-    // 统一按实例日期判定：重复任务是否出现在某天，取决于该日期的实例是否存在（完成驱动）
+fun taskOccursOn(task: Task, date: LocalDate): Boolean {
     return task.dueDate == date
 }

@@ -14,24 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import java.util.Properties
-
-/*
- * Copyright (C) 2026  Shubham Gorai
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
@@ -43,8 +25,8 @@ plugins {
 }
 
 val appName = "DayDo"
-val appVersionCode = 24
-val appVersionName = "1.3.0"
+val appVersionCode = 25
+val appVersionName = "1.4.0"
 
 val gitHash = execute("git", "rev-parse", "HEAD").take(7)
 
@@ -113,25 +95,6 @@ signingConfigs {
     flavorDimensions += "version"
 
     productFlavors {
-        create("play") {
-            val localProperties = Properties()
-            val localFile = rootProject.file("local.properties")
-
-            if (localFile.exists()) localProperties.load(localFile.inputStream())
-
-            val postHogApiKey = localProperties.getProperty("POSTHOG_API_KEY") ?: ""
-            val postHogHost = localProperties.getProperty("POSTHOG_HOST") ?: ""
-
-            if (postHogHost.isBlank() || postHogApiKey.isBlank()) {
-                println("WARNING: POSTHOG_API_KEY and POSTHOG_HOST must be set in local.properties")
-            }
-
-            dimension = "version"
-            versionNameSuffix = "-play"
-
-            buildConfigField("String", "POSTHOG_API_KEY", "\"$postHogApiKey\"")
-            buildConfigField("String", "POSTHOG_HOST", "\"$postHogHost\"")
-        }
         create("foss") { dimension = "version" }
     }
 
@@ -183,10 +146,6 @@ dependencies {
     implementation(projects.shared.core)
     implementation(projects.shared.ui)
 
-    "playImplementation"(libs.purchases)
-    "playImplementation"(libs.purchases.ui)
-    "playImplementation"("com.posthog:posthog-android:3.+")
-
     implementation(libs.filekit.core)
     implementation(libs.filekit.dialogs)
 
@@ -228,63 +187,3 @@ room3 { schemaDirectory("$projectDir/schemas") }
 
 fun execute(vararg command: String): String =
     providers.exec { commandLine(*command) }.standardOutput.asText.get().trim()
-
-tasks.register("generateChangelog") {
-    description = "Assembling Changelog"
-    val inputFile = rootProject.file("CHANGELOG.md")
-    val outputDir = file("$projectDir/src/main/assets/")
-    val outputFile = File(outputDir, "changelog.json")
-
-    inputs.file(inputFile)
-    outputs.file(outputFile)
-
-    doLast {
-        if (!outputDir.exists()) outputDir.mkdirs()
-
-        val lines = inputFile.readLines()
-
-        val map = mutableMapOf<String, MutableList<String>>()
-        var currentVersion: String? = null
-
-        for (line in lines) {
-            when {
-                line.startsWith("## ") -> {
-                    currentVersion = line.removePrefix("## ").trim()
-                    map[currentVersion] = mutableListOf()
-                }
-
-                line.startsWith("- ") && currentVersion != null -> {
-                    map[currentVersion]?.add(line.removePrefix("- ").trim())
-                }
-            }
-        }
-
-        val json = buildString {
-            append("[\n")
-
-            map.entries.take(10).forEachIndexed { index, entry ->
-                append("  {\n")
-                append("    \"version\": \"${entry.key}\",\n")
-                append("    \"changes\": [\n")
-
-                entry.value.forEachIndexed { i, item ->
-                    append("      \"${item.replace("\"", "\\\"")}\"")
-                    if (i != entry.value.lastIndex) append(",")
-                    append("\n")
-                }
-
-                append("    ]\n")
-                append("  }")
-
-                if (index != 9) append(",")
-                append("\n")
-            }
-
-            append("]")
-        }
-
-        outputFile.writeText(json)
-    }
-}
-
-tasks.named("preBuild") { dependsOn("generateChangelog") }

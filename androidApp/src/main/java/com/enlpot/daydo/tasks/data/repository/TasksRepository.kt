@@ -88,10 +88,6 @@ class TasksRepository(
         return categoryDao.getCategories().map { it.toCategory() }
     }
 
-    override suspend fun updateTaskIndexById(id: Long, index: Int) {
-        tasksDao.updateTaskIndexById(id, index)
-    }
-
     override suspend fun updateTaskSortKeyById(id: Long, newKey: Long) {
         tasksDao.updateTaskSortKeyById(id, newKey)
     }

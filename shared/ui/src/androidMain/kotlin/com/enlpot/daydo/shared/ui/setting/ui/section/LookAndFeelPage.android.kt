@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.rememberDynamicColorScheme
 import com.enlpot.daydo.core.theme.AppTheme
 import com.enlpot.daydo.core.theme.PaletteStyle
-import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.toMPaletteStyle
@@ -54,32 +53,12 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
 @Composable
-actual fun MaterialYouToggle(
-    isUserSubscribed: Boolean,
-    isMaterialYou: Boolean,
-    onClick: (Boolean) -> Unit,
-) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        ListItem(
-            headlineContent = { Text(text = stringResource(Res.string.material_theme)) },
-            supportingContent = { Text(text = stringResource(Res.string.material_theme_desc)) },
-            trailingContent = {
-                ExpressiveSwitch(checked = isMaterialYou, onCheckedChange = onClick)
-            },
-            colors = listItemColors(),
-            modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
-        )
-    }
-}
-
-@Composable
 actual fun PaletteStylePicker(
     paletteStyle: PaletteStyle,
     isMaterialYou: Boolean,
     seedColor: Color,
     appTheme: AppTheme,
     isAmoled: Boolean,
-    isUserSubscribed: Boolean,
     onClick: (PaletteStyle) -> Unit,
 ) {
     Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
@@ -133,7 +112,7 @@ actual fun PaletteStylePicker(
                                     if (selected) MaterialShapes.VerySunny.toShape()
                                     else CircleShape
                             )
-                            .clickable(enabled = isUserSubscribed) { onClick(style) },
+                            .clickable { onClick(style) },
                     contentAlignment = Alignment.Center,
                 ) {
                     Canvas(modifier = Modifier.matchParentSize()) {

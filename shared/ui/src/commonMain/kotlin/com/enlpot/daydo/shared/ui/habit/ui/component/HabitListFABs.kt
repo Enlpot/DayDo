@@ -50,8 +50,6 @@ fun BoxScope.HabitListFABs(
     state: HabitState,
     fabVisible: Boolean,
     onAction: (HabitsAction) -> Unit,
-    onNavigateToPaywall: () -> Unit,
-    isUserSubscribed: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
@@ -110,13 +108,7 @@ fun BoxScope.HabitListFABs(
             }
         } else {
             FloatingActionButton(
-                onClick = {
-                    if (isUserSubscribed || state.habitsWithAnalytics.size <= 5) {
-                        onAction(HabitsAction.OnAddHabitClicked)
-                    } else {
-                        onNavigateToPaywall()
-                    }
-                },
+                onClick = { onAction(HabitsAction.OnAddHabitClicked) },
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 modifier =
