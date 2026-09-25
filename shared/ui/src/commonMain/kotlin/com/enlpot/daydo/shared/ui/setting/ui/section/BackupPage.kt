@@ -45,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -125,12 +126,12 @@ fun BackupPage(
                             modifier =
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
-                                    .padding(start = 52.dp, end = 16.dp, bottom = 8.dp)
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Button(
                                 onClick = { onAction(SettingsAction.OnExport) },
                                 enabled = state.backupState.exportState == ExportState.IDLE,
-                                modifier = Modifier.weight(1f),
                             ) {
                                 when (state.backupState.exportState) {
                                     IDLE ->
@@ -171,14 +172,14 @@ fun BackupPage(
                             modifier =
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
-                                    .padding(start = 52.dp, end = 16.dp, bottom = 8.dp)
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Button(
                                 onClick = { onAction(SettingsAction.OnRestore) },
                                 enabled =
                                     state.backupState.restoreState == RestoreState.IDLE ||
                                         state.backupState.restoreState == RestoreState.FAILURE,
-                                modifier = Modifier.weight(1f),
                             ) {
                                 when (state.backupState.restoreState) {
                                     IDLE ->
@@ -211,7 +212,9 @@ fun BackupPage(
             // WebDAV 配置
             item {
                 Column(
-                    modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                    modifier =
+                        Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                            .background(listItemColors().containerColor),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     ListItem(
@@ -261,7 +264,7 @@ fun BackupPage(
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.Center,
                     ) {
                         Button(
                             onClick = {
@@ -273,7 +276,6 @@ fun BackupPage(
                                     )
                                 )
                             },
-                            modifier = Modifier.weight(1f),
                         ) {
                             Text(text = "保存配置")
                         }
@@ -304,12 +306,12 @@ fun BackupPage(
                             modifier =
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
-                                    .padding(start = 52.dp, end = 16.dp, bottom = 8.dp)
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Button(
                                 onClick = { onAction(SettingsAction.WebDavUpload) },
                                 enabled = state.webdavUploadState != WebDavState.WORKING,
-                                modifier = Modifier.weight(1f),
                             ) {
                                 if (state.webdavUploadState == WebDavState.WORKING) {
                                     CircularProgressIndicator(modifier = Modifier.size(22.dp))
@@ -340,12 +342,12 @@ fun BackupPage(
                             modifier =
                                 Modifier.fillParentMaxWidth()
                                     .background(listItemColors().containerColor)
-                                    .padding(start = 52.dp, end = 16.dp, bottom = 8.dp)
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             OutlinedButton(
                                 onClick = { onAction(SettingsAction.WebDavDownload) },
                                 enabled = state.webdavDownloadState != WebDavState.WORKING,
-                                modifier = Modifier.weight(1f),
                             ) {
                                 if (state.webdavDownloadState == WebDavState.WORKING) {
                                     CircularProgressIndicator(modifier = Modifier.size(22.dp))
