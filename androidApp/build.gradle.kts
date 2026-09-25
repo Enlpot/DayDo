@@ -25,8 +25,8 @@ plugins {
 }
 
 val appName = "DayDo"
-val appVersionCode = 32
-val appVersionName = "1.4.7"
+val appVersionCode = 33
+val appVersionName = "1.4.8"
 
 val gitHash = execute("git", "rev-parse", "HEAD").take(7)
 
@@ -111,7 +111,6 @@ signingConfigs {
 
     packaging {
         resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
-        jniLibs.keepDebugSymbols.add("**/*.so")
     }
 
     dependenciesInfo {

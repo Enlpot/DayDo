@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,7 +43,6 @@ import com.kizitonwose.calendar.core.minusDays
 import com.kizitonwose.calendar.core.plusDays
 import com.enlpot.daydo.core.habits.StreakPosition
 import com.enlpot.daydo.shared.ui.calendarMapStreakShape
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
@@ -70,7 +70,7 @@ fun CalendarMonthHeader(
             style =
                 style.copy(
                     color = MaterialTheme.colorScheme.secondary,
-                    fontFamily = flexFontRounded(),
+                    fontFamily = flexFontEmphasis(),
                 ),
             modifier = Modifier.align(Alignment.Center),
         )
@@ -86,7 +86,7 @@ fun YearlyCalendarDayContent(
     edgeWeeks: List<DayOfWeek>,
     modifier: Modifier = Modifier,
     style: TextStyle =
-        MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontFamily = flexFontRounded()),
+        MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, fontFamily = flexFontEmphasis()),
     onDateClick: (LocalDate) -> Unit,
 ) {
     if (day.position != DayPosition.MonthDate) return
@@ -178,7 +178,7 @@ fun MonthlyCalendarDayContent(
     onDateClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     height: Dp = 40.dp,
-    style: TextStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = flexFontRounded()),
+    style: TextStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = flexFontEmphasis()),
 ) {
     if (day.position != DayPosition.MonthDate) return
 

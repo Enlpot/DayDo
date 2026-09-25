@@ -114,10 +114,6 @@ class MainViewModel(
                     .getHapticFeedbackPref()
                     .onEach { pref -> _state.update { it.copy(hapticFeedback = pref) } }
                     .launchIn(this)
-                settingsDatastore
-                    .getCardHeightPref()
-                    .onEach { pref -> _state.update { it.copy(cardHeight = pref) } }
-                    .launchIn(this)
 
                 settingsDatastore
                     .getHapticStrengthPref()

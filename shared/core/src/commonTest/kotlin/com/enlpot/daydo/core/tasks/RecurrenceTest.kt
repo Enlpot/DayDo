@@ -5,9 +5,7 @@
  */
 package com.enlpot.daydo.core.tasks
 
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.plus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -176,40 +174,5 @@ class RecurrenceTest {
         val base = LocalDate(2026, 6, 1)
         val next = r.nextDateAfter(base, base)
         assertEquals(LocalDate(2027, 6, 1), next) // 全部非法 -> 回退 6 月
-    }
-
-    // ---------- 属性测试：生成序列严格递增，且每个实例与 occursOn 判定一致 ----------
-    @Test
-    fun generatedSequenceIsStrictlyIncreasingAndConsistentWithOccursOn() {
-        val rules =
-            listOf<Recurrence>(
-                Recurrence.Daily,
-                Recurrence.EveryNDays(interval = 3),
-                Recurrence.Weekly(interval = 1, days = setOf(2, 4, 6)),
-                Recurrence.Weekly(interval = 3, days = setOf(5)),
-                Recurrence.Monthly(interval = 1, days = setOf(1, 15, 31)),
-                Recurrence.Monthly(interval = 2, days = setOf(10)),
-                Recurrence.Yearly(interval = 1, months = setOf(2, 12), days = setOf(1)),
-                Recurrence.Yearly(interval = 4, months = setOf(2), days = setOf(29)),
-            )
-        val base = LocalDate(2026, 1, 1)
-        for (rule in rules) {
-            val dates =
-                generateSequence(rule.nextDateAfter(base, base)) { rule.nextDateAfter(it, base) }
-                    .take(40)
-                    .toList()
-            // 严格递增
-            assertTrue(dates.zipWithNext().all { (a, b) -> b > a }, "递增失败: $rule")
-            // 每个实例都满足判定器
-            assertTrue(dates.all { rule.occursOn(it, base) }, "与 occursOn 不一致: $rule")
-            // 非发生日不应在序列中（抽查相邻间隙内无遗漏判定：任意两连续实例之间不应有满足 occursOn 的日期）
-            dates.zipWithNext().forEach { (a, b) ->
-                var cursor = a
-                while (cursor.plus(1, DateTimeUnit.DAY) < b) {
-                    cursor = cursor.plus(1, DateTimeUnit.DAY)
-                    assertTrue(!rule.occursOn(cursor, base), "序列遗漏了发生日 $cursor: $rule")
-                }
-            }
-        }
     }
 }

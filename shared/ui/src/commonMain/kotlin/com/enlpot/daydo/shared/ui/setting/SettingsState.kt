@@ -18,7 +18,6 @@ package com.enlpot.daydo.shared.ui.setting
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import com.enlpot.daydo.core.settings.CardHeight
 import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.settings.backup.ExportState
@@ -50,7 +49,6 @@ val webdavMessage: String = "",
     val hiddenSmartViews: Set<SmartCategory> = emptySet(),
     val cornerRadius: Int = 20,
     val hapticFeedback: Boolean = true,
-    val cardHeight: CardHeight = CardHeight.NORMAL,
     val hapticStrength: Int = 50,
     val hapticSound: HapticSound = HapticSound.DING,
 )

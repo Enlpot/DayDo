@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -41,7 +42,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.enlpot.daydo.shared.ui.blurPossible
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -73,7 +73,7 @@ fun AnalyticsCard(
 
             Text(
                 text = title,
-                fontFamily = flexFontRounded(),
+                fontFamily = flexFontEmphasis(),
                 fontSize = 20.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

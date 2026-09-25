@@ -53,7 +53,6 @@ import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.HabitHeatMap
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeekDayBreakdown
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import kotlin.math.roundToInt
 import kotlinx.datetime.YearMonth
@@ -140,7 +139,7 @@ fun OverallAnalytics(
                                     "${(state.overallAnalytics.consistency * 100).roundToInt()}%",
                                 style =
                                     MaterialTheme.typography.headlineSmall.copy(
-                                        fontFamily = flexFontRounded(),
+                                        fontFamily = flexFontEmphasis(),
                                         color = MaterialTheme.colorScheme.primary,
                                     ),
                             )
@@ -148,7 +147,7 @@ fun OverallAnalytics(
                                 text = stringResource(Res.string.consistency),
                                 style =
                                     MaterialTheme.typography.titleSmall.copy(
-                                        fontFamily = flexFontRounded(),
+                                        fontFamily = flexFontEmphasis(),
                                         color = MaterialTheme.colorScheme.onSurface,
                                     ),
                             )
@@ -169,7 +168,7 @@ fun OverallAnalytics(
                                         text = "${index + 1}",
                                         style =
                                             MaterialTheme.typography.titleMedium.copy(
-                                                fontFamily = flexFontRounded(),
+                                                fontFamily = flexFontEmphasis(),
                                                 color = MaterialTheme.colorScheme.primary,
                                             ),
                                     )
@@ -178,7 +177,7 @@ fun OverallAnalytics(
                                             text = habit.title,
                                             style =
                                                 MaterialTheme.typography.titleSmall.copy(
-                                                    fontFamily = flexFontRounded(),
+                                                    fontFamily = flexFontEmphasis(),
                                                     color = MaterialTheme.colorScheme.onSurface,
                                                 ),
                                             maxLines = 1,
@@ -188,7 +187,7 @@ fun OverallAnalytics(
                                             text = "${(habit.consistency * 100).roundToInt()}%",
                                             style =
                                                 MaterialTheme.typography.labelSmall.copy(
-                                                    fontFamily = flexFontRounded(),
+                                                    fontFamily = flexFontEmphasis(),
                                                     color =
                                                         MaterialTheme.colorScheme.onSurfaceVariant,
                                                 ),

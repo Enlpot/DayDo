@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component.stats
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -46,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import kotlin.math.roundToInt
 import kotlinx.datetime.LocalDate
@@ -88,7 +88,7 @@ fun StartStats(
                     text = "${(consistency * 100).roundToInt()}%",
                     style =
                         MaterialTheme.typography.headlineSmall.copy(
-                            fontFamily = flexFontRounded(),
+                            fontFamily = flexFontEmphasis(),
                             color = MaterialTheme.colorScheme.primary,
                         ),
                 )
@@ -96,7 +96,7 @@ fun StartStats(
                     text = stringResource(Res.string.consistency),
                     style =
                         MaterialTheme.typography.titleSmall.copy(
-                            fontFamily = flexFontRounded(),
+                            fontFamily = flexFontEmphasis(),
                             color = MaterialTheme.colorScheme.onSurface,
                         ),
                 )
@@ -141,7 +141,7 @@ fun StartStats(
                             text = stringResource(Res.string.started_on),
                             style =
                                 MaterialTheme.typography.labelMedium.copy(
-                                    fontFamily = flexFontRounded(),
+                                    fontFamily = flexFontEmphasis(),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 ),
                         )
@@ -149,7 +149,7 @@ fun StartStats(
                             text = startDate.toFormattedString(),
                             style =
                                 MaterialTheme.typography.titleMedium.copy(
-                                    fontFamily = flexFontRounded(),
+                                    fontFamily = flexFontEmphasis(),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 ),
                             maxLines = 1,
@@ -195,7 +195,7 @@ fun StartStats(
                             text = stringResource(Res.string.best_streak),
                             style =
                                 MaterialTheme.typography.labelMedium.copy(
-                                    fontFamily = flexFontRounded(),
+                                    fontFamily = flexFontEmphasis(),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 ),
                         )
@@ -203,7 +203,7 @@ fun StartStats(
                             text = bestStreak.toString(),
                             style =
                                 MaterialTheme.typography.titleMedium.copy(
-                                    fontFamily = flexFontRounded(),
+                                    fontFamily = flexFontEmphasis(),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 ),
                         )
@@ -271,7 +271,7 @@ fun StartStats(
                             text = stringResource(Res.string.streak),
                             style =
                                 MaterialTheme.typography.labelMedium.copy(
-                                    fontFamily = flexFontRounded(),
+                                    fontFamily = flexFontEmphasis(),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 ),
                         )
@@ -279,7 +279,7 @@ fun StartStats(
                             text = currentStreak.toString(),
                             style =
                                 MaterialTheme.typography.titleMedium.copy(
-                                    fontFamily = flexFontRounded(),
+                                    fontFamily = flexFontEmphasis(),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 ),
                         )

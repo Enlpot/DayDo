@@ -25,5 +25,12 @@ val LocalDateSaver =
         if (it.isEmpty()) null else LocalDate.parse(it)
     }
 
-inline fun <reified T> genericSaver() =
-    Saver<T, String>(save = { Json.encodeToString(it) }) { Json.decodeFromString(it) }
+// 恢复路径容错：忽略未知键、非法枚举/越界值回退默认，避免旧版本存档反序列化崩溃
+inline fun <reified T> genericSaver(): Saver<T, String> {
+    val json =
+        Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+        }
+    return Saver<T, String>(save = { json.encodeToString(it) }) { json.decodeFromString(it) }
+}

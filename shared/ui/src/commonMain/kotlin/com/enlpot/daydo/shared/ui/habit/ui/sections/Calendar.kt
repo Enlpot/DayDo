@@ -60,7 +60,6 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.CalendarMonthHeader
 import com.enlpot.daydo.shared.ui.habit.ui.component.MonthlyCalendarDayContent
 import com.enlpot.daydo.shared.ui.habit.ui.component.YearlyCalendarDayContent
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import com.enlpot.daydo.shared.ui.toStringRes
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
@@ -191,7 +190,7 @@ private fun YearlyCalendar(
                     style =
                         MaterialTheme.typography.titleLarge.copy(
                             color = MaterialTheme.colorScheme.secondary,
-                            fontFamily = flexFontRounded(),
+                            fontFamily = flexFontEmphasis(),
                         ),
                     modifier = Modifier.align(Alignment.Center),
                 )

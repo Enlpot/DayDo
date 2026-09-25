@@ -58,52 +58,6 @@ fun Recurrence.nextDateAfter(from: LocalDate, base: LocalDate): LocalDate {
     }
 }
 
-/**
- * Whether this recurrence produces an occurrence on [date], anchored on [anchor].
- * Dates before the anchor never occur.
- */
-fun Recurrence.occursOn(date: LocalDate, anchor: LocalDate): Boolean {
-    if (date.toEpochDays() < anchor.toEpochDays()) return false
-    return when (this) {
-        Recurrence.Daily -> true
-        is Recurrence.EveryNDays ->
-            (date.toEpochDays() - anchor.toEpochDays()) % interval.coerceAtLeast(1).toLong() == 0L
-
-        is Recurrence.Weekly -> {
-            // 防御：非法周几（非 1..7）直接过滤，全部非法则回退 anchor 周几
-            val weekDays = days.filter { it in 1..7 }.ifEmpty { setOf(anchor.dayOfWeek.toIso()) }
-            val weeksDiff = (date.toEpochDays() - anchor.toEpochDays()) / 7
-            date.dayOfWeek.toIso() in weekDays && weeksDiff % interval.coerceAtLeast(1).toLong() == 0L
-        }
-
-        is Recurrence.Monthly -> {
-            // 防御：非法配置日（非 1..31）直接过滤，全部非法则回退 anchor 日
-            val monthDays = days.filter { it in 1..31 }.ifEmpty { setOf(anchor.dayOfMonth) }
-            val monthDiff = date.monthOrdinal() - anchor.monthOrdinal()
-            // 配置日超出当月天数时，月末视同发生日（与生成器 clamp 语义一致）
-            val clamped =
-                date.dayOfMonth == date.daysInMonth() && monthDays.any { it > date.dayOfMonth }
-            (date.dayOfMonth in monthDays || clamped) &&
-                monthDiff >= 0 &&
-                monthDiff % interval.coerceAtLeast(1) == 0
-        }
-
-        is Recurrence.Yearly -> {
-            // 防御：非法月份/配置日直接过滤，全部非法则回退 anchor 值
-            val months = months.filter { it in 1..12 }.ifEmpty { setOf(anchor.month.ordinal + 1) }
-            val monthDays = days.filter { it in 1..31 }.ifEmpty { setOf(anchor.dayOfMonth) }
-            val yearDiff = date.year - anchor.year
-            // 配置日超出当月天数时，月末视同发生日（与生成器 clamp 语义一致）
-            val clamped =
-                date.dayOfMonth == date.daysInMonth() && monthDays.any { it > date.dayOfMonth }
-            date.month.ordinal + 1 in months &&
-                (date.dayOfMonth in monthDays || clamped) &&
-                yearDiff >= 0 &&
-                yearDiff % interval.coerceAtLeast(1) == 0
-        }
-    }
-}
-
 private fun Recurrence.Weekly.nextWeekly(from: LocalDate, base: LocalDate): LocalDate {
     val interval = interval.coerceAtLeast(1)
     // 防御：非法周几（非 1..7）直接过滤，全部非法则回退 base 周几，避免死循环

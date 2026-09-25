@@ -75,7 +75,6 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeekDayBreakdown
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeeklyActivity
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeeklyBooleanHeatMap
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.YearMonth
 import org.jetbrains.compose.resources.stringResource
@@ -134,7 +133,7 @@ fun AnalyticsPage(
                     Text(
                         text = currentHabit.habit.description,
                         modifier = Modifier.basicMarquee(),
-                        fontFamily = flexFontRounded(),
+                        fontFamily = flexFontEmphasis(),
                     )
                 }
             },

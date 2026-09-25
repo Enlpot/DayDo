@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component.stats
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -63,7 +64,6 @@ import com.enlpot.daydo.core.habits.WeeklyTimePeriod.Companion.toWeeks
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.NotEnoughData
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import kotlin.random.Random
 import org.jetbrains.compose.resources.painterResource
@@ -134,7 +134,7 @@ fun WeeklyActivity(lineChartData: List<Double>, modifier: Modifier = Modifier) {
                             withStyle(
                                 style =
                                     MaterialTheme.typography.displayMedium
-                                        .copy(fontFamily = flexFontRounded())
+                                        .copy(fontFamily = flexFontEmphasis())
                                         .toSpanStyle()
                             ) {
                                 append("$avg ")
@@ -143,7 +143,7 @@ fun WeeklyActivity(lineChartData: List<Double>, modifier: Modifier = Modifier) {
                             withStyle(
                                 style =
                                     MaterialTheme.typography.bodyMedium
-                                        .copy(fontFamily = flexFontRounded())
+                                        .copy(fontFamily = flexFontEmphasis())
                                         .toSpanStyle()
                             ) {
                                 append("Completions per week (Avg)")

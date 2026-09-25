@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component.stats
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -55,7 +56,6 @@ import com.enlpot.daydo.shared.ui.habit.daysStartingFrom
 import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.CardArrows
 import com.enlpot.daydo.shared.ui.heatMapStreakShape
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
@@ -217,7 +217,7 @@ fun WeeklyBooleanHeatMap(
                                                 text = day.date.day.toString(),
                                                 style =
                                                     MaterialTheme.typography.bodyMedium.copy(
-                                                        fontFamily = flexFontRounded()
+                                                        fontFamily = flexFontEmphasis()
                                                     ),
                                                 color = MaterialTheme.colorScheme.primary,
                                             )
@@ -227,7 +227,7 @@ fun WeeklyBooleanHeatMap(
                                             text = day.date.day.toString(),
                                             style =
                                                 MaterialTheme.typography.bodyMedium.copy(
-                                                    fontFamily = flexFontRounded()
+                                                    fontFamily = flexFontEmphasis()
                                                 ),
                                             color = MaterialTheme.colorScheme.onPrimary,
                                         )
@@ -238,7 +238,7 @@ fun WeeklyBooleanHeatMap(
                                     text = day.date.day.toString(),
                                     style =
                                         MaterialTheme.typography.bodyMedium.copy(
-                                            fontFamily = flexFontRounded()
+                                            fontFamily = flexFontEmphasis()
                                         ),
                                     color =
                                         if (!validDay)

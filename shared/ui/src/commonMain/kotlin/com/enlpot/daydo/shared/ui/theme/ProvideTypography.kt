@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.theme
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
@@ -30,10 +31,7 @@ import org.jetbrains.compose.resources.FontResource
 val TYPOGRAPHY = Typography()
 
 @Composable
-fun flexFontEmphasis(slant: Float = 0f): FontFamily = FontFamily(Font(Res.font.figtree))
-
-@Composable
-fun flexFontRounded(): FontFamily = FontFamily(Font(Res.font.figtree))
+fun flexFontEmphasis(): FontFamily = FontFamily(Font(Res.font.figtree))
 
 /** function to get custom typography for Grit */
 @Composable
@@ -65,7 +63,6 @@ private fun TypographyPreview() {
     val typography = provideTypography()
     Column {
         Text("Flex Font Emphasis", fontFamily = flexFontEmphasis())
-        Text("Flex Font Rounded", fontFamily = flexFontRounded())
 
         Text("Display Large", style = typography.displayLarge)
         Text("Display Medium", style = typography.displayMedium)

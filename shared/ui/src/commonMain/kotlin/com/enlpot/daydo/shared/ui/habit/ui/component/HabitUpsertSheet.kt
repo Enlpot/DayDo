@@ -80,7 +80,6 @@ import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.middleItemShape
 import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
@@ -336,7 +335,7 @@ fun HabitUpsertSheetContent(
                                             newHabit.time.time.toFormattedString(is24Hr = is24Hr),
                                         style =
                                             MaterialTheme.typography.titleLarge.copy(
-                                                fontFamily = flexFontRounded()
+                                                fontFamily = flexFontEmphasis()
                                             ),
                                     )
                                 },

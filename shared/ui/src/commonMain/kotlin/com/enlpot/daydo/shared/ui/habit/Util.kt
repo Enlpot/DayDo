@@ -28,16 +28,3 @@ fun daysStartingFrom(start: DayOfWeek): Set<DayOfWeek> {
         }
     }
 }
-
-fun getOrdinalSuffix(day: Int): String {
-    return when {
-        day in 11..13 -> "${day}th"
-        else ->
-            when (day % 10) {
-                1 -> "${day}st"
-                2 -> "${day}nd"
-                3 -> "${day}rd"
-                else -> "${day}th"
-            }
-    }
-}

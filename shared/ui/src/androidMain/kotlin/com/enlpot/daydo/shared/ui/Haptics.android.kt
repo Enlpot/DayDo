@@ -57,9 +57,10 @@ private var soundPool: SoundPool? = null
 private val soundIds = mutableMapOf<HapticSound, Int>()
 private val soundReady = mutableSetOf<HapticSound>()
 private var pendingSound: HapticSound? = null
+private val soundLock = Any()
 
-private fun playBuiltinSound(context: Context, sound: HapticSound) {
-    if (sound == HapticSound.NONE) return
+private fun playBuiltinSound(context: Context, sound: HapticSound) = synchronized(soundLock) {
+    if (sound == HapticSound.NONE) return@synchronized
     val sp =
         soundPool
             ?: SoundPool.Builder().setMaxStreams(1).build().also { pool ->
@@ -70,15 +71,17 @@ private fun playBuiltinSound(context: Context, sound: HapticSound) {
                 pool.setOnLoadCompleteListener { _, sampleId, status ->
                     val loaded = soundIds.entries.firstOrNull { it.value == sampleId }?.key
                     if (loaded != null && status == 0) {
-                        soundReady += loaded
-                        if (pendingSound == loaded) {
-                            pendingSound = null
-                            pool.play(sampleId, 1f, 1f, 1, 0, 1f)
+                        synchronized(soundLock) {
+                            soundReady += loaded
+                            if (pendingSound == loaded) {
+                                pendingSound = null
+                                pool.play(sampleId, 1f, 1f, 1, 0, 1f)
+                            }
                         }
                     }
                 }
             }
-    val id = soundIds[sound] ?: return
+    val id = soundIds[sound] ?: return@synchronized
     if (sound in soundReady) {
         sp.play(id, 1f, 1f, 1, 0, 1f)
     } else {

@@ -149,7 +149,14 @@ class SettingsViewModel(
                     settingsDatastore.setWebDavServer(action.server)
                     settingsDatastore.setWebDavUsername(action.username)
                     settingsDatastore.setWebDavPassword(action.password)
-                    _state.update { it.copy(webdavMessage = "") }
+                    // 配置变更时重置 WebDAV 传输状态，避免残留上一次的上传/下载结果
+                    _state.update {
+                        it.copy(
+                            webdavUploadState = WebDavState.IDLE,
+                            webdavDownloadState = WebDavState.IDLE,
+                            webdavMessage = "",
+                        )
+                    }
                 }
 
                 WebDavUpload -> {
@@ -194,16 +201,6 @@ class SettingsViewModel(
                             webdavMessage =
                                 if (result is WebDavResult.Success) "已从 WebDAV 服务器恢复数据"
                                 else (result as WebDavResult.Failure).message,
-                        )
-                    }
-                }
-
-                OnResetWebDavState -> {
-                    _state.update {
-                        it.copy(
-                            webdavUploadState = WebDavState.IDLE,
-                            webdavDownloadState = WebDavState.IDLE,
-                            webdavMessage = "",
                         )
                     }
                 }
@@ -383,10 +380,6 @@ class SettingsViewModel(
                 settingsDatastore
                     .getHapticFeedbackPref()
                     .onEach { flow -> _state.update { it.copy(hapticFeedback = flow) } }
-                    .launchIn(this)
-                settingsDatastore
-                    .getCardHeightPref()
-                    .onEach { flow -> _state.update { it.copy(cardHeight = flow) } }
                     .launchIn(this)
                 settingsDatastore
                     .getHapticStrengthPref()

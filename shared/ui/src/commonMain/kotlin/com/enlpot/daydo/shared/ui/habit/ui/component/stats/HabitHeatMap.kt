@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component.stats
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -49,7 +50,6 @@ import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.habit.daysStartingFrom
 import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.CardArrows
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import kotlin.collections.forEachIndexed
 import kotlin.random.Random
@@ -138,7 +138,7 @@ fun HabitHeatMap(
                                 style =
                                     MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.onSurface,
-                                        fontFamily = flexFontRounded(),
+                                        fontFamily = flexFontEmphasis(),
                                     ),
                                 modifier = Modifier.align(Alignment.Center),
                             )

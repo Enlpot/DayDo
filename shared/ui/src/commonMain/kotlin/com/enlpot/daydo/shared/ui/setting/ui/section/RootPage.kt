@@ -52,6 +52,7 @@ import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
+import com.enlpot.daydo.shared.ui.setting.ui.component.LicenseBottomSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
@@ -72,6 +73,7 @@ fun RootPage(
     var showStartOfWeekDialog by rememberSaveable { mutableStateOf(false) }
     var show24HrDialog by rememberSaveable { mutableStateOf(false) }
     var showBiometricDialog by rememberSaveable { mutableStateOf(false) }
+    var showLicenseDialog by rememberSaveable { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).fillMaxSize()) {
@@ -263,6 +265,25 @@ fun RootPage(
                             Icon(
                                 imageVector = vectorResource(Res.drawable.download),
                                 contentDescription = "备份",
+                            )
+                        },
+                    )
+
+                    ListItem(
+                        modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { showLicenseDialog = true },
+                        colors = listItemColors(),
+                        headlineContent = { Text(text = "开源许可") },
+                        supportingContent = { Text(text = "GNU GPL v3 许可文本") },
+                        trailingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = "导航",
+                            )
+                        },
+                        leadingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.check_list),
+                                contentDescription = "许可",
                             )
                         },
                     )
@@ -467,6 +488,10 @@ fun RootPage(
                     }
                 }
             }
+        }
+
+        if (showLicenseDialog) {
+            LicenseBottomSheet(onDismissRequest = { showLicenseDialog = false })
         }
     }
 }

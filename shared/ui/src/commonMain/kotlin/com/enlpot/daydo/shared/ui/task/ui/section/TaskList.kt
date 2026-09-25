@@ -106,7 +106,6 @@ import com.enlpot.daydo.shared.ui.task.ui.component.CategoryUpsertSheet
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskCard
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskUpsertSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
@@ -337,7 +336,7 @@ private fun TaskListTopBar(
             if (!multiSelect) {
                 Text(
                     text = "${state.completedTasks.size} " + stringResource(Res.string.items_completed),
-                    fontFamily = flexFontRounded(),
+                    fontFamily = flexFontEmphasis(),
                 )
             }
         },

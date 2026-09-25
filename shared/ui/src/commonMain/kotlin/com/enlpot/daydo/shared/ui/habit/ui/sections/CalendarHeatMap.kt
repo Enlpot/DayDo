@@ -74,7 +74,6 @@ import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.ui.component.CalendarMonthHeader
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import com.enlpot.daydo.shared.ui.theme.flexFontRounded
 import com.enlpot.daydo.shared.ui.toStringRes
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.LocalDate
@@ -105,7 +104,7 @@ fun CalendarHeatMap(
             state.overallAnalytics.completedHabits?.let { (date, habits) ->
                 Text(
                     text = date.toFormattedString(),
-                    fontFamily = flexFontRounded(),
+                    fontFamily = flexFontEmphasis(),
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 )
@@ -242,7 +241,7 @@ private fun YearlyMap(
                     style =
                         MaterialTheme.typography.titleLarge.copy(
                             color = MaterialTheme.colorScheme.secondary,
-                            fontFamily = flexFontRounded(),
+                            fontFamily = flexFontEmphasis(),
                         ),
                     modifier = Modifier.align(Alignment.Center),
                 )
@@ -364,7 +363,7 @@ private fun MonthlyMap(
                 Text(
                     text = day.date.day.toString(),
                     color = textColor,
-                    fontFamily = flexFontRounded(),
+                    fontFamily = flexFontEmphasis(),
                 )
             }
         },

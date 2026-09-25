@@ -33,8 +33,6 @@ data object WebDavUpload : SettingsAction
 
 data object WebDavDownload : SettingsAction
 
-data object OnResetWebDavState : SettingsAction
-
     data object OnExport : SettingsAction
 
     data object OnRestore : SettingsAction
