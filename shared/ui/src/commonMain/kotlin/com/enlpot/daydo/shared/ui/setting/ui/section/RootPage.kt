@@ -98,7 +98,7 @@ fun RootPage(
 
             // General settings
             item {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
 
 
                     ListItem(
@@ -227,7 +227,7 @@ fun RootPage(
 
             // look and feel customizations
             item {
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     ListItem(
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable {
@@ -277,7 +277,7 @@ fun RootPage(
             // 版本号
             item {
                 Text(
-                    text = "DayDo v1.1.8",
+                    text = "DayDo v1.1.9",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
