@@ -72,6 +72,7 @@ import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
+import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import com.enlpot.daydo.shared.ui.components.GritTimePicker
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.endItemShape
@@ -277,7 +278,7 @@ fun HabitUpsertSheetContent(
                                                 newHabit.days.contains(dayOfWeek)),
                                         modifier = Modifier.weight(1f),
                                         colors = ToggleButtonDefaults.tonalToggleButtonColors(),
-                                        content = { Text(text = dayOfWeek.name.take(1)) },
+                                        content = { Text(text = weekdayShortLabels()[dayOfWeek.ordinal]) },
                                     )
                                 }
                             }
