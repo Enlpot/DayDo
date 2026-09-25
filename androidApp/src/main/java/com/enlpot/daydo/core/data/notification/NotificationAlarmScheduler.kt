@@ -41,9 +41,36 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
 
     companion object {
         private const val TAG = "NotificationAlarmScheduler"
+
+        // 无精确闹钟权限时的降级窗口（毫秒）
+        private const val EXACT_ALARM_WINDOW_MS = 10 * 60 * 1000L
     }
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+    /**
+     * 精确闹钟权限（SCHEDULE_EXACT_ALARM）被撤销时降级为窗口闹钟（±10 分钟内触发），
+     * 保证提醒不丢、不因 SecurityException 崩溃。权限正常时行为与原来完全一致。
+     */
+    private fun setAlarm(triggerAtMs: Long, pendingIntent: PendingIntent) {
+        val canExact =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                alarmManager.canScheduleExactAlarms()
+        if (canExact) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMs,
+                pendingIntent,
+            )
+        } else {
+            alarmManager.setWindow(
+                AlarmManager.RTC_WAKEUP,
+                triggerAtMs,
+                EXACT_ALARM_WINDOW_MS,
+                pendingIntent,
+            )
+        }
+    }
 
     override fun schedule(habit: Habit) {
         cancel(habit)
@@ -73,8 +100,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
 
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
+        setAlarm(
             scheduleTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
             pendingIntent,
         )
@@ -108,8 +134,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
 
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
+        setAlarm(
             scheduleTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
             pendingIntent,
         )

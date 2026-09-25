@@ -38,7 +38,7 @@ abstract class HabitDatabase : RoomDatabase() {
     abstract fun habitStatusDao(): HabitStatusDao
 
     companion object {
-        const val SCHEMA_VERSION = 5
+        const val SCHEMA_VERSION = 6
         const val DB_NAME = "habit_database"
 
         val migrate_3_4 =
@@ -46,6 +46,22 @@ abstract class HabitDatabase : RoomDatabase() {
                 override suspend fun migrate(connection: SQLiteConnection) {
                     connection.execSQL(
                         "ALTER TABLE habit_index ADD COLUMN days TEXT NOT NULL DEFAULT '${Converters.allDays}'"
+                    )
+                }
+            }
+
+        // v5→v6：habit_status 增加 (habitId, date) 唯一索引。
+        // 先清理历史重复打卡（同一天同一习惯保留最早一条），否则建唯一索引会失败。
+        val migrate_5_6 =
+            object : Migration(5, 6) {
+                override suspend fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL(
+                        "DELETE FROM habit_status WHERE id NOT IN " +
+                            "(SELECT MIN(id) FROM habit_status GROUP BY habitId, date)"
+                    )
+                    connection.execSQL(
+                        "CREATE UNIQUE INDEX IF NOT EXISTS index_habit_status_habitId_date " +
+                            "ON habit_status (habitId, date)"
                     )
                 }
             }

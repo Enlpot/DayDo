@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDateTime
 import org.koin.core.annotation.Single
 
 @Single(binds = [TaskRepo::class])
@@ -82,6 +83,14 @@ class TasksRepository(
 
     override suspend fun getTaskById(id: Long): Task? {
         return tasksDao.getTaskById(id)?.toTask()
+    }
+
+    override suspend fun getScheduledTasks(now: LocalDateTime): List<Task> {
+        return tasksDao.getUpcomingScheduledTasks(now).map { it.toTask() }
+    }
+
+    override suspend fun getTasksBySeries(seriesId: Long): List<Task> {
+        return tasksDao.getTasksBySeries(seriesId).map { it.toTask() }
     }
 
     override suspend fun getCategories(): List<Category> {

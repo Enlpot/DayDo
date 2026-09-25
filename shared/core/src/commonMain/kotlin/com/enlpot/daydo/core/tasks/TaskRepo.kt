@@ -17,6 +17,7 @@
 package com.enlpot.daydo.core.tasks
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDateTime
 
 /** Interface for tasks repository */
 interface TaskRepo {
@@ -33,6 +34,12 @@ interface TaskRepo {
     suspend fun getTasks(): List<Task>
 
     suspend fun getTaskById(id: Long): Task?
+
+    /** 未完成且提醒时间在未来（含当天）的任务，供开机/重启后重排闹钟，避免全表调度 */
+    suspend fun getScheduledTasks(now: LocalDateTime): List<Task>
+
+    /** 同一重复系列的所有实例（含已完成），供补做查重与统计，避免全表加载后过滤 */
+    suspend fun getTasksBySeries(seriesId: Long): List<Task>
 
     suspend fun getCategories(): List<Category>
 

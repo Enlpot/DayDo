@@ -32,7 +32,8 @@ interface HabitStatusDao {
 
     @Query("SELECT * FROM habit_status") fun getAllHabitStatuses(): Flow<List<HabitStatusEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // IGNORE：同一天重复打卡直接忽略（保留最早记录），配合 (habitId,date) 唯一索引幂等
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertHabitStatus(habitStatusEntity: HabitStatusEntity)
 
     @Query("SELECT * FROM habit_status WHERE habitId = :habitId")

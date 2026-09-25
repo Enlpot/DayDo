@@ -33,7 +33,12 @@ import kotlinx.datetime.LocalDate
                 onDelete = ForeignKey.CASCADE,
             )
         ],
-    indices = [Index(value = ["habitId"])],
+    indices =
+        [
+            Index(value = ["habitId"]),
+            // (habitId, date) 唯一：同一天同一习惯只能有一条打卡记录，防止重复行破坏 streak 连续判定
+            Index(value = ["habitId", "date"], unique = true),
+        ],
 )
 data class HabitStatusEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,

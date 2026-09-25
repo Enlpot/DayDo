@@ -21,6 +21,7 @@ import androidx.room3.Delete
 import androidx.room3.Query
 import androidx.room3.Upsert
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDateTime
 
 @Dao
 interface TasksDao {
@@ -50,6 +51,17 @@ interface TasksDao {
 
     @Query("UPDATE task SET deletedAt = NULL WHERE id = :id")
     suspend fun restoreTask(id: Long)
+
+    // 开机重排用：只需未完成且提醒时间在未来（含当天）的任务；完成/过期的不再挂闹钟
+    @Query(
+        "SELECT * FROM task WHERE deletedAt IS NULL AND status = 0 " +
+            "AND reminder IS NOT NULL AND reminder >= :now"
+    )
+    suspend fun getUpcomingScheduledTasks(now: LocalDateTime): List<TaskEntity>
+
+    // 系列查重用：只取同一 seriesId 的实例，避免全表加载后过滤
+    @Query("SELECT * FROM task WHERE seriesId = :seriesId")
+    suspend fun getTasksBySeries(seriesId: Long): List<TaskEntity>
 
     @Query("DELETE FROM task WHERE id = :id") suspend fun purgeTask(id: Long)
 

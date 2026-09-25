@@ -22,11 +22,13 @@ import android.content.Intent
 import android.util.Log
 import com.enlpot.daydo.core.habits.HabitRepo
 import com.enlpot.daydo.core.interfaces.AlarmScheduler
+import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.TaskRepo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
@@ -48,10 +50,14 @@ class BootReceiver : BroadcastReceiver(), KoinComponent {
                         Log.d("BootReceiver", "Scheduled habit: ${it.id}")
                     }
 
-                    taskRepo.getTasks().forEach {
-                        scheduler.schedule(it)
-                        Log.d("BootReceiver", "Scheduled task: ${it.id}")
-                    }
+                    // 只重排未完成且提醒时间在未来（含当天）的任务；
+                    // 完成/过期/无提醒的任务不占闹钟，避免几十万历史任务全表逐条调度
+                    taskRepo
+                        .getScheduledTasks(LocalDateTime.now())
+                        .forEach {
+                            scheduler.schedule(it)
+                            Log.d("BootReceiver", "Scheduled task: ${it.id}")
+                        }
                 } catch (t: Exception) {
                     Log.e("BootReceiver", "Failed to initiate alarms", t)
                 } finally {

@@ -62,8 +62,6 @@ class HabitViewModel(
                 observeDataStore()
                 observeHabitStatuses()
                 observeOverallAnalytics()
-
-                rescheduleAllHabits()
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitState())
 
@@ -237,10 +235,6 @@ class HabitViewModel(
                     .onEach { pref -> _state.update { it.copy(is24Hr = pref) } }
                     .launchIn(this)
             }
-    }
-
-    private suspend fun rescheduleAllHabits() {
-        repo.getHabits().forEach { habit -> scheduler.schedule(habit) }
     }
 
     private suspend fun upsertHabit(habit: Habit) {

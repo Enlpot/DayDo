@@ -78,7 +78,6 @@ class TasksViewModel(
             .onStart {
                 observeTasks()
                 observeDatastore()
-                rescheduleAllTasks()
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TaskState())
 
@@ -303,12 +302,13 @@ class TasksViewModel(
                 val base = seriesTask.dueDate ?: today
                 val offset = seriesTask.reminderOffsetMinutes()
 
-                // 该系列已有实例的日期（查重，避免同一周期重复生成）
+                // 该系列已有实例的日期（查重，避免同一周期重复生成）——按 seriesId 查询，避免全表加载
                 val existingDueDates =
-                    repo.getTasks()
-                        .filter { it.seriesId == seriesTask.seriesId }
-                        .mapNotNull { it.dueDate }
-                        .toSet()
+                    seriesTask.seriesId
+                        ?.let { seriesId -> repo.getTasksBySeries(seriesId) }
+                        ?.mapNotNull { it.dueDate }
+                        ?.toSet()
+                        ?: emptySet()
 
                 val tasksToCreate = mutableListOf<Task>()
                 var cursor = recurrence.nextDateAfter(base, base)
@@ -544,11 +544,6 @@ class TasksViewModel(
                 }
         }
     }
-
-    private suspend fun rescheduleAllTasks() {
-        repo.getTasks().forEach { task -> scheduler.schedule(task) }
-    }
-
 
     private suspend fun upsertCategory(category: Category) {
         repo.upsertCategory(category)
