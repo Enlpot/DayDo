@@ -76,6 +76,7 @@ fun YearlyCalendarDayContent(
     day: CalendarDay,
     doneDates: Set<LocalDate>,
     today: LocalDate,
+    habitStartDate: LocalDate,
     habitDays: Set<DayOfWeek>,
     edgeWeeks: List<DayOfWeek>,
     modifier: Modifier = Modifier,
@@ -87,6 +88,7 @@ fun YearlyCalendarDayContent(
         day = day,
         doneDates = doneDates,
         today = today,
+        habitStartDate = habitStartDate,
         habitDays = habitDays,
         edgeWeeks = edgeWeeks,
         onDateClick = onDateClick,
@@ -104,6 +106,7 @@ fun MonthlyCalendarDayContent(
     day: CalendarDay,
     doneDates: Set<LocalDate>,
     today: LocalDate,
+    habitStartDate: LocalDate,
     habitDays: Set<DayOfWeek>,
     edgeWeeks: List<DayOfWeek>,
     onDateClick: (LocalDate) -> Unit,
@@ -115,6 +118,7 @@ fun MonthlyCalendarDayContent(
         day = day,
         doneDates = doneDates,
         today = today,
+        habitStartDate = habitStartDate,
         habitDays = habitDays,
         edgeWeeks = edgeWeeks,
         onDateClick = onDateClick,
@@ -133,6 +137,7 @@ private fun CalendarStreakCell(
     day: CalendarDay,
     doneDates: Set<LocalDate>,
     today: LocalDate,
+    habitStartDate: LocalDate,
     habitDays: Set<DayOfWeek>,
     edgeWeeks: List<DayOfWeek>,
     onDateClick: (LocalDate) -> Unit,
@@ -146,7 +151,7 @@ private fun CalendarStreakCell(
     if (day.position != DayPosition.MonthDate) return
 
     val done = day.date in doneDates
-    val validDate = day.date <= today && day.date.dayOfWeek in habitDays
+    val validDate = day.date >= habitStartDate && day.date <= today && day.date.dayOfWeek in habitDays
 
     val donePrevious = day.date.minusDays(1) in doneDates
     val doneAfter = day.date.plusDays(1) in doneDates

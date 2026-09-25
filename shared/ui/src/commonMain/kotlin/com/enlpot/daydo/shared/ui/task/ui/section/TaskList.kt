@@ -121,7 +121,7 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
         var showCategoryAddSheet by rememberSaveable { mutableStateOf(false) }
         var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
         var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
-        var editTask by remember { mutableStateOf<Task?>(null) }
+        var editTask by rememberSaveable(stateSaver = genericSaver<Task?>()) { mutableStateOf<Task?>(null) }
         var multiSelect by rememberSaveable { mutableStateOf(false) }
         var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
 

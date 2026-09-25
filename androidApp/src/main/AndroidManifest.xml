@@ -30,6 +30,7 @@
             android:name=".app.MainActivity"
             android:launchMode="standard"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Grit.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

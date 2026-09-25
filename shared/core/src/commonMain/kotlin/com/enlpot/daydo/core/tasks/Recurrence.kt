@@ -81,6 +81,15 @@ private fun Recurrence.Monthly.nextMonthly(from: LocalDate, base: LocalDate): Lo
     // 配置日超出当月天数时 clamp 到月末（每月必有候选，保证终止）。
     var year = from.year
     var month = from.month.ordinal + 1
+    // 入口对齐：若 from 的月份偏移不被 interval 整除（未对齐调用方），直接跳到下一个对齐周期，
+    // 避免 while 内 offset 余数恒定导致死循环。
+    var monthOffset = (year * 12 + month) - (base.year * 12 + base.month.ordinal + 1)
+    if (monthOffset % interval != 0) {
+        val remainder = ((monthOffset % interval) + interval) % interval
+        val total = base.year * 12 + base.month.ordinal + 1 + monthOffset + (interval - remainder)
+        year = total / 12
+        month = total % 12 + 1
+    }
     while (true) {
         val monthOffset = (year * 12 + month) - (base.year * 12 + base.month.ordinal + 1)
         if (monthOffset >= 0 && monthOffset % interval == 0) {
@@ -112,6 +121,13 @@ private fun Recurrence.Yearly.nextYearly(from: LocalDate, base: LocalDate): Loca
     // 从 from 所在年向后按 interval 年推进；同年（yearDiff = 0）且配置组合仍晚于 from 时也需发生。
     // 配置日超出当月天数时 clamp 到月末（候选月必有候选，保证终止）。
     var year = from.year
+    // 入口对齐：若 from 的年份偏移不被 interval 整除（未对齐调用方），直接跳到下一个对齐周期，
+    // 避免 while 内 offset 余数恒定导致死循环。
+    var yearOffset = year - base.year
+    if (yearOffset % interval != 0) {
+        val remainder = ((yearOffset % interval) + interval) % interval
+        year = base.year + yearOffset + (interval - remainder)
+    }
     while (true) {
         val yearDiff = year - base.year
         if (yearDiff >= 0 && yearDiff % interval == 0) {

@@ -61,6 +61,7 @@ import org.jetbrains.compose.resources.stringResource
 fun CalendarMap(
     calendarState: CalendarState,
     statuses: List<HabitStatus>,
+    startDate: LocalDate,
     days: Set<DayOfWeek>,
     onNavigateToCalendar: () -> Unit,
     onDateClick: (LocalDate) -> Unit,
@@ -119,6 +120,7 @@ fun CalendarMap(
                     day = day,
                     doneDates = doneDates,
                     today = today,
+                    habitStartDate = startDate,
                     habitDays = days,
                     edgeWeeks = edgeWeeks,
                     onDateClick = onDateClick,
@@ -143,6 +145,7 @@ private fun Preview() {
             (0..40).map {
                 HabitStatus(habitId = 1, date = LocalDate.now().minus(it, DateTimeUnit.DAY))
             },
+        startDate = LocalDate.now().minus(1, DateTimeUnit.YEAR),
         days = DayOfWeek.entries.toSet(),
         onDateClick = {},
         onNavigateToCalendar = {},

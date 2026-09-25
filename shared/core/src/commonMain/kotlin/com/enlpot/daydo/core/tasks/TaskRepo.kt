@@ -33,6 +33,9 @@ interface TaskRepo {
 
     suspend fun getTasks(): List<Task>
 
+    /** 含回收站软删任务的全量查询（备份/同步用，避免换机恢复后软删任务丢失） */
+    suspend fun getTasksIncludingDeleted(): List<Task>
+
     suspend fun getTaskById(id: Long): Task?
 
     /** 未完成且提醒时间在未来（含当天）的任务，供开机/重启后重排闹钟，避免全表调度 */

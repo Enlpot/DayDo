@@ -79,6 +79,7 @@ fun WeeklyBooleanHeatMap(
     heatMapState: HeatMapCalendarState,
     days: Set<DayOfWeek>,
     statuses: List<HabitStatus>,
+    startDate: LocalDate,
     onDateClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -156,7 +157,7 @@ fun WeeklyBooleanHeatMap(
                         }
                     },
                     dayContent = { day, _ ->
-                        if (day.date > today) return@HeatMapCalendar
+                        if (day.date > today || day.date < startDate) return@HeatMapCalendar
 
                         val done = day.date in doneDates
                         val validDay = day.date.dayOfWeek in days
@@ -263,6 +264,7 @@ private fun Preview() {
             (0..40).map {
                 HabitStatus(habitId = 1, date = LocalDate.now().minus(it, DateTimeUnit.DAY))
             },
+        startDate = LocalDate.now().minus(1, DateTimeUnit.YEAR),
         days = DayOfWeek.entries.toSet(),
         onDateClick = {},
     )

@@ -110,8 +110,17 @@ private fun CategoryEditDialog(
     onDismissRequest: () -> Unit,
 ) {
     GritDialog(onDismissRequest = onDismissRequest, padding = 0.dp) {
-        // 只初始化一次：拖动排序时 DB 回流不再重置列表，避免打断拖动
+        // 只初始化一次：拖动排序时 DB 回流不再重置列表，避免打断拖动；
+        // 但分类被删除/改名（集合内容变化）时需同步，否则本地列表 stale
         var categories by remember { mutableStateOf(state.tasks.keys.toList()) }
+        val dbKeys = state.tasks.keys.toList()
+        LaunchedEffect(dbKeys) {
+            val localContent = categories.map { it.id to it.name }.toSet()
+            val dbContent = dbKeys.map { it.id to it.name }.toSet()
+            if (localContent != dbContent) {
+                categories = dbKeys
+            }
+        }
 
         val listState = rememberLazyListState()
         val reorderableListState =

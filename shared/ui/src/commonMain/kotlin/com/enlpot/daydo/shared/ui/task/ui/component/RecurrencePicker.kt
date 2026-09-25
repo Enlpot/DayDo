@@ -451,7 +451,7 @@ fun Recurrence.toDisplayString(): String {
             val daysText =
                 if (days.isEmpty()) "" else
                     " · " + days.sorted().joinToString("、") + stringResource(Res.string.day_suffix)
-            "$monthsText$daysText"
+            stringResource(Res.string.every_n_years, interval) + " · $monthsText$daysText"
         }
     }
 }

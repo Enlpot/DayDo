@@ -71,6 +71,7 @@ fun TaskCard(
     selected: Boolean = false,
     hapticFeedback: Boolean = true,
     onLongClick: (() -> Unit)? = null,
+    today: LocalDate = LocalDate.now(),
 ) {
     val haptic = LocalHapticPerformer.current
     val cardContent by
@@ -169,7 +170,7 @@ fun TaskCard(
                                             fontWeight = FontWeight.Light,
                                         ),
                                     color =
-                                        if (task.dueDate!! < LocalDate.now() && !task.status)
+                                        if (task.dueDate!! < today && !task.status)
                                             MaterialTheme.colorScheme.error
                                         else Color.Unspecified,
                                 )
@@ -218,7 +219,7 @@ fun TaskCard(
                                         fontWeight = FontWeight.Light,
                                     ),
                                 color =
-                                    if (task.dueDate!! < LocalDate.now() && !task.status)
+                                    if (task.dueDate!! < today && !task.status)
                                         MaterialTheme.colorScheme.error
                                     else Color.Unspecified,
                             )

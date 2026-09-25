@@ -215,7 +215,10 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
         val firstDate = stats.calendar.firstOrNull()?.date ?: today
         val leadingOffset = firstDate.dayOfWeek.isoDayNumber - 1
 
-        for (row in 0 until 5) {
+        // 动态行数：30 天 + 首日偏移可能超过 5 行（35 槽），按需向上取整，避免尾部日期被裁切
+        val totalSlots = leadingOffset + stats.calendar.size
+        val rowCount = (totalSlots + 6) / 7
+        for (row in 0 until rowCount) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 for (col in 0 until 7) {
                     val index = row * 7 + col - leadingOffset

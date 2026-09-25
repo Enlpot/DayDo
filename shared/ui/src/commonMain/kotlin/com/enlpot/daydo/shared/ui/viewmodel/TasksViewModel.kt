@@ -42,15 +42,20 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -71,6 +76,8 @@ class TasksViewModel(
 
     private var savedJob: Job? = null
     private var observerJob: Job? = null
+    // 动作串行化：快速连续操作（勾选/删除/拖动）按提交顺序逐个处理，避免 DB 并发写竞争
+    private val actionMutex = Mutex()
 
     private val _state = MutableStateFlow(TaskState())
 
@@ -85,7 +92,8 @@ class TasksViewModel(
 
     fun onAction(action: TaskAction) {
         viewModelScope.launch {
-            when (action) {
+            actionMutex.withLock {
+                when (action) {
                 is UpsertTask -> {
                     // 重复任务未设置日期时，默认锚点日期=今天（当天全天任务），避免落入收集箱
                     val task = action.task
@@ -284,6 +292,7 @@ class TasksViewModel(
                         emptyMap(),
                     )
                 }
+                }
             }
         }
     }
@@ -455,6 +464,15 @@ class TasksViewModel(
             }
     }
 
+    /** 每分钟检查一次日期，仅当天变化时向下游 emit，驱动跨午夜自动刷新列表 */
+    private fun dateTicker(): Flow<LocalDate> =
+        flow {
+            while (true) {
+                emit(LocalDate.now())
+                delay(60_000)
+            }
+        }.distinctUntilChanged()
+
     private fun observeTasks() {
         savedJob?.cancel()
         savedJob =
@@ -463,8 +481,9 @@ class TasksViewModel(
                     repo.getTasksFlow(),
                     repo.getAllTasksFlow(),
                     repo.getDeletedTasksFlow(),
-                ) { tasksByCategory, allTasks, deletedTasks ->
-                        val today = LocalDate.now()
+                    dateTicker(),
+                ) { tasksByCategory, allTasks, deletedTasks, today ->
+                        val today = today
                         val view = resolveView(_state.value.currentView, tasksByCategory.keys.toList())
                         // 系列典型完成时间表：全量只算一次，供所有视图排序复用
                         val typicalBySeries =

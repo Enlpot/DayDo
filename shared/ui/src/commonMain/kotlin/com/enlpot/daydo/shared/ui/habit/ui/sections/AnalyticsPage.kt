@@ -206,6 +206,7 @@ fun AnalyticsPage(
                 WeeklyBooleanHeatMap(
                     heatMapState = heatMapState,
                     statuses = currentHabit.statuses,
+                    startDate = currentHabit.habit.time.date,
                     days = currentHabit.habit.days,
                     onDateClick = { onAction(HabitsAction.InsertStatus(currentHabit.habit, it)) },
                 )
@@ -215,6 +216,7 @@ fun AnalyticsPage(
                 CalendarMap(
                     calendarState = calendarState,
                     statuses = currentHabit.statuses,
+                    startDate = currentHabit.habit.time.date,
                     days = currentHabit.habit.days,
                     onNavigateToCalendar = onNavigateToCalendar,
                     onDateClick = {

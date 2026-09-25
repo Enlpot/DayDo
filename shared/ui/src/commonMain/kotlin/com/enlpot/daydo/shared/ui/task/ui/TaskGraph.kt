@@ -94,8 +94,16 @@ fun TaskGraph(
                 }
 
                 entry<TaskRoutes.Stats>(metadata = horizontalTransitionMetadata()) {
+                    // 优先读路由携带的 seriesId（进程恢复时 VM 状态为空，不能依赖 statsSeriesId）
+                    val seriesId =
+                        (backStack.lastOrNull() as? TaskRoutes.Stats)?.seriesId
+                            ?: state.statsSeriesId
+                            ?: 0L
+                    LaunchedEffect(seriesId) {
+                        if (state.statsSeriesId != seriesId) onAction(TaskAction.OpenTaskStats(seriesId))
+                    }
                     TaskStatsPage(
-                        seriesId = state.statsSeriesId ?: 0L,
+                        seriesId = seriesId,
                         state = state,
                         onAction = onAction,
                         onNavigateBack = {

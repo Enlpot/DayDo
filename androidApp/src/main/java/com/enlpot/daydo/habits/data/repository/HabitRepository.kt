@@ -122,7 +122,7 @@ class HabitRepository(
                             ),
                         weekDayFrequencyData = prepareWeekDayFrequencyData(dates = dates),
                         startedDaysAgo = habit.time.date.daysUntil(LocalDate.now()).toLong(),
-                        consistency = calculateConsistency(dates, habit.days),
+                        consistency = calculateConsistency(dates, habit.days, habit.time.date),
                     )
                 }
             }
@@ -144,7 +144,7 @@ class HabitRepository(
                     habitsFlow.map { habit ->
                         val dates =
                             habitStatusesFlow.filter { it.habitId == habit.id }.map { it.date }
-                        habit.title to calculateConsistency(dates, habit.days)
+                        habit.title to calculateConsistency(dates, habit.days, habit.time.date)
                     }
 
                 val consistencies = habitConsistencies.map { it.second }

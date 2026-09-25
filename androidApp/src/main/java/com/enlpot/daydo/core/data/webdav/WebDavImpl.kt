@@ -57,7 +57,7 @@ class WebDavImpl(
                     habitsSchemaVersion = HabitDatabase.SCHEMA_VERSION,
                     habits = habitsRepo.getHabits().map { it.toHabitSchema() },
                     habitStatus = habitsRepo.getHabitStatuses().map { it.toHabitStatusSchema() },
-                    tasks = taskRepo.getTasks().map { it.toTaskSchema() },
+                    tasks = taskRepo.getTasksIncludingDeleted().map { it.toTaskSchema() },
                     categories = taskRepo.getCategories().map { it.toCategorySchema() },
                 )
             val body = json.encodeToString(schema)

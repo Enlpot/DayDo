@@ -63,7 +63,7 @@ class ExportImpl(private val taskRepo: TaskRepo, private val habitsRepo: HabitRe
             val tasksDef =
                 async {
                         withContext(Dispatchers.IO) {
-                            taskRepo.getTasks().map { it.toTaskSchema() }
+                            taskRepo.getTasksIncludingDeleted().map { it.toTaskSchema() }
                         }
                     }
                     .await()

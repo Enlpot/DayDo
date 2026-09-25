@@ -239,23 +239,30 @@ class SettingsViewModel(
                         it.copy(backupState = it.backupState.copy(restoreState = RESTORING))
                     }
 
-                    val result = restoreRepo.restoreData()
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.BACKUP_RESTORED.name,
-                        mapOf("status" to result.toString()),
-                    )
-
-                    _state.update {
-                        it.copy(
-                            backupState =
-                                it.backupState.copy(
-                                    restoreState =
-                                        when (result) {
-                                            is Failure -> FAILURE
-                                            Success -> RESTORED
-                                        }
-                                )
+                    try {
+                        val result = restoreRepo.restoreData()
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.BACKUP_RESTORED.name,
+                            mapOf("status" to result.toString()),
                         )
+
+                        _state.update {
+                            it.copy(
+                                backupState =
+                                    it.backupState.copy(
+                                        restoreState =
+                                            when (result) {
+                                                is Failure -> FAILURE
+                                                Success -> RESTORED
+                                            }
+                                    )
+                            )
+                        }
+                    } catch (t: Throwable) {
+                        // 恢复异常：回到失败态，避免永久卡在"恢复中"导致按钮不可用
+                        _state.update {
+                            it.copy(backupState = it.backupState.copy(restoreState = FAILURE))
+                        }
                     }
                 }
 

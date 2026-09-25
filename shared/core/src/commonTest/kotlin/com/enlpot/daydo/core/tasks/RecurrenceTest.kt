@@ -188,4 +188,32 @@ class RecurrenceTest {
         val next = r.nextDateAfter(base, base)
         assertEquals(LocalDate(2027, 6, 1), next) // 全部非法 -> 回退 6 月
     }
+
+    // ---------- P1-5：未对齐 from 不再死循环，跳到下一个对齐周期 ----------
+    @Test
+    fun monthlyUnalignedFromJumpsToAlignedCycle() {
+        // base 1 月（offset 0），interval=2；from 2 月（offset 1）未对齐 -> 应跳到 3 月周期
+        val r = Recurrence.Monthly(interval = 2, days = setOf(5))
+        val base = LocalDate(2026, 1, 5)
+        assertEquals(
+            LocalDate(2026, 3, 5),
+            r.nextDateAfter(LocalDate(2026, 2, 15), base),
+        )
+    }
+
+    @Test
+    fun yearlyUnalignedFromJumpsToAlignedCycle() {
+        // base 2026（offset 0），interval=2；from 2027（offset 1）未对齐 -> 应跳到 2028
+        val r = Recurrence.Yearly(interval = 2, months = setOf(6), days = setOf(10))
+        val base = LocalDate(2026, 6, 10)
+        assertEquals(
+            LocalDate(2028, 6, 10),
+            r.nextDateAfter(LocalDate(2027, 6, 10), base),
+        )
+        // from 在 base 之前（offset -1）：应返回 base 所在对齐周期
+        assertEquals(
+            LocalDate(2026, 6, 10),
+            r.nextDateAfter(LocalDate(2025, 6, 10), base),
+        )
+    }
 }

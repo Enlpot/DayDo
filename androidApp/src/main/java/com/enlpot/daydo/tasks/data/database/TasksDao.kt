@@ -31,6 +31,9 @@ interface TasksDao {
     @Query("SELECT * FROM task WHERE deletedAt IS NULL")
     suspend fun getTasks(): List<TaskEntity>
 
+    @Query("SELECT * FROM task")
+    suspend fun getAllTasksIncludingDeleted(): List<TaskEntity>
+
     @Query("SELECT * FROM task WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
     fun getDeletedTasksFlow(): Flow<List<TaskEntity>>
 

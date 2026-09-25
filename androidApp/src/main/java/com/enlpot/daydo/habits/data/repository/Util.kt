@@ -169,13 +169,19 @@ private fun areConsecutiveEligibleDays(
     return checkDate == date2
 }
 
-fun calculateConsistency(dates: List<LocalDate>, eligibleWeekdays: Set<DayOfWeek>): Float {
+fun calculateConsistency(
+    dates: List<LocalDate>,
+    eligibleWeekdays: Set<DayOfWeek>,
+    startDate: LocalDate,
+): Float {
     val eligibleDates = dates.filter { it.dayOfWeek in eligibleWeekdays }
-    val firstCompletionDate = eligibleDates.minOrNull() ?: return 0f
+    if (eligibleDates.isEmpty()) return 0f
     val today = LocalDate.now()
+    if (startDate > today) return 0f
 
+    // 分母从习惯创建日起算（而非首次打卡日）：漏打后补卡可回到 100%，语义更符合"自创建以来的连贯性"
     var totalEligibleDays = 0
-    var current = firstCompletionDate
+    var current = startDate
     while (current <= today) {
         if (current.dayOfWeek in eligibleWeekdays) {
             totalEligibleDays++

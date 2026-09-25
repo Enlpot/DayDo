@@ -24,6 +24,7 @@ import com.enlpot.daydo.core.data.backup.toHabitStatus
 import com.enlpot.daydo.core.data.backup.toTask
 import com.enlpot.daydo.core.habits.HabitRepo
 import com.enlpot.daydo.core.interfaces.AlarmScheduler
+import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.settings.backup.RestoreFailedException
 import com.enlpot.daydo.core.settings.backup.RestoreRepo
 import com.enlpot.daydo.core.settings.backup.RestoreResult
@@ -40,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
@@ -104,7 +106,16 @@ class RestoreImpl(
 
                         jsonDeserialized.tasks
                             .map { it.toTask() }
-                            .forEach { taskRepo.upsertTask(it) }
+                            .forEach {
+                                taskRepo.upsertTask(it)
+                                // 恢复备份后需重建提醒：仅未完成且提醒时间未过的任务补调度
+                                if (!it.status) {
+                                    val reminder = it.reminder
+                                    if (reminder != null && reminder >= LocalDateTime.now()) {
+                                        alarmScheduler.schedule(it)
+                                    }
+                                }
+                            }
                     },
                 )
             }

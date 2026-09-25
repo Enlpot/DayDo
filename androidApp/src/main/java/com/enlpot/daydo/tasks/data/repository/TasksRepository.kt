@@ -88,6 +88,10 @@ class TasksRepository(
         return tasksDao.getTasks().map { it.toTask() }
     }
 
+    override suspend fun getTasksIncludingDeleted(): List<Task> {
+        return tasksDao.getAllTasksIncludingDeleted().map { it.toTask() }
+    }
+
     override suspend fun getTaskById(id: Long): Task? {
         return tasksDao.getTaskById(id)?.toTask()
     }

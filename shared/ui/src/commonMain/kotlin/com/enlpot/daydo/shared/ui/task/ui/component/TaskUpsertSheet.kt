@@ -517,7 +517,6 @@ fun TaskUpsertSheetContent(
             dismissButton = {
                 IconButton(
                     onClick = {
-                        timeSelected = true
                         showTimePicker = true
                     },
                 ) {
@@ -534,7 +533,10 @@ fun TaskUpsertSheetContent(
                 GritTimePicker(
                     onDismissRequest = { showTimePicker = false },
                     state = timePickerState,
-                    onConfirm = { showTimePicker = false },
+                    onConfirm = {
+                        timeSelected = true
+                        showTimePicker = false
+                    },
                 )
             }
         }
