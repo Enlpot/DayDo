@@ -59,6 +59,7 @@ jobs:
 
       - name: Build release APK (signed)
         env:
+          KEYSTORE_FILE: keystore-release.jks
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
