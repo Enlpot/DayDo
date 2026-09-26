@@ -23,18 +23,19 @@ import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Category
-import com.enlpot.daydo.core.tasks.REPOS_POS_BASE
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.tasks.TaskRepo
+import com.enlpot.daydo.core.tasks.isReorderSamePosition
 import com.enlpot.daydo.core.tasks.nextDateAfter
+import com.enlpot.daydo.core.tasks.normalReorderKey
+import com.enlpot.daydo.core.tasks.recurringReorderKey
 import com.enlpot.daydo.core.tasks.reminderFor
 import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
 import com.enlpot.daydo.core.tasks.sortActiveTasks
 import com.enlpot.daydo.core.tasks.sortCompletedTasks
 import com.enlpot.daydo.core.tasks.sortOverdueTasks
 import com.enlpot.daydo.core.tasks.taskOccursOn
-import com.enlpot.daydo.core.tasks.taskSortKeyOrCreated
 import com.enlpot.daydo.core.tasks.typicalCompletionMinuteOfSeries
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
@@ -154,126 +155,55 @@ class TasksViewModel(
                         if (moved != null && !moved.status) {
                             // 原地释放（拖起又放回原位）不写排序键（P3）：避免把任务"钉住"当日顺序，
                             // 重复任务次日仍可回归典型完成时间排序
-                            val displayChain =
-                                _state.value.displayTasks.filter { it.id != action.taskId }
-                            val curIdx = displayChain.indexOfFirst { it.id == action.taskId }
-                            val aboveIsPrev =
-                                action.aboveId == displayChain.getOrNull(curIdx - 1)?.id
-                            val belowIsNext =
-                                action.belowId == displayChain.getOrNull(curIdx + 1)?.id
-                            if (aboveIsPrev && belowIsNext) {
+                            if (
+                                isReorderSamePosition(
+                                    _state.value.displayTasks,
+                                    action.taskId,
+                                    action.aboveId,
+                                    action.belowId,
+                                )
+                            ) {
                                 return@withLock
                             }
                             if (moved.recurrence != null) {
                                 // 重复任务：按当前显示链索引精确落位（拖到哪停哪）。
-                                // sortKey 量纲 = 链位置 × REPOS_POS_BASE；当天拖过在排序器中按
-                                // sortKey 插入未拖过（典型完成时间排序）的链中，次日自动回归频率排序。
-                                // 链坐标与排序器一致：排除被拖任务本身（排序器按"未拖链索引"落位），
-                                // 否则向下拖动时被拖项之后少算 1，中点键偏高一个 REPOS_POS_BASE（P2-2）
+                                // 键计算抽为纯函数（TaskReorder.recurringReorderKey）：链坐标与排序器一致
+                                // （排除被拖任务本身），否则向下拖动时被拖项之后少算 1，中点键偏高一个
+                                // REPOS_POS_BASE（P2-2）；次日自动回归典型完成时间排序
                                 val chain =
                                     _state.value.displayTasks.filter {
                                         it.recurrence != null && it.id != action.taskId
                                     }
-                                val idxOf: (Long?) -> Int? = { id ->
-                                    id?.let { i -> chain.indexOfFirst { t -> t.id == i } }
-                                        ?.takeIf { it >= 0 }
-                                }
-                                val upperIdx = idxOf(action.aboveId)
-                                val lowerIdx = idxOf(action.belowId)
-                                var newKey =
-                                    when {
-                                        upperIdx != null &&
-                                            lowerIdx != null &&
-                                            lowerIdx - upperIdx > 1 ->
-                                            (upperIdx * REPOS_POS_BASE +
-                                                lowerIdx * REPOS_POS_BASE) / 2
-                                        upperIdx != null && lowerIdx == null ->
-                                            upperIdx * REPOS_POS_BASE + 1
-                                        lowerIdx != null -> lowerIdx * REPOS_POS_BASE - 1
-                                        else -> moved.sortKey ?: 0L
-                                    }
-                                // 相邻索引无空隙：整段按当前链顺序重编号（步长 REPOS_POS_BASE）腾出空间，
-                                // 被拖任务再取目标插值（未拖过的重编号不动 sortKeyDate，次日仍回归频率排序）
-                                if (
-                                    upperIdx != null && lowerIdx != null && lowerIdx - upperIdx <= 1
-                                ) {
-                                    // 重编号同样基于排除被拖任务的链（被拖任务由 newKey 覆盖，不参与腾位）
-                                    chain.forEachIndexed { i, t ->
-                                        repo.updateTaskSortKeyById(t.id, i * REPOS_POS_BASE)
-                                    }
-                                    val newUpper = idxOf(action.aboveId)
-                                    val newLower = idxOf(action.belowId)
-                                    newKey =
-                                        when {
-                                            newUpper != null && newLower != null ->
-                                                (newUpper * REPOS_POS_BASE +
-                                                    newLower * REPOS_POS_BASE) / 2
-                                            newUpper != null -> newUpper * REPOS_POS_BASE + 1
-                                            newLower != null -> newLower * REPOS_POS_BASE - 1
-                                            else -> newKey
-                                        }
+                                val plan =
+                                    recurringReorderKey(
+                                        chain = chain,
+                                        taskId = action.taskId,
+                                        aboveId = action.aboveId,
+                                        belowId = action.belowId,
+                                        today = LocalDate.now(),
+                                    )
+                                plan.renumber.forEach { (id, key) ->
+                                    repo.updateTaskSortKeyById(id, key)
                                 }
                                 repo.updateTaskSortKeyAndDateById(
                                     action.taskId,
-                                    newKey,
-                                    LocalDate.now().toEpochDays(),
+                                    plan.key,
+                                    plan.sortKeyDate,
                                 )
                             } else {
-                                val all = _state.value.allTasks
-                                // 已完成任务固定按完成时间倒序，不作为活动任务排序键的邻居参与中点计算
-                                val aboveKey =
-                                    action.aboveId
-                                        ?.let { id -> all.firstOrNull { it.id == id } }
-                                        ?.takeIf { !it.status }
-                                        ?.let { taskSortKeyOrCreated(it) }
-                                val belowKey =
-                                    action.belowId
-                                        ?.let { id -> all.firstOrNull { it.id == id } }
-                                        ?.takeIf { !it.status }
-                                        ?.let { taskSortKeyOrCreated(it) }
-                                var newKey =
-                                    when {
-                                        aboveKey != null &&
-                                            belowKey != null &&
-                                            aboveKey - belowKey > 1 ->
-                                            belowKey + (aboveKey - belowKey) / 2
-                                        aboveKey != null && belowKey == null -> aboveKey - 1
-                                        belowKey != null -> belowKey + 1
-                                        else -> taskSortKeyOrCreated(moved)
-                                    }
-                                // 相邻键差 1 时中点/±1 会撞同键（排序截断）：整段按当前顺序重编号（步长 2）腾出空间
-                                if (
-                                    aboveKey != null && belowKey != null && aboveKey - belowKey <= 1
-                                ) {
-                                    val active =
-                                        all.filter { !it.status }
-                                            .sortedWith(compareBy { taskSortKeyOrCreated(it) })
-                                    active.forEachIndexed { idx, t ->
-                                        repo.updateTaskSortKeyById(t.id, idx * 2L)
-                                    }
-                                    val newAbove =
-                                        action.aboveId
-                                            ?.let { id -> active.firstOrNull { it.id == id } }
-                                            ?.let { active.indexOf(it) * 2L }
-                                    val newBelow =
-                                        action.belowId
-                                            ?.let { id -> active.firstOrNull { it.id == id } }
-                                            ?.let { active.indexOf(it) * 2L }
-                                    newKey =
-                                        when {
-                                            newAbove != null && newBelow != null ->
-                                                newBelow + (newAbove - newBelow) / 2
-                                            newAbove != null -> newAbove - 1
-                                            newBelow != null -> newBelow + 1
-                                            else -> newKey
-                                        }
+                                // 普通任务：键计算抽为纯函数（TaskReorder.normalReorderKey），
+                                // 量纲继承邻居 epoch（永久生效，无 sortKeyDate）
+                                val plan =
+                                    normalReorderKey(
+                                        moved = moved,
+                                        allTasks = _state.value.allTasks,
+                                        aboveId = action.aboveId,
+                                        belowId = action.belowId,
+                                    )
+                                plan.renumber.forEach { (id, key) ->
+                                    repo.updateTaskSortKeyById(id, key)
                                 }
-                                // 拖动日期一并落库：重复任务当天拖过优先，次日回归典型完成时间排序
-                                repo.updateTaskSortKeyAndDateById(
-                                    action.taskId,
-                                    newKey,
-                                    LocalDate.now().toEpochDays(),
-                                )
+                                repo.updateTaskSortKeyById(action.taskId, plan.key)
                             }
                         }
                     }
