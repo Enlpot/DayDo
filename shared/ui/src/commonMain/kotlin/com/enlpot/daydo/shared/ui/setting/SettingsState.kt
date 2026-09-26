@@ -32,14 +32,14 @@ import kotlinx.datetime.DayOfWeek
 data class SettingsState(
     val backupState: BackupState = BackupState(),
     val appVersion: String = "1.0.0",
-val webdavServer: String = "",
-val webdavUsername: String = "",
-val webdavPassword: String = "",
-val webdavUploadState: WebDavState = WebDavState.IDLE,
-val webdavDownloadState: WebDavState = WebDavState.IDLE,
-val webdavConfigMessage: String = "",
-val webdavUploadMessage: String = "",
-val webdavDownloadMessage: String = "",
+    val webdavServer: String = "",
+    val webdavUsername: String = "",
+    val webdavPassword: String = "",
+    val webdavUploadState: WebDavState = WebDavState.IDLE,
+    val webdavDownloadState: WebDavState = WebDavState.IDLE,
+    val webdavConfigMessage: String = "",
+    val webdavUploadMessage: String = "",
+    val webdavDownloadMessage: String = "",
 
     // datastore
     val theme: Theme = Theme(),

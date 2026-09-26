@@ -60,10 +60,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
-import com.kizitonwose.calendar.compose.heatmapcalendar.rememberHeatMapCalendarState
-import com.kizitonwose.calendar.compose.rememberCalendarState
-import com.kizitonwose.calendar.core.minusMonths
-import com.kizitonwose.calendar.core.now
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
 import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.habit.HabitState
@@ -75,6 +71,10 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeekDayBreakdown
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeeklyActivity
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeeklyBooleanHeatMap
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
+import com.kizitonwose.calendar.compose.heatmapcalendar.rememberHeatMapCalendarState
+import com.kizitonwose.calendar.compose.rememberCalendarState
+import com.kizitonwose.calendar.core.minusMonths
+import com.kizitonwose.calendar.core.now
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.YearMonth
 import org.jetbrains.compose.resources.stringResource
@@ -90,9 +90,8 @@ fun AnalyticsPage(
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
 
-    val currentMonth = remember { YearMonth.now() }
-    val currentHabit =
-        state.habitsWithAnalytics.find { it.habit.id == state.analyticsHabitId }
+    val currentMonth = YearMonth.now() // 跨月后重组自然取新值（P4）
+    val currentHabit = state.habitsWithAnalytics.find { it.habit.id == state.analyticsHabitId }
 
     if (currentHabit == null) {
         // 习惯不存在（已删除/数据未就绪）：显示空状态而非整页空白，可返回
@@ -333,9 +332,6 @@ private fun AnalyticsMissing(onNavigateBack: () -> Unit) {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        TextButton(onClick = onNavigateBack) {
-            Text(stringResource(Res.string.back))
-        }
+        TextButton(onClick = onNavigateBack) { Text(stringResource(Res.string.back)) }
     }
 }
-

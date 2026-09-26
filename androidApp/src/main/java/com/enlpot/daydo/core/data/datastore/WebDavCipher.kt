@@ -13,8 +13,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- * WebDAV 密码 AES-GCM 加密（密钥存于 Android Keystore，不可导出）
  */
 package com.enlpot.daydo.core.data.datastore
 
@@ -39,21 +37,24 @@ object WebDavCipher {
 
     private fun getOrCreateKey(): SecretKey? {
         val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        (keyStore.getKey(KEY_ALIAS, null) as? SecretKey)?.let { return it }
+        (keyStore.getKey(KEY_ALIAS, null) as? SecretKey)?.let {
+            return it
+        }
         return runCatching {
-            val generator =
-                KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
-            generator.init(
-                KeyGenParameterSpec.Builder(
-                    KEY_ALIAS,
-                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
+                val generator =
+                    KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+                generator.init(
+                    KeyGenParameterSpec.Builder(
+                            KEY_ALIAS,
+                            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
+                        )
+                        .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                        .build()
                 )
-                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                    .build()
-            )
-            generator.generateKey()
-        }.getOrNull()
+                generator.generateKey()
+            }
+            .getOrNull()
     }
 
     /** 返回加密串；明文为空或加密失败时返回 null（调用方按原值存储） */
@@ -61,14 +62,15 @@ object WebDavCipher {
         if (plain.isEmpty()) return null
         val key = getOrCreateKey() ?: return null
         return runCatching {
-            val cipher = Cipher.getInstance(TRANSFORMATION)
-            cipher.init(Cipher.ENCRYPT_MODE, key)
-            val iv = cipher.iv
-            val cipherText = cipher.doFinal(plain.toByteArray(Charsets.UTF_8))
-            Base64.encodeToString(iv, Base64.NO_WRAP) +
-                ":" +
-                Base64.encodeToString(cipherText, Base64.NO_WRAP)
-        }.getOrNull()
+                val cipher = Cipher.getInstance(TRANSFORMATION)
+                cipher.init(Cipher.ENCRYPT_MODE, key)
+                val iv = cipher.iv
+                val cipherText = cipher.doFinal(plain.toByteArray(Charsets.UTF_8))
+                Base64.encodeToString(iv, Base64.NO_WRAP) +
+                    ":" +
+                    Base64.encodeToString(cipherText, Base64.NO_WRAP)
+            }
+            .getOrNull()
     }
 
     /** 解密；非加密格式（旧明文）或解密失败时返回 null */
@@ -78,13 +80,14 @@ object WebDavCipher {
         if (parts.size != 2) return null
         val key = getOrCreateKey() ?: return null
         return runCatching {
-            val cipher = Cipher.getInstance(TRANSFORMATION)
-            cipher.init(
-                Cipher.DECRYPT_MODE,
-                key,
-                GCMParameterSpec(GCM_TAG_BITS, Base64.decode(parts[0], Base64.NO_WRAP)),
-            )
-            String(cipher.doFinal(Base64.decode(parts[1], Base64.NO_WRAP)), Charsets.UTF_8)
-        }.getOrNull()
+                val cipher = Cipher.getInstance(TRANSFORMATION)
+                cipher.init(
+                    Cipher.DECRYPT_MODE,
+                    key,
+                    GCMParameterSpec(GCM_TAG_BITS, Base64.decode(parts[0], Base64.NO_WRAP)),
+                )
+                String(cipher.doFinal(Base64.decode(parts[1], Base64.NO_WRAP)), Charsets.UTF_8)
+            }
+            .getOrNull()
     }
 }

@@ -42,12 +42,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
-import com.materialkolor.rememberDynamicColorScheme
 import com.enlpot.daydo.core.theme.AppTheme
 import com.enlpot.daydo.core.theme.PaletteStyle
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.toMPaletteStyle
+import com.materialkolor.rememberDynamicColorScheme
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource

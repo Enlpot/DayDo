@@ -45,7 +45,7 @@ class TasksRepository(
     private val notificationManager: GritNotificationManager,
 ) : TaskRepo {
 
-    // 共享热流：多个 collector（getTasksFlow/getAllTasksFlow/getCompletedTasksFlow）共用
+    // 共享热流：多个 collector（getTasksFlow/getAllTasksFlow）共用
     // 同一份 Room 查询与实体转换结果，数据库变更只重算一遍
     private val repoScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val tasksFlow =
@@ -76,21 +76,9 @@ class TasksRepository(
             .flowOn(Dispatchers.Default)
     }
 
-    override fun getCompletedTasksFlow(): Flow<List<Task>> {
-        return tasksFlow.map { tasks -> tasks.filter { it.status } }.flowOn(Dispatchers.IO)
-    }
-
     override fun getAllTasksFlow(): Flow<List<Task>> = tasksFlow
 
     override fun getDeletedTasksFlow(): Flow<List<Task>> = deletedTasksFlow
-
-    override suspend fun getTasks(): List<Task> {
-        return tasksDao.getTasks().map { it.toTask() }
-    }
-
-    override suspend fun getTasksIncludingDeleted(): List<Task> {
-        return tasksDao.getAllTasksIncludingDeleted().map { it.toTask() }
-    }
 
     override suspend fun getTaskById(id: Long): Task? {
         return tasksDao.getTaskById(id)?.toTask()
@@ -129,10 +117,6 @@ class TasksRepository(
         }
     }
 
-    override suspend fun deleteTask(task: Task) {
-        tasksDao.deleteTask(task.toTaskEntity())
-    }
-
     override suspend fun softDeleteTask(task: Task) {
         tasksDao.softDeleteTask(task.id, System.currentTimeMillis())
         notificationManager.cancelNotification(task)
@@ -146,10 +130,6 @@ class TasksRepository(
         tasksDao.purgeTask(task.id)
     }
 
-    override suspend fun deleteAllTasks() {
-        tasksDao.deleteAllTasks()
-    }
-
     override suspend fun moveTasksToInbox(categoryId: Long) {
         tasksDao.moveTasksToInbox(categoryId)
     }
@@ -161,9 +141,5 @@ class TasksRepository(
     override suspend fun deleteCategory(category: Category) {
         moveTasksToInbox(category.id)
         categoryDao.deleteCategory(category.toCategoryEntity())
-    }
-
-    override suspend fun deleteAllCategories() {
-        categoryDao.deleteAllCategories()
     }
 }

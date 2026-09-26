@@ -69,7 +69,11 @@ private fun HapticSound.labelText(): String =
     }
 
 @Composable
-fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavigateBack: () -> Unit) {
+fun HapticsPage(
+    state: SettingsState,
+    onAction: (SettingsAction) -> Unit,
+    onNavigateBack: () -> Unit,
+) {
     var showFeedbackDialog by rememberSaveable { mutableStateOf(false) }
     var showSoundDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -82,13 +86,20 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
     ) {
         MediumFlexibleTopAppBar(
             scrollBehavior = scrollBehavior,
-            title = { Text(text = stringResource(Res.string.haptics), fontFamily = flexFontEmphasis()) },
-            colors = TopAppBarDefaults.topAppBarColors(scrolledContainerColor = MaterialTheme.colorScheme.surface),
+            title = {
+                Text(text = stringResource(Res.string.haptics), fontFamily = flexFontEmphasis())
+            },
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                ),
             navigationIcon = {
                 Icon(
                     imageVector = vectorResource(Res.drawable.nav_arrow_back),
                     contentDescription = null,
-                    modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)).clickable { onNavigateBack() },
+                    modifier =
+                        Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                            .clickable { onNavigateBack() },
                 )
             },
         )
@@ -102,7 +113,13 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
                     // 触感反馈总开关
                     ListItem(
                         headlineContent = { Text(text = stringResource(Res.string.haptics)) },
-                        supportingContent = { Text(text = if (state.hapticFeedback) stringResource(Res.string.on) else stringResource(Res.string.off)) },
+                        supportingContent = {
+                            Text(
+                                text =
+                                    if (state.hapticFeedback) stringResource(Res.string.on)
+                                    else stringResource(Res.string.off)
+                            )
+                        },
                         trailingContent = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
@@ -116,10 +133,18 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
                     )
 
                     // 震动强度（内嵌滑块）
-                    var sliderValue by remember(state.hapticStrength) { mutableFloatStateOf(state.hapticStrength.toFloat()) }
-                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
+                    var sliderValue by
+                        remember(state.hapticStrength) {
+                            mutableFloatStateOf(state.hapticStrength.toFloat())
+                        }
+                    Column(
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                    ) {
                         ListItem(
-                            headlineContent = { Text(text = stringResource(Res.string.vibration_strength)) },
+                            headlineContent = {
+                                Text(text = stringResource(Res.string.vibration_strength))
+                            },
                             supportingContent = { Text(text = "${sliderValue.roundToInt()}%") },
                             colors = listItemColors(),
                         )
@@ -135,13 +160,18 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
                                 onValueChange = { sliderValue = it },
                                 valueRange = 0f..100f,
                                 onValueChangeFinished = {
-                                    onAction(SettingsAction.ChangeHapticStrength(sliderValue.roundToInt()))
+                                    onAction(
+                                        SettingsAction.ChangeHapticStrength(
+                                            sliderValue.roundToInt()
+                                        )
+                                    )
                                 },
                                 colors =
                                     SliderDefaults.colors(
                                         thumbColor = MaterialTheme.colorScheme.primary,
                                         activeTrackColor = MaterialTheme.colorScheme.primary,
-                                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        inactiveTrackColor =
+                                            MaterialTheme.colorScheme.surfaceVariant,
                                     ),
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -170,40 +200,50 @@ fun HapticsPage(state: SettingsState, onAction: (SettingsAction) -> Unit, onNavi
 
     if (showFeedbackDialog) {
         GritBottomSheet(onDismissRequest = { showFeedbackDialog = false }) {
-            Text(text = stringResource(Res.string.haptics), style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = stringResource(Res.string.haptics),
+                style = MaterialTheme.typography.headlineSmall,
+            )
             Text(
                 text = stringResource(Res.string.haptics_desc),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                listOf(true to stringResource(Res.string.on), false to stringResource(Res.string.off)).forEach { (value, label) ->
-                    ListItem(
-                        headlineContent = { Text(text = label) },
-                        colors = listItemColors(),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable {
-                                    onAction(SettingsAction.ChangeHapticFeedback(value))
-                                    showFeedbackDialog = false
-                                },
-                        trailingContent = {
-                            if (state.hapticFeedback == value) {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.check),
-                                    contentDescription = null,
-                                )
-                            }
-                        },
+                listOf(
+                        true to stringResource(Res.string.on),
+                        false to stringResource(Res.string.off),
                     )
-                }
+                    .forEach { (value, label) ->
+                        ListItem(
+                            headlineContent = { Text(text = label) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable {
+                                        onAction(SettingsAction.ChangeHapticFeedback(value))
+                                        showFeedbackDialog = false
+                                    },
+                            trailingContent = {
+                                if (state.hapticFeedback == value) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
+                            },
+                        )
+                    }
             }
         }
     }
 
     if (showSoundDialog) {
         GritBottomSheet(onDismissRequest = { showSoundDialog = false }) {
-            Text(text = stringResource(Res.string.sound), style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = stringResource(Res.string.sound),
+                style = MaterialTheme.typography.headlineSmall,
+            )
             Text(
                 text = stringResource(Res.string.sound_desc),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

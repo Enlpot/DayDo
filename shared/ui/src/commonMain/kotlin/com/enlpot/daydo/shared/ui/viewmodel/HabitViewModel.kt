@@ -24,6 +24,7 @@ import com.enlpot.daydo.core.habits.HabitStatus
 import com.enlpot.daydo.core.interfaces.AlarmScheduler
 import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
+import com.enlpot.daydo.core.now
 import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import kotlinx.coroutines.Job
@@ -74,114 +75,115 @@ class HabitViewModel(
     fun onAction(action: HabitsAction) {
         viewModelScope.launch {
             actionMutex.withLock {
-            when (action) {
-                is AddHabit -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_CREATED.name,
-                        mapOf("has_reminder" to action.habit.reminder),
-                    )
-                    upsertHabit(action.habit)
-                }
-
-                is DeleteHabit -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_DELETED.name,
-                        mapOf("has_reminder" to action.habit.reminder),
-                    )
-                    deleteHabit(action.habit)
-                }
-
-                is InsertStatus -> insertHabitStatus(action.habit, action.date)
-
-                is UpdateHabit -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_EDITED.name,
-                        mapOf("has_reminder" to action.habit.reminder),
-                    )
-                    upsertHabit(action.habit)
-                }
-
-                ReorderHabits -> {
-                    val currentList =
-                        _state.value.habitsWithAnalytics.mapIndexed { index, analytics ->
-                            analytics.habit.copy(index = index)
-                        }
-
-                    currentList.forEach { upsertHabit(it) }
-                }
-
-                is PrepareAnalytics -> {
-                    if (action.habit != null) {
+                when (action) {
+                    is AddHabit -> {
                         analytics.trackEvent(
-                            AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_ANALYTICS_VIEWED.name,
+                            AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_CREATED.name,
                             mapOf("has_reminder" to action.habit.reminder),
                         )
+                        upsertHabit(action.habit)
                     }
-                    _state.update { it.copy(analyticsHabitId = action.habit?.id) }
-                }
 
-                OnAddHabitClicked -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_SHEET_OPENED.name,
-                        emptyMap(),
-                    )
-                    _state.update { it.copy(showHabitAddSheet = true) }
-                }
+                    is DeleteHabit -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_DELETED.name,
+                            mapOf("has_reminder" to action.habit.reminder),
+                        )
+                        deleteHabit(action.habit)
+                    }
 
-                DismissAddHabitDialog -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_SHEET_DISMISSED.name,
-                        emptyMap(),
-                    )
-                    _state.update { it.copy(showHabitAddSheet = false) }
-                }
+                    is InsertStatus -> insertHabitStatus(action.habit, action.date)
 
-                is OnToggleCompactView -> datastore.setCompactView(action.pref)
+                    is UpdateHabit -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_EDITED.name,
+                            mapOf("has_reminder" to action.habit.reminder),
+                        )
+                        upsertHabit(action.habit)
+                    }
 
-                is OnToggleEditState -> _state.update { it.copy(editState = action.pref) }
+                    ReorderHabits -> {
+                        val currentList =
+                            _state.value.habitsWithAnalytics.mapIndexed { index, analytics ->
+                                analytics.habit.copy(index = index)
+                            }
 
-                is OnTransientHabitReorder -> {
-                    val currentList = _state.value.habitsWithAnalytics.toMutableList()
-                    currentList.add(action.to, currentList.removeAt(action.from))
-                    _state.update { it.copy(habitsWithAnalytics = currentList) }
-                }
+                        currentList.forEach { upsertHabit(it) }
+                    }
 
-                is FetchCompletedHabitsForDate -> {
-                    completedHabitsFetchJob?.cancel()
-                    completedHabitsFetchJob = launch {
-                        if (action.date == null) {
-                            _state.update { it.copy(selectedDayCompletedHabits = null) }
-                            return@launch
-                        }
-
-                        val completedHabits =
-                            repo.getCompletedHabitsForDate(action.date).map { it.title }
-
-                        _state.update { habitState ->
-                            habitState.copy(
-                                selectedDayCompletedHabits =
-                                    if (completedHabits.isNotEmpty()) {
-                                        action.date to completedHabits
-                                    } else null
+                    is PrepareAnalytics -> {
+                        if (action.habit != null) {
+                            analytics.trackEvent(
+                                AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_ANALYTICS_VIEWED
+                                    .name,
+                                mapOf("has_reminder" to action.habit.reminder),
                             )
                         }
+                        _state.update { it.copy(analyticsHabitId = action.habit?.id) }
+                    }
+
+                    OnAddHabitClicked -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_SHEET_OPENED.name,
+                            emptyMap(),
+                        )
+                        _state.update { it.copy(showHabitAddSheet = true) }
+                    }
+
+                    DismissAddHabitDialog -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_SHEET_DISMISSED.name,
+                            emptyMap(),
+                        )
+                        _state.update { it.copy(showHabitAddSheet = false) }
+                    }
+
+                    is OnToggleCompactView -> datastore.setCompactView(action.pref)
+
+                    is OnToggleEditState -> _state.update { it.copy(editState = action.pref) }
+
+                    is OnTransientHabitReorder -> {
+                        val currentList = _state.value.habitsWithAnalytics.toMutableList()
+                        currentList.add(action.to, currentList.removeAt(action.from))
+                        _state.update { it.copy(habitsWithAnalytics = currentList) }
+                    }
+
+                    is FetchCompletedHabitsForDate -> {
+                        completedHabitsFetchJob?.cancel()
+                        completedHabitsFetchJob = launch {
+                            if (action.date == null) {
+                                _state.update { it.copy(selectedDayCompletedHabits = null) }
+                                return@launch
+                            }
+
+                            val completedHabits =
+                                repo.getCompletedHabitsForDate(action.date).map { it.title }
+
+                            _state.update { habitState ->
+                                habitState.copy(
+                                    selectedDayCompletedHabits =
+                                        if (completedHabits.isNotEmpty()) {
+                                            action.date to completedHabits
+                                        } else null
+                                )
+                            }
+                        }
+                    }
+
+                    OnHabitsOpened -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.HABITS_OPENED.name,
+                            emptyMap(),
+                        )
+                    }
+
+                    OnOverallAnalyticsViewed -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.OVERALL_ANALYTICS_VIEWED.name,
+                            emptyMap(),
+                        )
                     }
                 }
-
-                OnHabitsOpened -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.HABITS_OPENED.name,
-                        emptyMap(),
-                    )
-                }
-
-                OnOverallAnalyticsViewed -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.OVERALL_ANALYTICS_VIEWED.name,
-                        emptyMap(),
-                    )
-                }
-            }
             }
         }
     }
@@ -261,6 +263,11 @@ class HabitViewModel(
             )
             repo.deleteHabitStatus(habit.id, date)
         } else {
+            // 打卡守卫（P2-4）：非计划日/未到创建日/未来日期不允许完成（取消打卡不限制），
+            // 与提醒打卡路径（GritIntentReceiver）统一，防跨午夜/误点污染统计
+            val dayIso = date.dayOfWeek.ordinal + 1
+            val validDay = habit.days.isEmpty() || habit.days.any { it.ordinal + 1 == dayIso }
+            if (!validDay || date < habit.time.date || date > LocalDate.now()) return
             analytics.trackEvent(
                 AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_COMPLETED.name,
                 emptyMap(),

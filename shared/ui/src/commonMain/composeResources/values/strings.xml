@@ -40,6 +40,7 @@
     <string name="weekly_graph">Weekly Comparison</string>
     <string name="not_enough_data">Not enough data</string>
     <string name="items_completed">completed</string>
+    <string name="items_overdue">overdue</string>
     <string name="completed">Completed Today</string>
     <string name="title">Title</string>
     <string name="description">Description</string>

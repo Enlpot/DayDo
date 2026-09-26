@@ -43,7 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -99,9 +98,7 @@ fun MainApp(state: MainAppState) {
     var subPage by remember { mutableStateOf(false) }
     var taskStatsSeriesId by rememberSaveable { mutableStateOf<Long?>(null) }
     var habitAnalyticsHabitId by rememberSaveable { mutableStateOf<Long?>(null) }
-    CompositionLocalProvider(
-        LocalCardCornerRadius provides state.cornerRadius,
-    ) {
+    CompositionLocalProvider(LocalCardCornerRadius provides state.cornerRadius) {
         val entryProvider =
             mainEntryProvider(
                 onSubPageChange = { subPage = it },
@@ -141,7 +138,8 @@ fun MainApp(state: MainAppState) {
                     NavDisplay(
                         modifier =
                             Modifier.padding(
-                                    start = padding.calculateStartPadding(LocalLayoutDirection.current),
+                                    start =
+                                        padding.calculateStartPadding(LocalLayoutDirection.current),
                                     end = padding.calculateEndPadding(LocalLayoutDirection.current),
                                     bottom = padding.calculateBottomPadding(),
                                 )
@@ -189,60 +187,59 @@ private fun mainEntryProvider(
     initialAnalyticsHabitId: Long?,
     onInitialAnalyticsHandled: () -> Unit,
     onOpenHabitAnalytics: (Habit) -> Unit,
-): (NavKey) -> NavEntry<NavKey> =
-    entryProvider {
-        entry<AppSections.HomePages>(metadata = fadeTransitionMetadata()) {
-            val hvm: HabitViewModel = koinViewModel()
-            val tvm: TasksViewModel = koinViewModel()
-            val habitState by hvm.state.collectAsStateWithLifecycle()
-            val taskState by tvm.state.collectAsStateWithLifecycle()
+): (NavKey) -> NavEntry<NavKey> = entryProvider {
+    entry<AppSections.HomePages>(metadata = fadeTransitionMetadata()) {
+        val hvm: HabitViewModel = koinViewModel()
+        val tvm: TasksViewModel = koinViewModel()
+        val habitState by hvm.state.collectAsStateWithLifecycle()
+        val taskState by tvm.state.collectAsStateWithLifecycle()
 
-            HomePage(
-                taskState = taskState,
-                habitState = habitState,
-                onTaskAction = tvm::onAction,
-                onHabitAction = hvm::onAction,
-                onOpenTaskStats = onOpenTaskStats,
-                onOpenHabitAnalytics = onOpenHabitAnalytics,
-            )
-        }
-
-        entry<AppSections.TaskPages>(metadata = fadeTransitionMetadata()) {
-            val tvm: TasksViewModel = koinViewModel()
-            val taskPageState by tvm.state.collectAsStateWithLifecycle()
-
-            TaskGraph(
-                state = taskPageState,
-                onAction = tvm::onAction,
-                onSubPageChange = onSubPageChange,
-                initialStatsSeriesId = initialStatsSeriesId,
-                onInitialStatsHandled = onInitialStatsHandled,
-            )
-        }
-
-        entry<AppSections.SettingsPages>(metadata = fadeTransitionMetadata()) {
-            val svm: SettingsViewModel = koinViewModel()
-            val settingsState by svm.state.collectAsStateWithLifecycle()
-
-            SettingsGraph(
-                state = settingsState,
-                onAction = svm::onAction,
-                onSubPageChange = onSubPageChange,
-            )
-        }
-
-        entry<AppSections.HabitPages>(metadata = fadeTransitionMetadata()) {
-            val hvm: HabitViewModel = koinViewModel()
-            val habitsPageState by hvm.state.collectAsStateWithLifecycle()
-
-            HabitsGraph(
-                state = habitsPageState,
-                onAction = hvm::onAction,
-                initialAnalyticsHabitId = initialAnalyticsHabitId,
-                onInitialAnalyticsHandled = onInitialAnalyticsHandled,
-            )
-        }
+        HomePage(
+            taskState = taskState,
+            habitState = habitState,
+            onTaskAction = tvm::onAction,
+            onHabitAction = hvm::onAction,
+            onOpenTaskStats = onOpenTaskStats,
+            onOpenHabitAnalytics = onOpenHabitAnalytics,
+        )
     }
+
+    entry<AppSections.TaskPages>(metadata = fadeTransitionMetadata()) {
+        val tvm: TasksViewModel = koinViewModel()
+        val taskPageState by tvm.state.collectAsStateWithLifecycle()
+
+        TaskGraph(
+            state = taskPageState,
+            onAction = tvm::onAction,
+            onSubPageChange = onSubPageChange,
+            initialStatsSeriesId = initialStatsSeriesId,
+            onInitialStatsHandled = onInitialStatsHandled,
+        )
+    }
+
+    entry<AppSections.SettingsPages>(metadata = fadeTransitionMetadata()) {
+        val svm: SettingsViewModel = koinViewModel()
+        val settingsState by svm.state.collectAsStateWithLifecycle()
+
+        SettingsGraph(
+            state = settingsState,
+            onAction = svm::onAction,
+            onSubPageChange = onSubPageChange,
+        )
+    }
+
+    entry<AppSections.HabitPages>(metadata = fadeTransitionMetadata()) {
+        val hvm: HabitViewModel = koinViewModel()
+        val habitsPageState by hvm.state.collectAsStateWithLifecycle()
+
+        HabitsGraph(
+            state = habitsPageState,
+            onAction = hvm::onAction,
+            initialAnalyticsHabitId = initialAnalyticsHabitId,
+            onInitialAnalyticsHandled = onInitialAnalyticsHandled,
+        )
+    }
+}
 
 @Composable
 private fun AppNavRail(

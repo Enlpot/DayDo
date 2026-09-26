@@ -23,9 +23,8 @@ import kotlinx.serialization.Serializable
 /**
  * Recurrence rule for a task.
  *
- * Week days use ISO numbering: 1 = Monday ... 7 = Sunday.
- * Month days use 1..31. Yearly months use 1..12.
- * Empty sets fall back to the anchor (base) date's value.
+ * Week days use ISO numbering: 1 = Monday ... 7 = Sunday. Month days use 1..31. Yearly months use
+ * 1..12. Empty sets fall back to the anchor (base) date's value.
  */
 @Serializable
 sealed interface Recurrence {
@@ -33,11 +32,11 @@ sealed interface Recurrence {
 
     @Serializable data class EveryNDays(val interval: Int = 1) : Recurrence
 
-    @Serializable data class Weekly(val interval: Int = 1, val days: Set<Int> = emptySet()) :
-        Recurrence
+    @Serializable
+    data class Weekly(val interval: Int = 1, val days: Set<Int> = emptySet()) : Recurrence
 
-    @Serializable data class Monthly(val interval: Int = 1, val days: Set<Int> = emptySet()) :
-        Recurrence
+    @Serializable
+    data class Monthly(val interval: Int = 1, val days: Set<Int> = emptySet()) : Recurrence
 
     @Serializable
     data class Yearly(
@@ -74,10 +73,29 @@ private fun Recurrence.Weekly.nextWeekly(from: LocalDate, base: LocalDate): Loca
     val weekDays = days.filter { it in 1..7 }.ifEmpty { setOf(base.dayOfWeek.toIso()) }
     val baseDays = base.toEpochDays()
     var candidateDays = from.toEpochDays() + 1
+    var guard = 0
     while (true) {
+        if (guard++ > 2000) {
+            // 防御：2000 周内无候选（interval 极大/配置异常，如备份 JSON 注入 Int.MAX），
+            // 直接跳到下一个 interval 对齐周取首个计划日，保证严格晚于 from 且终止（P2-4）
+            val raw = candidateDays - baseDays
+            val weeks =
+                if (raw < 0 && raw % 7 != 0L) raw / 7 - 1 else raw / 7 // 手工 floor（无 Long.floorDiv）
+            val rem = (weeks % interval + interval) % interval
+            val alignedWeeks = weeks - rem + interval
+            val alignedStart = baseDays + alignedWeeks * 7
+            var d = alignedStart
+            while (d < alignedStart + 7) {
+                val dd = LocalDate.fromEpochDays(d)
+                if (dd.dayOfWeek.toIso() in weekDays && d > from.toEpochDays()) return dd
+                d++
+            }
+            return from.plusDaysSafe(1) // 绝对兜底：保证单调递增
+        }
         val weeksDiff = candidateDays - baseDays
         // floor 除法：from<base 时负周差按向下取整，避免截断除法导致 base 周误判命中（P3）
-        val floorWeeks = if (weeksDiff < 0 && weeksDiff % 7 != 0L) weeksDiff / 7 - 1 else weeksDiff / 7
+        val floorWeeks =
+            if (weeksDiff < 0 && weeksDiff % 7 != 0L) weeksDiff / 7 - 1 else weeksDiff / 7
         val weekOffset = (floorWeeks % interval + interval) % interval
         val dayIso = LocalDate.fromEpochDays(candidateDays).dayOfWeek.toIso()
         if (dayIso in weekDays && weekOffset == 0L) return LocalDate.fromEpochDays(candidateDays)
@@ -156,37 +174,34 @@ private fun Recurrence.Yearly.nextYearly(from: LocalDate, base: LocalDate): Loca
     var guard = 0
     while (true) {
         if (guard++ > 2000) {
-            // 防御：interval 超大（Int 溢出）或配置异常时回退到 from 之后，避免死循环（P3）
-            // Long 运算避免 interval 极大时 Int 溢出；LocalDate 上限 9999 再截断
-            val fallbackYear =
-                (from.year.toLong() + interval).coerceIn(1L, 9999L)
+            // 防御：interval 超大（Int 溢出）或配置异常时回退到 from 之后，避免死循环（P3）。
+            // Long 运算避免 interval 极大时 Int 溢出；9999 是跨平台 LocalDate 的保守上限
+            // （JVM 委派 java.time 实际范围更大），coerceIn 防极端配置越界
+            val fallbackYear = (from.year.toLong() + interval).coerceIn(1L, 9999L)
             val m = months.sorted().first()
-            val nd = base.dayOfMonth.coerceAtMost(
-                LocalDate(fallbackYear.toInt(), m, 1).daysInMonth()
-            )
+            val nd =
+                base.dayOfMonth.coerceAtMost(LocalDate(fallbackYear.toInt(), m, 1).daysInMonth())
             val fallback = LocalDate(fallbackYear.toInt(), m, nd)
             return if (fallback > from) fallback else from.plusDaysSafe(1)
         }
         val yearDiff = year - base.year
         if (yearDiff >= 0 && yearDiff % interval == 0) {
             val candidate =
-                months
-                    .sorted()
-                    .firstNotNullOfOrNull { m ->
-                        val monthEnd = LocalDate(year, m, 1).daysInMonth()
-                        val direct =
-                            monthDays
-                                .filter { it <= monthEnd }
-                                .sorted()
-                                .map { d -> LocalDate(year, m, d) }
-                                .firstOrNull { it > from }
-                        direct
-                            ?: monthDays
-                                .filter { it > monthEnd }
-                                .maxOrNull()
-                                ?.let { LocalDate(year, m, monthEnd) }
-                                ?.takeIf { it > from }
-                    }
+                months.sorted().firstNotNullOfOrNull { m ->
+                    val monthEnd = LocalDate(year, m, 1).daysInMonth()
+                    val direct =
+                        monthDays
+                            .filter { it <= monthEnd }
+                            .sorted()
+                            .map { d -> LocalDate(year, m, d) }
+                            .firstOrNull { it > from }
+                    direct
+                        ?: monthDays
+                            .filter { it > monthEnd }
+                            .maxOrNull()
+                            ?.let { LocalDate(year, m, monthEnd) }
+                            ?.takeIf { it > from }
+                }
             if (candidate != null) return candidate
         }
         year += interval
@@ -196,12 +211,13 @@ private fun Recurrence.Yearly.nextYearly(from: LocalDate, base: LocalDate): Loca
 private fun LocalDate.plusDaysSafe(days: Long): LocalDate =
     LocalDate.fromEpochDays(toEpochDays() + days)
 
-
 private fun LocalDate.daysInMonth(): Int =
     when (month) {
-        Month.FEBRUARY ->
-            if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) 29 else 28
-        Month.APRIL, Month.JUNE, Month.SEPTEMBER, Month.NOVEMBER -> 30
+        Month.FEBRUARY -> if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) 29 else 28
+        Month.APRIL,
+        Month.JUNE,
+        Month.SEPTEMBER,
+        Month.NOVEMBER -> 30
         else -> 31
     }
 

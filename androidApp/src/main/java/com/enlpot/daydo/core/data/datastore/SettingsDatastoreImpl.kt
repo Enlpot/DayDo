@@ -17,12 +17,11 @@
 package com.enlpot.daydo.core.data.datastore
 
 import android.util.Base64
-
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.settings.HapticSound
@@ -48,9 +47,9 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val hapticFeedbackKey = booleanPreferencesKey("haptic_feedback")
         private val hapticStrengthKey = intPreferencesKey("haptic_strength")
         private val hapticSoundKey = stringPreferencesKey("haptic_sound")
-private val webDavServerKey = stringPreferencesKey("webdav_server")
-private val webDavUsernameKey = stringPreferencesKey("webdav_username")
-private val webDavPasswordKey = stringPreferencesKey("webdav_password")
+        private val webDavServerKey = stringPreferencesKey("webdav_server")
+        private val webDavUsernameKey = stringPreferencesKey("webdav_username")
+        private val webDavPasswordKey = stringPreferencesKey("webdav_password")
     }
 
     override fun getStartOfTheWeekPref(): Flow<DayOfWeek> =
@@ -107,14 +106,16 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
         datastore.data.map { prefs ->
             val raw = prefs[hiddenSmartViewsKey].orEmpty()
             if (raw.isBlank()) emptySet()
-            else raw.split(",").mapNotNull { runCatching { SmartCategory.valueOf(it) }.getOrNull() }.toSet()
+            else
+                raw.split(",")
+                    .mapNotNull { runCatching { SmartCategory.valueOf(it) }.getOrNull() }
+                    .toSet()
         }
 
     override suspend fun setHiddenSmartViews(views: Set<SmartCategory>) {
-        datastore.edit { prefs ->
-            prefs[hiddenSmartViewsKey] = views.joinToString(",") { it.name }
-        }
+        datastore.edit { prefs -> prefs[hiddenSmartViewsKey] = views.joinToString(",") { it.name } }
     }
+
     override fun getCornerRadiusPref(): Flow<Int> =
         datastore.data.map { prefs -> prefs[cornerRadiusKey] ?: 20 }
 
@@ -178,7 +179,8 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
         val parts = stored.split(":")
         if (parts.size != 2) return false
         return parts.all { p ->
-            p.isNotEmpty() && p.length % 4 == 0 &&
+            p.isNotEmpty() &&
+                p.length % 4 == 0 &&
                 runCatching { Base64.decode(p, Base64.NO_WRAP) }.isSuccess
         }
     }
@@ -189,8 +191,7 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
                 "" // 清空密码
             } else {
                 // 加密失败必须报错，不允许静默回退明文
-                WebDavCipher.encrypt(password)
-                    ?: throw IllegalStateException("WebDAV 密码加密失败，未保存明文")
+                WebDavCipher.encrypt(password) ?: throw IllegalStateException("WebDAV 密码加密失败，未保存明文")
             }
         datastore.edit { prefs -> prefs[webDavPasswordKey] = encrypted }
     }

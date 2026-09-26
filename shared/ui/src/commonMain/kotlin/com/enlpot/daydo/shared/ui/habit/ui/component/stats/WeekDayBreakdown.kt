@@ -68,10 +68,7 @@ private fun localizedDayLabel(day: String): String =
     }
 
 @Composable
-fun WeekDayBreakdown(
-    weekDayData: WeekDayFrequencyData,
-    modifier: Modifier = Modifier,
-) {
+fun WeekDayBreakdown(weekDayData: WeekDayFrequencyData, modifier: Modifier = Modifier) {
     val max = weekDayData.values.takeIf { it.any { value -> value != 0 } }?.maxOrNull()
 
     AnalyticsCard(
@@ -171,6 +168,6 @@ fun WeekDayBreakdown(
 private fun Preview() {
     WeekDayBreakdown(
         weekDayData =
-            DayOfWeekNames.ENGLISH_ABBREVIATED.names.associateWith { Random.nextInt(0..100) },
+            DayOfWeekNames.ENGLISH_ABBREVIATED.names.associateWith { Random.nextInt(0..100) }
     )
 }

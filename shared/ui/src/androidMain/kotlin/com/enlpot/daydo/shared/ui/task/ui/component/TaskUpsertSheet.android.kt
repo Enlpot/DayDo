@@ -20,8 +20,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.widget.Toast
-import daydo.shared.ui.generated.resources.*
-import org.jetbrains.compose.resources.stringResource
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -34,6 +32,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.Task
+import daydo.shared.ui.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 actual fun TaskUpsertSheet(
@@ -80,8 +80,7 @@ actual fun TaskUpsertSheet(
             if (granted) {
                 showDateTimePicker = true
                 notificationPermission = true
-            } else
-                Toast.makeText(context, deniedText, Toast.LENGTH_SHORT).show()
+            } else Toast.makeText(context, deniedText, Toast.LENGTH_SHORT).show()
         }
 
     TaskUpsertSheetContent(

@@ -38,8 +38,8 @@ import com.enlpot.daydo.R
 import com.enlpot.daydo.core.interfaces.BiometricUtils
 import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
-import com.enlpot.daydo.shared.ui.performAndroidHaptic
 import com.enlpot.daydo.shared.ui.components.InitialLoading
+import com.enlpot.daydo.shared.ui.performAndroidHaptic
 import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.viewmodel.MainViewModel
 import io.github.vinceglb.filekit.FileKit
@@ -67,9 +67,15 @@ class MainActivity : FragmentActivity() {
 
             CompositionLocalProvider(
                 LocalWindowSizeClass provides windowSizeClass,
-                LocalHapticPerformer provides { kind ->
-                    performAndroidHaptic(this@MainActivity, kind, state.hapticStrength, state.hapticSound)
-                },
+                LocalHapticPerformer provides
+                    { kind ->
+                        performAndroidHaptic(
+                            this@MainActivity,
+                            kind,
+                            state.hapticStrength,
+                            state.hapticSound,
+                        )
+                    },
             ) {
                 var showContent by remember { mutableStateOf(false) }
 
@@ -145,7 +151,8 @@ class MainActivity : FragmentActivity() {
             BiometricPrompt.ERROR_USER_CANCELED,
             BiometricPrompt.ERROR_NEGATIVE_BUTTON,
             BiometricPrompt.ERROR_CANCELED -> {
-                Toast.makeText(this, getString(R.string.biometric_auth_failed), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.biometric_auth_failed), Toast.LENGTH_SHORT)
+                    .show()
                 finish()
             }
 
@@ -155,12 +162,18 @@ class MainActivity : FragmentActivity() {
                 mainViewModel.setAppUnlocked(true)
                 mainViewModel.setBiometricLock(false)
 
-                Toast.makeText(this, getString(R.string.biometric_auth_failed), Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.biometric_auth_failed), Toast.LENGTH_LONG)
+                    .show()
                 onComplete()
             }
 
             else -> {
-                Toast.makeText(this, getString(R.string.biometric_auth_error, errString), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                        this,
+                        getString(R.string.biometric_auth_error, errString),
+                        Toast.LENGTH_SHORT,
+                    )
+                    .show()
                 finish()
             }
         }

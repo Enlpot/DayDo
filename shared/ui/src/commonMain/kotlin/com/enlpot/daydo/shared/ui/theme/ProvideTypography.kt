@@ -15,24 +15,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.theme
-import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.tooling.preview.Preview
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.Font
-import org.jetbrains.compose.resources.FontResource
 
 val TYPOGRAPHY = Typography()
 
 // Font(Res.font...) 为 @Composable 构造且资源层自带缓存：保持直接构造（P3 性能项实测收益极低，维持现状）
-@Composable
-fun flexFontEmphasis(): FontFamily = FontFamily(Font(Res.font.figtree))
+@Composable fun flexFontEmphasis(): FontFamily = FontFamily(Font(Res.font.figtree))
 
 /** function to get custom typography for Grit（固定使用 Figtree） */
 @Composable

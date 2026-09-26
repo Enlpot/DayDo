@@ -14,20 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import androidx.room3.Room
 import androidx.room3.testing.MigrationTestHelper
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.sqlite.execSQL
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.google.common.truth.Truth.assertThat
 import com.enlpot.daydo.habits.data.database.HabitDatabase
+import com.google.common.truth.Truth.assertThat
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.toInstant
@@ -166,9 +163,13 @@ class HabitDBMigrationTest {
                 assertThat(habitId).isAtMost(5L)
 
                 // Date should be a valid epochDay (not in the future)
-                assertThat(dateEpoch).isAtMost(
-                    Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toEpochDays()
-                )
+                assertThat(dateEpoch)
+                    .isAtMost(
+                        Clock.System.now()
+                            .toLocalDateTime(TimeZone.currentSystemDefault())
+                            .date
+                            .toEpochDays()
+                    )
             }
             assertThat(count).isEqualTo(15)
         }

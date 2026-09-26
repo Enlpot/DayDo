@@ -63,10 +63,7 @@ class ExportImpl(
     override suspend fun exportToJson(): ExportResult {
         val time = LocalDateTime.now().toString().replace(":", "").replace(" ", "")
         val file =
-            FileKit.openFileSaver(
-                suggestedName = "Grit-Export-$time",
-                defaultExtension = "json",
-            )
+            FileKit.openFileSaver(suggestedName = "Grit-Export-$time", defaultExtension = "json")
 
         // 用户取消保存对话框 -> 不视为导出成功，也不报失败
         if (file == null) return ExportResult.Cancelled
@@ -87,9 +84,12 @@ class ExportImpl(
     }
 
     private suspend fun buildExportJson(): String = buildString {
-        append("{\"tasksSchemaVersion\":").append(TaskDatabase.SCHEMA_VERSION)
-            .append(",\"habitsSchemaVersion\":").append(HabitDatabase.SCHEMA_VERSION)
-            .append(",\"backupFormatVersion\":").append(BACKUP_FORMAT_VERSION)
+        append("{\"tasksSchemaVersion\":")
+            .append(TaskDatabase.SCHEMA_VERSION)
+            .append(",\"habitsSchemaVersion\":")
+            .append(HabitDatabase.SCHEMA_VERSION)
+            .append(",\"backupFormatVersion\":")
+            .append(BACKUP_FORMAT_VERSION)
         append(",\"habits\":[")
         habitsRepo.getHabits().forEachIndexed { index, habit ->
             if (index > 0) append(',')

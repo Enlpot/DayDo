@@ -55,9 +55,20 @@ import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
-private enum class RecurrenceType { DAILY, WEEKLY, MONTHLY, YEARLY, CUSTOM }
+private enum class RecurrenceType {
+    DAILY,
+    WEEKLY,
+    MONTHLY,
+    YEARLY,
+    CUSTOM,
+}
 
-private enum class CustomUnit { DAY, WEEK, MONTH, YEAR }
+private enum class CustomUnit {
+    DAY,
+    WEEK,
+    MONTH,
+    YEAR,
+}
 
 @Composable
 fun RecurrencePickerSheet(
@@ -67,27 +78,25 @@ fun RecurrencePickerSheet(
     onRemove: () -> Unit,
 ) {
     var type by remember { mutableStateOf(initial?.toType() ?: RecurrenceType.DAILY) }
-    var interval by
-        remember {
-            mutableStateOf(
-                when (initial) {
-                    is Recurrence.EveryNDays -> initial.interval
-                    is Recurrence.Weekly -> initial.interval
-                    is Recurrence.Monthly -> initial.interval
-                    is Recurrence.Yearly -> initial.interval
-                    else -> 1
-                }
-            )
-        }
-    var days by
-        remember {
-            mutableStateOf(
-                (initial as? Recurrence.Weekly)?.days
-                    ?: (initial as? Recurrence.Monthly)?.days
-                    ?: (initial as? Recurrence.Yearly)?.days
-                    ?: emptySet()
-            )
-        }
+    var interval by remember {
+        mutableStateOf(
+            when (initial) {
+                is Recurrence.EveryNDays -> initial.interval
+                is Recurrence.Weekly -> initial.interval
+                is Recurrence.Monthly -> initial.interval
+                is Recurrence.Yearly -> initial.interval
+                else -> 1
+            }
+        )
+    }
+    var days by remember {
+        mutableStateOf(
+            (initial as? Recurrence.Weekly)?.days
+                ?: (initial as? Recurrence.Monthly)?.days
+                ?: (initial as? Recurrence.Yearly)?.days
+                ?: emptySet()
+        )
+    }
     var months by remember { mutableStateOf((initial as? Recurrence.Yearly)?.months ?: emptySet()) }
     var customUnit by remember { mutableStateOf(initial.customUnit()) }
 
@@ -141,7 +150,11 @@ fun RecurrencePickerSheet(
             }
 
             when (type) {
-                RecurrenceType.DAILY -> Text(text = stringResource(Res.string.daily_repeat), style = MaterialTheme.typography.bodyLarge)
+                RecurrenceType.DAILY ->
+                    Text(
+                        text = stringResource(Res.string.daily_repeat),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
 
                 RecurrenceType.CUSTOM -> {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -161,14 +174,18 @@ fun RecurrencePickerSheet(
                                 text = stringResource(Res.string.every_prefix),
                                 unit = stringResource(Res.string.day_unit),
                                 value = interval,
-                            ) { interval = it }
+                            ) {
+                                interval = it
+                            }
 
                         CustomUnit.WEEK -> {
                             IntervalRow(
                                 text = stringResource(Res.string.every_prefix),
                                 unit = stringResource(Res.string.week_unit),
                                 value = interval,
-                            ) { interval = it }
+                            ) {
+                                interval = it
+                            }
                             WeekDaySelector(days = days, onChange = { days = it })
                         }
 
@@ -177,8 +194,14 @@ fun RecurrencePickerSheet(
                                 text = stringResource(Res.string.every_prefix),
                                 unit = stringResource(Res.string.month_unit_plural),
                                 value = interval,
-                            ) { interval = it }
-                            DaySelector(title = stringResource(Res.string.repeat_dates), selected = days, onChange = { days = it })
+                            ) {
+                                interval = it
+                            }
+                            DaySelector(
+                                title = stringResource(Res.string.repeat_dates),
+                                selected = days,
+                                onChange = { days = it },
+                            )
                         }
 
                         CustomUnit.YEAR -> {
@@ -186,9 +209,15 @@ fun RecurrencePickerSheet(
                                 text = stringResource(Res.string.every_prefix),
                                 unit = stringResource(Res.string.year_unit),
                                 value = interval,
-                            ) { interval = it }
+                            ) {
+                                interval = it
+                            }
                             MonthSelector(selected = months, onChange = { months = it })
-                            DaySelector(title = stringResource(Res.string.repeat_dates), selected = days, onChange = { days = it })
+                            DaySelector(
+                                title = stringResource(Res.string.repeat_dates),
+                                selected = days,
+                                onChange = { days = it },
+                            )
                         }
                     }
                 }
@@ -198,7 +227,9 @@ fun RecurrencePickerSheet(
                         text = stringResource(Res.string.every_prefix),
                         unit = stringResource(Res.string.week_unit),
                         value = interval,
-                    ) { interval = it }
+                    ) {
+                        interval = it
+                    }
                     WeekDaySelector(days = days, onChange = { days = it })
                 }
 
@@ -207,8 +238,14 @@ fun RecurrencePickerSheet(
                         text = stringResource(Res.string.every_prefix),
                         unit = stringResource(Res.string.month_unit_plural),
                         value = interval,
-                    ) { interval = it }
-                    DaySelector(title = stringResource(Res.string.repeat_dates), selected = days, onChange = { days = it })
+                    ) {
+                        interval = it
+                    }
+                    DaySelector(
+                        title = stringResource(Res.string.repeat_dates),
+                        selected = days,
+                        onChange = { days = it },
+                    )
                 }
 
                 RecurrenceType.YEARLY -> {
@@ -216,9 +253,15 @@ fun RecurrencePickerSheet(
                         text = stringResource(Res.string.every_prefix),
                         unit = stringResource(Res.string.year_unit),
                         value = interval,
-                    ) { interval = it }
+                    ) {
+                        interval = it
+                    }
                     MonthSelector(selected = months, onChange = { months = it })
-                    DaySelector(title = stringResource(Res.string.repeat_dates), selected = days, onChange = { days = it })
+                    DaySelector(
+                        title = stringResource(Res.string.repeat_dates),
+                        selected = days,
+                        onChange = { days = it },
+                    )
                 }
             }
 
@@ -228,7 +271,10 @@ fun RecurrencePickerSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextButton(onClick = onRemove) {
-                    Text(text = stringResource(Res.string.no_repeat), color = MaterialTheme.colorScheme.error)
+                    Text(
+                        text = stringResource(Res.string.no_repeat),
+                        color = MaterialTheme.colorScheme.error,
+                    )
                 }
                 Button(
                     onClick = {
@@ -253,16 +299,10 @@ fun RecurrencePickerSheet(
                                     }
 
                                 RecurrenceType.WEEKLY ->
-                                    Recurrence.Weekly(
-                                        interval = intervalText,
-                                        days = days,
-                                    )
+                                    Recurrence.Weekly(interval = intervalText, days = days)
 
                                 RecurrenceType.MONTHLY ->
-                                    Recurrence.Monthly(
-                                        interval = intervalText,
-                                        days = days,
-                                    )
+                                    Recurrence.Monthly(interval = intervalText, days = days)
 
                                 RecurrenceType.YEARLY ->
                                     Recurrence.Yearly(
@@ -287,12 +327,7 @@ fun RecurrencePickerSheet(
 }
 
 @Composable
-private fun IntervalRow(
-    text: String,
-    unit: String,
-    value: Int,
-    onChange: (Int) -> Unit,
-) {
+private fun IntervalRow(text: String, unit: String, value: Int, onChange: (Int) -> Unit) {
     var textValue by remember(value) { mutableStateOf(value.toString()) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -320,22 +355,27 @@ private fun IntervalRow(
 private fun WeekDaySelector(days: Set<Int>, onChange: (Set<Int>) -> Unit) {
     val labels =
         listOf(
-            stringResource(Res.string.monday).removePrefix(stringResource(Res.string.weekday_prefix)),
-            stringResource(Res.string.tuesday).removePrefix(stringResource(Res.string.weekday_prefix)),
-            stringResource(Res.string.wednesday).removePrefix(stringResource(Res.string.weekday_prefix)),
-            stringResource(Res.string.thursday).removePrefix(stringResource(Res.string.weekday_prefix)),
-            stringResource(Res.string.friday).removePrefix(stringResource(Res.string.weekday_prefix)),
-            stringResource(Res.string.saturday).removePrefix(stringResource(Res.string.weekday_prefix)),
-            stringResource(Res.string.sunday).removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.monday)
+                .removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.tuesday)
+                .removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.wednesday)
+                .removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.thursday)
+                .removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.friday)
+                .removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.saturday)
+                .removePrefix(stringResource(Res.string.weekday_prefix)),
+            stringResource(Res.string.sunday)
+                .removePrefix(stringResource(Res.string.weekday_prefix)),
         )
     FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         labels.forEachIndexed { index, label ->
             val day = index + 1
             ToggleButton(
                 checked = day in days,
-                onCheckedChange = { checked ->
-                    onChange(if (checked) days + day else days - day)
-                },
+                onCheckedChange = { checked -> onChange(if (checked) days + day else days - day) },
                 colors = ToggleButtonDefaults.tonalToggleButtonColors(),
             ) {
                 Text(text = label)
@@ -368,7 +408,10 @@ private fun DaySelector(title: String, selected: Set<Int>, onChange: (Set<Int>) 
 private fun MonthSelector(selected: Set<Int>, onChange: (Set<Int>) -> Unit) {
     val labels = (1..12).map { stringResource(Res.string.month_n, it) }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(text = stringResource(Res.string.repeat_months), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = stringResource(Res.string.repeat_months),
+            style = MaterialTheme.typography.bodyLarge,
+        )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             labels.forEachIndexed { index, label ->
                 val month = index + 1
@@ -439,9 +482,12 @@ fun Recurrence.toDisplayString(): String {
         }
         is Recurrence.Monthly -> {
             val daysText =
-                if (days.isEmpty()) "" else
-                    " · " + stringResource(Res.string.monthly) +
-                    days.sorted().joinToString("、") + stringResource(Res.string.day_suffix)
+                if (days.isEmpty()) ""
+                else
+                    " · " +
+                        stringResource(Res.string.monthly) +
+                        days.sorted().joinToString("、") +
+                        stringResource(Res.string.day_suffix)
             stringResource(Res.string.every_n_months, interval) + daysText
         }
         is Recurrence.Yearly -> {
@@ -449,8 +495,8 @@ fun Recurrence.toDisplayString(): String {
             val monthsText =
                 monthLabels.joinToString("、").ifEmpty { stringResource(Res.string.every_year) }
             val daysText =
-                if (days.isEmpty()) "" else
-                    " · " + days.sorted().joinToString("、") + stringResource(Res.string.day_suffix)
+                if (days.isEmpty()) ""
+                else " · " + days.sorted().joinToString("、") + stringResource(Res.string.day_suffix)
             stringResource(Res.string.every_n_years, interval) + " · $monthsText$daysText"
         }
     }

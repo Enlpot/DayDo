@@ -25,13 +25,18 @@ plugins {
 }
 
 val appName = "DayDo"
-val appVersionCode = 49
-val appVersionName = "1.5.2"
+val appVersionCode = 50
+val appVersionName = "1.5.3"
 
 val gitHash =
     try {
-        providers.exec { commandLine("git", "rev-parse", "HEAD") }
-            .standardOutput.asText.get().trim().take(7)
+        providers
+            .exec { commandLine("git", "rev-parse", "HEAD") }
+            .standardOutput
+            .asText
+            .get()
+            .trim()
+            .take(7)
     } catch (_: Exception) {
         "nogit"
     }
@@ -53,25 +58,24 @@ android {
         androidResources { generateLocaleConfig = true }
     }
 
-val keystoreFileEnv = System.getenv("KEYSTORE_FILE")
-signingConfigs {
-    create("release") {
-        if (keystoreFileEnv != null && File(keystoreFileEnv).exists()) {
-            storeFile = file(keystoreFileEnv)
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
-            keyAlias = System.getenv("KEY_ALIAS") ?: "daydo"
-            keyPassword = System.getenv("KEY_PASSWORD")
+    val keystoreFileEnv = System.getenv("KEYSTORE_FILE")
+    signingConfigs {
+        create("release") {
+            if (keystoreFileEnv != null && File(keystoreFileEnv).exists()) {
+                storeFile = file(keystoreFileEnv)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS") ?: "daydo"
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
         }
     }
-}
     buildTypes {
         release {
             resValue("string", "app_name", appName)
             signingConfig =
                 if (keystoreFileEnv != null && File(keystoreFileEnv).exists())
                     signingConfigs.getByName("release")
-                else
-                    signingConfigs.getByName("debug")
+                else signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -100,9 +104,7 @@ signingConfigs {
 
     flavorDimensions += "version"
 
-    productFlavors {
-        create("foss") { dimension = "version" }
-    }
+    productFlavors { create("foss") { dimension = "version" } }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
@@ -115,9 +117,7 @@ signingConfigs {
         resValues = true
     }
 
-    packaging {
-        resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" }
-    }
+    packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
 
     dependenciesInfo {
         includeInApk = false
@@ -156,7 +156,6 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
-
 
     implementation(libs.androidx.datastore.preferences.core)
     implementation(libs.androidx.biometric)

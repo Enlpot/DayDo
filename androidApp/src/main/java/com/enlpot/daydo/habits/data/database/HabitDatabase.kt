@@ -80,19 +80,17 @@ abstract class HabitDatabase : RoomDatabase() {
         val migrate_6_7 =
             object : Migration(6, 7) {
                 override suspend fun migrate(connection: SQLiteConnection) {
-                    connection
-                        .prepare("UPDATE habit_index SET time = ? WHERE id = ?")
-                        .use { upd ->
-                            connection.prepare("SELECT id, time FROM habit_index").use { stmt ->
-                                while (stmt.step()) {
-                                    val id = stmt.getLong(0)
-                                    upd.clearBindings()
-                                    upd.bindLong(1, Converters.localEpochToUtc(stmt.getLong(1))!!)
-                                    upd.bindLong(2, id)
-                                    upd.step()
-                                }
+                    connection.prepare("UPDATE habit_index SET time = ? WHERE id = ?").use { upd ->
+                        connection.prepare("SELECT id, time FROM habit_index").use { stmt ->
+                            while (stmt.step()) {
+                                val id = stmt.getLong(0)
+                                upd.clearBindings()
+                                upd.bindLong(1, Converters.localEpochToUtc(stmt.getLong(1))!!)
+                                upd.bindLong(2, id)
+                                upd.step()
                             }
                         }
+                    }
                 }
             }
     }

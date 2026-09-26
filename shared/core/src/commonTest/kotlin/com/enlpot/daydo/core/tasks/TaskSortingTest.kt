@@ -13,16 +13,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- * TaskSorting 单元测试：重复任务拖动"拖到哪停哪"（当天精确落位）与次日回归频率排序。
  */
 package com.enlpot.daydo.core.tasks
 
 import com.enlpot.daydo.core.now
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 
 class TaskSortingTest {
 
@@ -32,15 +30,16 @@ class TaskSortingTest {
         seriesId: Long,
         sortKey: Long? = null,
         sortKeyDate: LocalDate? = null,
-    ) = Task(
-        id = id,
-        title = "t$id",
-        recurrence = Recurrence.Daily,
-        seriesId = seriesId,
-        createdAt = createdAt,
-        sortKey = sortKey,
-        sortKeyDate = sortKeyDate,
-    )
+    ) =
+        Task(
+            id = id,
+            title = "t$id",
+            recurrence = Recurrence.Daily,
+            seriesId = seriesId,
+            createdAt = createdAt,
+            sortKey = sortKey,
+            sortKeyDate = sortKeyDate,
+        )
 
     // ---------- 重复任务拖动：当天拖过按 sortKey 精确落位（拖到哪停哪） ----------
     @Test
@@ -105,7 +104,8 @@ class TaskSortingTest {
         val a = recurringTask(1, LocalDateTime(2026, 9, 1, 10, 0), seriesId = 1)
         val b = recurringTask(2, LocalDateTime(2026, 9, 1, 10, 0), seriesId = 2)
         val c = recurringTask(3, LocalDateTime(2026, 9, 1, 10, 0), seriesId = 3)
-        val typical: Map<Long?, Int?> = mapOf(1L to 420, 2L to 300, 3L to 600) // a=7:00, b=5:00, c=10:00
+        val typical: Map<Long?, Int?> =
+            mapOf(1L to 420, 2L to 300, 3L to 600) // a=7:00, b=5:00, c=10:00
         val sorted = sortActiveTasks(listOf(a, b, c), typical)
         assertEquals(listOf(b.id, a.id, c.id), sorted.map { it.id })
     }

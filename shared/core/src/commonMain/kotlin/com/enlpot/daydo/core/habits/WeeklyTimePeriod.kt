@@ -27,10 +27,9 @@ enum class WeeklyTimePeriod {
             return when (this) {
                 MONTHS_2 -> 8
                 MONTHS_4 -> 16
-                MONTHS_8 -> 32
+                MONTHS_8 -> 35 // 8 个月 ≈ 35 周（原 32 周 ≈ 7.4 月，标签不匹配，P4）
                 YEARS_1 -> 52
             }
         }
-
     }
 }

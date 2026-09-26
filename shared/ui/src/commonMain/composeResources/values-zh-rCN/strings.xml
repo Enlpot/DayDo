@@ -41,6 +41,7 @@
     <string name="not_enough_data">数据不足</string>
     <string name="biometric_lock">生物识别锁</string>
     <string name="items_completed">已完成</string>
+    <string name="items_overdue">已过期</string>
     <string name="completed">今天已完成</string>
     <string name="title">标题</string>
     <string name="description">描述</string>

@@ -13,15 +13,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- * 重复任务系列统计：累计完成 / 完成率 / 连续完成 / 近 30 天日历 / 周几分布 / 完成时刻分布
  */
 package com.enlpot.daydo.shared.ui.task.ui
 
 import androidx.compose.runtime.Composable
 import com.enlpot.daydo.core.tasks.Task
-import daydo.shared.ui.generated.resources.Res
 import daydo.shared.ui.generated.resources.*
+import daydo.shared.ui.generated.resources.Res
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus

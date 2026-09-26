@@ -17,7 +17,6 @@
 package com.enlpot.daydo.app
 
 import android.app.Application
-import android.os.Build
 import com.enlpot.daydo.analytics.AnalyticsInitializer
 import com.enlpot.daydo.core.data.notification.GritNotificationManager
 import com.enlpot.daydo.di.GritModules

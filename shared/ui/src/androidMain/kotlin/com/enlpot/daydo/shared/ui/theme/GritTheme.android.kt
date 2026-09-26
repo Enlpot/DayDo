@@ -25,9 +25,9 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.materialkolor.rememberDynamicColorScheme
 import com.enlpot.daydo.core.theme.Theme
 import com.enlpot.daydo.shared.ui.toMPaletteStyle
+import com.materialkolor.rememberDynamicColorScheme
 
 @Composable
 actual fun GritTheme(theme: Theme, content: @Composable (() -> Unit)) {
@@ -51,7 +51,8 @@ actual fun GritTheme(theme: Theme, content: @Composable (() -> Unit)) {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && theme.isMaterialYou -> {
                 val context = LocalContext.current
                 val dynamic =
-                    if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                    if (isDark) dynamicDarkColorScheme(context)
+                    else dynamicLightColorScheme(context)
                 // MaterialYou 深色模式下将背景替换为 AMOLED 纯黑，避免该设置被静默忽略
                 if (theme.isAmoled && isDark) {
                     dynamic.copy(

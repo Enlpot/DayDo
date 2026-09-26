@@ -83,6 +83,4 @@ androidComponents {
     }
 }
 
-compose.resources {
-    packageOfResClass = "daydo.shared.ui.generated.resources"
-}
+compose.resources { packageOfResClass = "daydo.shared.ui.generated.resources" }

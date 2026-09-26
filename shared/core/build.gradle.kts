@@ -43,8 +43,6 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines)
         }
-        commonTest.dependencies {
-            implementation(kotlin("test"))
-        }
+        commonTest.dependencies { implementation(kotlin("test")) }
     }
 }

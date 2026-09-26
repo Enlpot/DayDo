@@ -39,9 +39,11 @@ class BootReceiver : BroadcastReceiver(), KoinComponent {
     override fun onReceive(context: Context, intent: Intent?) {
         val action = intent?.action
         // 开机/时区变化/手动改时间后，所有提醒按当前时刻重排（P3）
-        if (action == Intent.ACTION_BOOT_COMPLETED ||
-            action == Intent.ACTION_TIMEZONE_CHANGED ||
-            action == "android.intent.action.TIME_SET"
+        if (
+            action == Intent.ACTION_BOOT_COMPLETED ||
+                action == Intent.ACTION_TIMEZONE_CHANGED ||
+                action == "android.intent.action.TIME_SET" ||
+                action == Intent.ACTION_MY_PACKAGE_REPLACED
         ) {
             val scheduler = get<AlarmScheduler>()
             val habitRepo = get<HabitRepo>()
@@ -57,12 +59,10 @@ class BootReceiver : BroadcastReceiver(), KoinComponent {
 
                     // 只重排未完成且提醒时间在未来（含当天）的任务；
                     // 完成/过期/无提醒的任务不占闹钟，避免几十万历史任务全表逐条调度
-                    taskRepo
-                        .getScheduledTasks(LocalDateTime.now())
-                        .forEach {
-                            scheduler.schedule(it)
-                            Log.d("BootReceiver", "Scheduled task: ${it.id}")
-                        }
+                    taskRepo.getScheduledTasks(LocalDateTime.now()).forEach {
+                        scheduler.schedule(it)
+                        Log.d("BootReceiver", "Scheduled task: ${it.id}")
+                    }
                 } catch (t: Exception) {
                     Log.e("BootReceiver", "Failed to initiate alarms", t)
                 } finally {

@@ -16,14 +16,10 @@
  */
 package com.enlpot.daydo.shared.ui.app
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,12 +31,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -66,6 +61,9 @@ import com.enlpot.daydo.core.habits.Habit
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.toFormattedString
+import com.enlpot.daydo.shared.ui.HapticKind
+import com.enlpot.daydo.shared.ui.LocalHapticPerformer
+import com.enlpot.daydo.shared.ui.PlatformBackHandler
 import com.enlpot.daydo.shared.ui.components.Empty
 import com.enlpot.daydo.shared.ui.components.PageFill
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
@@ -74,14 +72,11 @@ import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import com.enlpot.daydo.shared.ui.habit.ui.component.HabitCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.HabitUpsertSheet
-import com.enlpot.daydo.shared.ui.HapticKind
-import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskCard
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskUpsertSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
-import com.enlpot.daydo.shared.ui.PlatformBackHandler
 import daydo.shared.ui.generated.resources.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
@@ -118,17 +113,17 @@ fun HomePage(
     // 保持用户所在逻辑位置，避免停在 index 不变导致被切到错误 tab（P2-12）
     var currentTab by rememberSaveable { mutableStateOf(0) }
     LaunchedEffect(hasOverdue) {
-        val target = when {
-            currentTab == 1 -> habitPageIndex
-            else -> if (hasOverdue) 1 else 0
-        }
+        val target =
+            when {
+                currentTab == 1 -> habitPageIndex
+                else -> if (hasOverdue) 1 else 0
+            }
         if (pagerState.currentPage != target) pagerState.scrollToPage(target)
     }
     // 点击/滑动后同步逻辑 tab（当前页==习惯页则归习惯，其余归任务）
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect { page ->
-            currentTab = if (page == habitPageIndex) 1 else 0
-        }
+        snapshotFlow { pagerState.currentPage }
+            .collect { page -> currentTab = if (page == habitPageIndex) 1 else 0 }
     }
     val scope = rememberCoroutineScope()
 
@@ -156,7 +151,7 @@ fun HomePage(
         modifier =
             Modifier.fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
     ) {
         // 主副标题：与其他页面一致的 LargeFlexibleTopAppBar 样式
         LargeFlexibleTopAppBar(
@@ -167,7 +162,10 @@ fun HomePage(
                 ),
             title = {
                 if (multiSelect) {
-                    Text(text = stringResource(Res.string.selected_count, selectedTaskIds.size), fontFamily = flexFontEmphasis())
+                    Text(
+                        text = stringResource(Res.string.selected_count, selectedTaskIds.size),
+                        fontFamily = flexFontEmphasis(),
+                    )
                 } else {
                     Text(text = stringResource(Res.string.home), fontFamily = flexFontEmphasis())
                 }
@@ -176,22 +174,32 @@ fun HomePage(
                 if (!multiSelect) {
                     Text(
                         text =
-                            "${today.toFormattedString()} · ${taskState.homeTodayCompleted.size} " +
-                                stringResource(Res.string.items_completed),
+                            if (hasOverdue && pagerState.currentPage == 0) {
+                                "${today.toFormattedString()} · ${overdueTasks.size} " +
+                                    stringResource(Res.string.items_overdue)
+                            } else {
+                                "${today.toFormattedString()} · ${taskState.homeTodayCompleted.size} " +
+                                    stringResource(Res.string.items_completed)
+                            },
                         fontFamily = flexFontEmphasis(),
                     )
                 }
             },
             actions = {
                 if (multiSelect) {
-                    TextButton(onClick = { selectedTaskIds = currentListTasks.map { it.id }.toSet() }) {
+                    TextButton(
+                        onClick = { selectedTaskIds = currentListTasks.map { it.id }.toSet() }
+                    ) {
                         Text(text = stringResource(Res.string.select_all))
                     }
-                    IconButton(onClick = {
-                        currentListTasks.filter { it.id in selectedTaskIds }
-                            .forEach { onTaskAction(TaskAction.SoftDeleteTask(it)) }
-                        exitMultiSelect()
-                    }) {
+                    IconButton(
+                        onClick = {
+                            currentListTasks
+                                .filter { it.id in selectedTaskIds }
+                                .forEach { onTaskAction(TaskAction.SoftDeleteTask(it)) }
+                            exitMultiSelect()
+                        }
+                    ) {
                         Icon(
                             imageVector = vectorResource(Res.drawable.delete),
                             contentDescription = null,
@@ -235,8 +243,7 @@ fun HomePage(
 
         HorizontalPager(state = pagerState) { page ->
             val isOverduePage = hasOverdue && page == 0
-            val isTasksPage =
-                if (hasOverdue) page == 1 else page == 0
+            val isTasksPage = if (hasOverdue) page == 1 else page == 0
             when {
                 isOverduePage ->
                     TodayTasksSection(
@@ -274,11 +281,12 @@ fun HomePage(
                         onEditTask = { editTask = it },
                     )
 
-                else -> TodayHabitsSection(
-                    state = habitState,
-                    onAction = onHabitAction,
-                    onOpenHabitAnalytics = onOpenHabitAnalytics,
-                )
+                else ->
+                    TodayHabitsSection(
+                        state = habitState,
+                        onAction = onHabitAction,
+                        onOpenHabitAnalytics = onOpenHabitAnalytics,
+                    )
             }
         }
     }
@@ -286,7 +294,8 @@ fun HomePage(
     // 新建入口：任务 tab 新建任务、习惯 tab 新建习惯
     FloatingActionButton(
         onClick = {
-            if (pagerState.currentPage == habitPageIndex) onHabitAction(HabitsAction.OnAddHabitClicked)
+            if (pagerState.currentPage == habitPageIndex)
+                onHabitAction(HabitsAction.OnAddHabitClicked)
             else showTaskAddSheet = true
         },
         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -336,7 +345,7 @@ fun HomePage(
             onDismissRequest = { editTask = null },
             isEditSheet = true,
             is24Hr = taskState.is24Hour,
-                        onOpenStats =
+            onOpenStats =
                 if (onOpenTaskStats != null) {
                     { onOpenTaskStats(editTask!!) }
                 } else {
@@ -374,9 +383,7 @@ private fun TodayTasksSection(
     val reorderableListState =
         rememberReorderableLazyListState(lazyListState) { from, to ->
             reorderableTasks =
-                reorderableTasks.toMutableList().apply {
-                    add(to.index, removeAt(from.index))
-                }
+                reorderableTasks.toMutableList().apply { add(to.index, removeAt(from.index)) }
         }
 
     LazyColumn(
@@ -417,7 +424,7 @@ private fun TodayTasksSection(
                                             }
                                         }
                                         draggedTaskId = null
-                                    }
+                                    },
                                 ),
                         )
                     },
@@ -432,10 +439,7 @@ private fun TodayTasksSection(
                         if (multiSelect) onToggleSelect(task)
                         else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
                     },
-                    onClick = {
-                        if (multiSelect) onToggleSelect(task)
-                        else onEditTask(task)
-                    },
+                    onClick = { if (multiSelect) onToggleSelect(task) else onEditTask(task) },
                 )
             }
         }
@@ -459,18 +463,13 @@ private fun TodayTasksSection(
                         if (multiSelect) onToggleSelect(task)
                         else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
                     },
-                    onClick = {
-                        if (multiSelect) onToggleSelect(task)
-                        else onEditTask(task)
-                    },
+                    onClick = { if (multiSelect) onToggleSelect(task) else onEditTask(task) },
                 )
             }
         }
 
         if (activeTasks.isEmpty() && completedTasks.isEmpty()) {
-            item {
-                Empty(modifier = Modifier.padding(top = 120.dp))
-            }
+            item { Empty(modifier = Modifier.padding(top = 120.dp)) }
         }
     }
 }
@@ -486,7 +485,9 @@ private fun TodayHabitsSection(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        itemsIndexed(state.habitsWithAnalytics, key = { _, it -> it.habit.id }) { index, habitWithAnalytics ->
+        itemsIndexed(state.habitsWithAnalytics, key = { _, it -> it.habit.id }) {
+            index,
+            habitWithAnalytics ->
             val completed = state.completedHabitIds.contains(habitWithAnalytics.habit.id)
             val cardShape = detachedItemShape(radius = 28)
 
@@ -494,9 +495,7 @@ private fun TodayHabitsSection(
                 habitWithAnalytics = habitWithAnalytics,
                 completed = completed,
                 action = onAction,
-                onNavigateToAnalytics = { _ ->
-                    onOpenHabitAnalytics(habitWithAnalytics.habit)
-                },
+                onNavigateToAnalytics = { _ -> onOpenHabitAnalytics(habitWithAnalytics.habit) },
                 editState = false,
                 compactView = state.compactHabitView,
                 analyticsEnabled = true,
@@ -509,9 +508,7 @@ private fun TodayHabitsSection(
         }
 
         if (state.habitsWithAnalytics.isEmpty()) {
-            item {
-                Empty(modifier = Modifier.padding(top = 120.dp))
-            }
+            item { Empty(modifier = Modifier.padding(top = 120.dp)) }
         }
     }
 

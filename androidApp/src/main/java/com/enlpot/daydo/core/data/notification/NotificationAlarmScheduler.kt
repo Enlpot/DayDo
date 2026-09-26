@@ -53,13 +53,12 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
     private val scheduledIntents = mutableSetOf<PendingIntent>()
 
     /**
-     * 精确闹钟权限（SCHEDULE_EXACT_ALARM）被撤销时降级为窗口闹钟（±10 分钟内触发），
-     * 保证提醒不丢、不因 SecurityException 崩溃。权限正常时行为与原来完全一致。
+     * 精确闹钟权限（SCHEDULE_EXACT_ALARM）被撤销时降级为窗口闹钟（±10 分钟内触发）， 保证提醒不丢、不因 SecurityException
+     * 崩溃。权限正常时行为与原来完全一致。
      */
     private fun setAlarm(triggerAtMs: Long, pendingIntent: PendingIntent) {
         val canExact =
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
-                alarmManager.canScheduleExactAlarms()
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
         if (canExact) {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
@@ -187,9 +186,12 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
     }
 
     override fun cancelAll() {
-        // 系统级 cancelAll：进程被杀后注册集合丢失，仅遍历集合清不干净旧闹钟；
-        // 再逐个 cancel 集合中的 PendingIntent 兜底（minSdk 29 >= API 24，直接可用）
-        alarmManager.cancelAll()
+        // 系统级 cancelAll：进程被杀后注册集合丢失，仅遍历集合清不干净旧闹钟。
+        // AlarmManager.cancelAll() 仅 API 34+（UPSIDE_DOWN_CAKE）可用，minSdk 29 低版本
+        // 必须靠集合逐个取消，否则 NoSuchMethodError 崩溃（P0-1）
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            alarmManager.cancelAll()
+        }
         synchronized(scheduledIntents) {
             scheduledIntents.forEach { alarmManager.cancel(it) }
             scheduledIntents.clear()

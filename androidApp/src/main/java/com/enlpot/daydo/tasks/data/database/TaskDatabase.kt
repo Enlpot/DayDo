@@ -30,7 +30,15 @@ import com.enlpot.daydo.core.data.Converters
     entities = [TaskEntity::class, CategoryEntity::class],
     version = TaskDatabase.SCHEMA_VERSION,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 4, to = 5), AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7), AutoMigration(from = 7, to = 8), AutoMigration(from = 8, to = 9), AutoMigration(from = 11, to = 12)],
+    autoMigrations =
+        [
+            AutoMigration(from = 4, to = 5),
+            AutoMigration(from = 5, to = 6),
+            AutoMigration(from = 6, to = 7),
+            AutoMigration(from = 7, to = 8),
+            AutoMigration(from = 8, to = 9),
+            AutoMigration(from = 11, to = 12),
+        ],
 )
 @ColumnTypeConverters(Converters::class)
 abstract class TaskDatabase : RoomDatabase() {
@@ -64,7 +72,9 @@ abstract class TaskDatabase : RoomDatabase() {
             object : Migration(10, 11) {
                 override suspend fun migrate(connection: SQLiteConnection) {
                     connection
-                        .prepare("UPDATE task SET reminder = ?, completedAt = ?, createdAt = ? WHERE id = ?")
+                        .prepare(
+                            "UPDATE task SET reminder = ?, completedAt = ?, createdAt = ? WHERE id = ?"
+                        )
                         .use { upd ->
                             connection
                                 .prepare("SELECT id, reminder, completedAt, createdAt FROM task")
@@ -81,9 +91,12 @@ abstract class TaskDatabase : RoomDatabase() {
                                         val createdAt =
                                             if (stmt.isNull(3)) null
                                             else Converters.localEpochToUtc(stmt.getLong(3))
-                                        if (reminder != null) upd.bindLong(1, reminder) else upd.bindNull(1)
-                                        if (completedAt != null) upd.bindLong(2, completedAt) else upd.bindNull(2)
-                                        if (createdAt != null) upd.bindLong(3, createdAt) else upd.bindNull(3)
+                                        if (reminder != null) upd.bindLong(1, reminder)
+                                        else upd.bindNull(1)
+                                        if (completedAt != null) upd.bindLong(2, completedAt)
+                                        else upd.bindNull(2)
+                                        if (createdAt != null) upd.bindLong(3, createdAt)
+                                        else upd.bindNull(3)
                                         upd.bindLong(4, id)
                                         upd.step()
                                     }

@@ -15,7 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component.stats
-import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -39,18 +38,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
-import com.kizitonwose.calendar.compose.HeatMapCalendar
-import com.kizitonwose.calendar.compose.heatmapcalendar.HeatMapCalendarState
-import com.kizitonwose.calendar.compose.heatmapcalendar.rememberHeatMapCalendarState
-import com.kizitonwose.calendar.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.endItemShape
 import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.habit.daysStartingFrom
-import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.CardArrows
+import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
+import com.kizitonwose.calendar.compose.HeatMapCalendar
+import com.kizitonwose.calendar.compose.heatmapcalendar.HeatMapCalendarState
+import com.kizitonwose.calendar.compose.heatmapcalendar.rememberHeatMapCalendarState
+import com.kizitonwose.calendar.core.now
 import daydo.shared.ui.generated.resources.*
 import kotlin.collections.forEachIndexed
 import kotlin.random.Random

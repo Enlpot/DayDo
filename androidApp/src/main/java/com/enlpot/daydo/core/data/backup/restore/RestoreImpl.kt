@@ -69,6 +69,9 @@ class RestoreImpl(
             }
 
             return restoreFromJson(file.readString())
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程取消必须向上传播，不能误报"恢复失败"（P3）
+            throw e
         } catch (e: SchemaMismatchException) {
             Log.e("RestoreRepo", "Failed to restore data, old schema: ", e)
             RestoreResult.Failure(RestoreFailedException.OldSchema)
@@ -85,11 +88,14 @@ class RestoreImpl(
                 // 解码 + schema 校验 + 全量实体映射都在 IO 线程：几十万行的大备份避免卡住主线程（ANR）
                 val jsonDeserialized = restoreJson.decodeFromString<ExportSchema>(json)
 
-                // 版本门（P2-3）：备份格式语义未变即可恢复（迁移链覆盖范围内），
-                // 低于迁移链起点的早期备份字段结构不兼容，明确拒绝
+                // 版本门（P2-1）：接受迁移链覆盖范围内备份；下限 = UTC 语义起点（v1.4.16，
+                // task 11 / habit 7）。更早备份（task<=10 / habit<=6）的 habit.time/task.reminder
+                // 是本机时区毫秒语义，字段结构虽兼容但时间语义不兼容——明确拒绝而非静默偏移。
+                // 注：task=11/habit=7 同时覆盖 v1.4.15（本机时区）与 v1.4.16+（UTC），schema 版本
+                // 无法区分，无标记备份按当前语义（backupFormatVersion 缺省=2）解读（P2-1 已知歧义）。
                 if (
-                    jsonDeserialized.tasksSchemaVersion !in 5..TaskDatabase.SCHEMA_VERSION ||
-                        jsonDeserialized.habitsSchemaVersion !in 4..HabitDatabase.SCHEMA_VERSION
+                    jsonDeserialized.tasksSchemaVersion !in 11..TaskDatabase.SCHEMA_VERSION ||
+                        jsonDeserialized.habitsSchemaVersion !in 7..HabitDatabase.SCHEMA_VERSION
                 ) {
                     throw SchemaMismatchException()
                 }
@@ -119,9 +125,11 @@ class RestoreImpl(
                 val habitIds = habits.map { it.id }.toSet()
                 if (
                     tasks.any { it.categoryId != null && it.categoryId !in categoryIds } ||
-                    statuses.any { it.habitId !in habitIds }
+                        statuses.any { it.habitId !in habitIds }
                 ) {
-                    return@withContext RestoreResult.Failure(RestoreFailedException.InconsistentData)
+                    return@withContext RestoreResult.Failure(
+                        RestoreFailedException.InconsistentData
+                    )
                 }
 
                 // 恢复 = 回到备份状态：清空本地旧数据 + 写入备份内容，
@@ -151,7 +159,11 @@ class RestoreImpl(
                     }
             }
 
+            // withContext 块值即函数返回值：预校验失败经 return@withContext 返回 Failure（P1-1）
             RestoreResult.Success
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 协程取消必须向上传播，不能误报"恢复失败"（P3）
+            throw e
         } catch (e: SchemaMismatchException) {
             Log.e("RestoreRepo", "Failed to restore data, old schema: ", e)
             RestoreResult.Failure(RestoreFailedException.OldSchema)

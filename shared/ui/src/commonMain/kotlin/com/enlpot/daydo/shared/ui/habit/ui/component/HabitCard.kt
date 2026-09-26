@@ -44,8 +44,8 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,16 +53,16 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.enlpot.daydo.core.habits.HabitWithAnalytics
+import com.enlpot.daydo.core.now
+import com.enlpot.daydo.core.toFormattedString
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
+import com.enlpot.daydo.shared.ui.habit.HabitsAction
+import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import com.kizitonwose.calendar.compose.WeekCalendar
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.minusDays
 import com.kizitonwose.calendar.core.plusDays
-import com.enlpot.daydo.core.habits.HabitWithAnalytics
-import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
-import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
-import com.enlpot.daydo.core.now
-import com.enlpot.daydo.core.toFormattedString
-import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -144,7 +144,8 @@ fun HabitCard(
             ),
     ) {
         ListItem(
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+            modifier =
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
             colors =
                 ListItemDefaults.colors(
                     containerColor = cardBackground,

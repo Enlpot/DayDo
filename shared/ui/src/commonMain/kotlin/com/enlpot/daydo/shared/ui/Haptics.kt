@@ -28,7 +28,7 @@ enum class HapticKind {
 }
 
 /**
- * Platform haptic performer. Provided by the Android entry (MainActivity);
- * defaults to a no-op on non-Android targets.
+ * Platform haptic performer. Provided by the Android entry (MainActivity); defaults to a no-op on
+ * non-Android targets.
  */
 val LocalHapticPerformer = staticCompositionLocalOf<(HapticKind) -> Unit> { {} }

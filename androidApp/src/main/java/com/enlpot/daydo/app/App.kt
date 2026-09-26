@@ -35,11 +35,6 @@ fun App(state: MainAppState) {
 
     NavDisplay(
         backStack = mainBackStack,
-        entryProvider =
-            entryProvider {
-                entry<GlobalRoutes.App> {
-                    MainApp(state = state)
-                }
-            },
+        entryProvider = entryProvider { entry<GlobalRoutes.App> { MainApp(state = state) } },
     )
 }

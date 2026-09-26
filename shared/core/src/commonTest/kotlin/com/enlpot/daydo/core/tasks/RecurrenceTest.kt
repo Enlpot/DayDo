@@ -13,15 +13,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- * Recurrence 生成器单元测试：覆盖周期回归、输入防御与生成器-判定器一致性属性测试。
  */
 package com.enlpot.daydo.core.tasks
 
-import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.datetime.LocalDate
 
 class RecurrenceTest {
 
@@ -63,10 +61,7 @@ class RecurrenceTest {
         val base = LocalDate(2026, 1, 10)
         assertEquals(LocalDate(2026, 6, 10), r.nextDateAfter(base, base))
         // 同年 6 月之后的第一次应落在下一年 1 月
-        assertEquals(
-            LocalDate(2027, 1, 10),
-            r.nextDateAfter(LocalDate(2026, 6, 10), base),
-        )
+        assertEquals(LocalDate(2027, 1, 10), r.nextDateAfter(LocalDate(2026, 6, 10), base))
     }
 
     // ---------- P0-1：每 N 年按 interval 推进，不再年年生成 ----------
@@ -143,15 +138,9 @@ class RecurrenceTest {
     @Test
     fun dailyAndEveryNDays() {
         val base = LocalDate(2026, 9, 24)
-        assertEquals(
-            LocalDate(2026, 9, 25),
-            Recurrence.Daily.nextDateAfter(base, base),
-        )
+        assertEquals(LocalDate(2026, 9, 25), Recurrence.Daily.nextDateAfter(base, base))
         val every3 = Recurrence.EveryNDays(interval = 3)
-        assertEquals(
-            LocalDate(2026, 9, 27),
-            every3.nextDateAfter(base, base),
-        )
+        assertEquals(LocalDate(2026, 9, 27), every3.nextDateAfter(base, base))
         // 非法 interval（<=0）按 1 处理
         assertEquals(
             LocalDate(2026, 9, 25),
@@ -179,8 +168,7 @@ class RecurrenceTest {
         val next = r.nextDateAfter(base, base)
         assertEquals(LocalDate(2026, 9, 28), next) // 全部非法 -> 回退周一
         // 生成 20 个实例验证不死循环
-        val seq =
-            generateSequence(next) { r.nextDateAfter(it, base) }.take(20).toList()
+        val seq = generateSequence(next) { r.nextDateAfter(it, base) }.take(20).toList()
         assertEquals(20, seq.size)
         assertTrue(seq.zipWithNext().all { (a, b) -> b > a })
     }
@@ -207,10 +195,7 @@ class RecurrenceTest {
         // base 1 月（offset 0），interval=2；from 2 月（offset 1）未对齐 -> 应跳到 3 月周期
         val r = Recurrence.Monthly(interval = 2, days = setOf(5))
         val base = LocalDate(2026, 1, 5)
-        assertEquals(
-            LocalDate(2026, 3, 5),
-            r.nextDateAfter(LocalDate(2026, 2, 15), base),
-        )
+        assertEquals(LocalDate(2026, 3, 5), r.nextDateAfter(LocalDate(2026, 2, 15), base))
     }
 
     // ---------- 第五轮：跨 12 月对齐反例（旧码死循环触发面） ----------
@@ -219,10 +204,7 @@ class RecurrenceTest {
         // 第五轮报告的旧码反例：base=2026-12 / interval=2 / from=2027-01（1-based/0-based 编码混用会死循环）
         val r = Recurrence.Monthly(interval = 2, days = setOf(5))
         val base = LocalDate(2026, 12, 5)
-        assertEquals(
-            LocalDate(2027, 2, 5),
-            r.nextDateAfter(LocalDate(2027, 1, 15), base),
-        )
+        assertEquals(LocalDate(2027, 2, 5), r.nextDateAfter(LocalDate(2027, 1, 15), base))
     }
 
     @Test
@@ -230,10 +212,7 @@ class RecurrenceTest {
         // 反例二：base=2026-11 / interval=4 / from=2026-12 -> 下一个对齐周期 2027-03
         val r = Recurrence.Monthly(interval = 4, days = setOf(5))
         val base = LocalDate(2026, 11, 5)
-        assertEquals(
-            LocalDate(2027, 3, 5),
-            r.nextDateAfter(LocalDate(2026, 12, 15), base),
-        )
+        assertEquals(LocalDate(2027, 3, 5), r.nextDateAfter(LocalDate(2026, 12, 15), base))
     }
 
     // ---------- 第五轮：全规则序列严格递增性质（锁死"旧死循环/重复生成"回归面） ----------
@@ -258,11 +237,40 @@ class RecurrenceTest {
                     .take(30)
                     .toList()
             assertEquals(30, seq.size, "sequence size for $rule")
-            assertTrue(
-                seq.zipWithNext().all { (a, b) -> b > a },
-                "strictly increasing for $rule",
-            )
+            assertTrue(seq.zipWithNext().all { (a, b) -> b > a }, "strictly increasing for $rule")
         }
+    }
+
+    @Test
+    fun weeklyFromBeforeBaseStillAdvances() {
+        // P2-4/B3：from 早于 base 时也必须返回严格晚于 from 的计划日
+        val rule = Recurrence.Weekly(interval = 1, days = setOf(3))
+        val base = LocalDate(2026, 9, 1)
+        val from = LocalDate(2026, 8, 1)
+        val next = rule.nextDateAfter(from, base)
+        assertTrue(next > from, "next($next) must be strictly after from($from)")
+        assertEquals(3, next.dayOfWeek.ordinal + 1)
+    }
+
+    @Test
+    fun weeklyLargeIntervalStillAdvances() {
+        // P2-4：大 interval 下仍能命中下一个对齐周且严格递增
+        val rule = Recurrence.Weekly(interval = 1_000, days = setOf(2))
+        val base = LocalDate(2026, 9, 1)
+        val from = LocalDate(2026, 9, 3)
+        val next = rule.nextDateAfter(from, base)
+        assertTrue(next > from, "next($next) must be strictly after from($from)")
+        assertEquals(2, next.dayOfWeek.ordinal + 1)
+    }
+
+    @Test
+    fun weeklyHugeIntervalTerminatesWithFallback() {
+        // P2-4/B3：interval 极大（备份注入 Int.MAX）时 guard 兜底保证终止且严格晚于 from
+        val rule = Recurrence.Weekly(interval = Int.MAX_VALUE, days = setOf(5))
+        val base = LocalDate(2026, 9, 1)
+        val from = LocalDate(2026, 9, 5)
+        val next = rule.nextDateAfter(from, base)
+        assertTrue(next > from, "fallback($next) must be strictly after from($from)")
     }
 
     @Test
@@ -270,14 +278,8 @@ class RecurrenceTest {
         // base 2026（offset 0），interval=2；from 2027（offset 1）未对齐 -> 应跳到 2028
         val r = Recurrence.Yearly(interval = 2, months = setOf(6), days = setOf(10))
         val base = LocalDate(2026, 6, 10)
-        assertEquals(
-            LocalDate(2028, 6, 10),
-            r.nextDateAfter(LocalDate(2027, 6, 10), base),
-        )
+        assertEquals(LocalDate(2028, 6, 10), r.nextDateAfter(LocalDate(2027, 6, 10), base))
         // from 在 base 之前（offset -1）：应返回 base 所在对齐周期
-        assertEquals(
-            LocalDate(2026, 6, 10),
-            r.nextDateAfter(LocalDate(2025, 6, 10), base),
-        )
+        assertEquals(LocalDate(2026, 6, 10), r.nextDateAfter(LocalDate(2025, 6, 10), base))
     }
 }

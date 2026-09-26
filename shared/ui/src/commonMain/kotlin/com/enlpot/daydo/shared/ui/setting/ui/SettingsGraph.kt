@@ -40,7 +40,6 @@ import com.enlpot.daydo.shared.ui.setting.ui.section.BackupPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.HapticsPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.LookAndFeelPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.RootPage
-
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -92,7 +91,6 @@ fun SettingsGraph(
                             onAction = onAction,
                             onNavigateToLookAndFeel = { backStack.add(SettingsRoutes.LookAndFeel) },
                             onNavigateToBackup = { backStack.add(SettingsRoutes.Backup) },
-
                             onNavigateToHaptics = { backStack.add(SettingsRoutes.Haptics) },
                         )
                     }
@@ -134,8 +132,5 @@ fun SettingsGraph(
 @Preview
 @Composable
 private fun Preview() {
-    SettingsGraph(
-        state = SettingsState(),
-        onAction = {},
-    )
+    SettingsGraph(state = SettingsState(), onAction = {})
 }

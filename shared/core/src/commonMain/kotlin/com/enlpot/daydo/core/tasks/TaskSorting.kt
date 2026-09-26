@@ -24,14 +24,12 @@ import kotlinx.datetime.toInstant
 /**
  * 任务列表排序规则（首页 / 任务页所有列表统一）：
  * 1. 未完成：
- *    - 普通任务：创建时间倒序（新的在顶）；被拖过（sortKey != null）的按拖后位置固定
- *    - 重复任务：按系列"典型完成时间"升序（最近 20 次完成时刻的中位数，完成越早排越上）；
- *      完成不足 3 次的按创建时间倒序
+ *     - 普通任务：创建时间倒序（新的在顶）；被拖过（sortKey != null）的按拖后位置固定
+ *     - 重复任务：按系列"典型完成时间"升序（最近 20 次完成时刻的中位数，完成越早排越上）； 完成不足 3 次的按创建时间倒序
  * 2. 已完成：按完成时间倒序（后完成在上）
  * 3. 已过期：按副标题日期时间升序（越早越上）
  *
- * typicalBySeries 由调用方（ViewModel）按全量任务一次性预计算，
- * 避免每个列表每次排序都重建 seriesId 全量 map 与重复统计完成时刻。
+ * typicalBySeries 由调用方（ViewModel）按全量任务一次性预计算， 避免每个列表每次排序都重建 seriesId 全量 map 与重复统计完成时刻。
  */
 fun sortActiveTasks(tasks: List<Task>, typicalBySeries: Map<Long?, Int?>): List<Task> {
     val normal = tasks.filter { it.recurrence == null }
@@ -52,34 +50,27 @@ fun sortActiveTasks(tasks: List<Task>, typicalBySeries: Map<Long?, Int?>): List<
     val todayEpoch = LocalDate.now().toEpochDays()
     val dragged =
         recurring.filter { it.sortKeyDate?.toEpochDays() == todayEpoch && it.sortKey != null }
-    val untouched =
-        recurring.filterNot { d -> dragged.any { it.id == d.id } }
+    val untouched = recurring.filterNot { d -> dragged.any { it.id == d.id } }
     val untouchedSorted =
         untouched.sortedWith(
-            compareBy(
-                { typicalBySeries[it.seriesId] ?: Int.MAX_VALUE },
-                { -createdAtKey(it, tz) },
-            )
+            compareBy({ typicalBySeries[it.seriesId] ?: Int.MAX_VALUE }, { -createdAtKey(it, tz) })
         )
-    val recSorted =
-        buildList {
-            val draggedSorted = dragged.sortedBy { it.sortKey ?: Long.MAX_VALUE }
-            var di = 0
-            untouchedSorted.forEachIndexed { i, t ->
-                val pos = i * REPOS_POS_BASE
-                while (di < draggedSorted.size &&
-                    (draggedSorted[di].sortKey ?: Long.MAX_VALUE) < pos
-                ) {
-                    add(draggedSorted[di])
-                    di++
-                }
-                add(t)
-            }
-            while (di < draggedSorted.size) {
+    val recSorted = buildList {
+        val draggedSorted = dragged.sortedBy { it.sortKey ?: Long.MAX_VALUE }
+        var di = 0
+        untouchedSorted.forEachIndexed { i, t ->
+            val pos = i * REPOS_POS_BASE
+            while (di < draggedSorted.size && (draggedSorted[di].sortKey ?: Long.MAX_VALUE) < pos) {
                 add(draggedSorted[di])
                 di++
             }
+            add(t)
         }
+        while (di < draggedSorted.size) {
+            add(draggedSorted[di])
+            di++
+        }
+    }
 
     return normalSorted + recSorted
 }
@@ -98,8 +89,7 @@ fun sortOverdueTasks(tasks: List<Task>): List<Task> =
     )
 
 /**
- * 重复任务系列"典型完成时间"：同系列已完成的实例中，最近 20 次完成时刻（小时:分钟）的中位数。
- * 完成不足 3 次视为无稳定模式，返回 null（按创建时间排）。
+ * 重复任务系列"典型完成时间"：同系列已完成的实例中，最近 20 次完成时刻（小时:分钟）的中位数。 完成不足 3 次视为无稳定模式，返回 null（按创建时间排）。
  * 输入为该系列全部实例列表（由调用方 groupBy seriesId 后传入）。
  */
 fun typicalCompletionMinuteOfSeries(seriesTasks: List<Task>): Int? {
@@ -124,8 +114,7 @@ fun typicalCompletionMinuteOfSeries(seriesTasks: List<Task>): Int? {
             breakIndex = i
         }
     }
-    val rotated =
-        sorted.drop(breakIndex + 1) + sorted.take(breakIndex + 1)
+    val rotated = sorted.drop(breakIndex + 1) + sorted.take(breakIndex + 1)
     val mid = rotated.size / 2
     return if (rotated.size % 2 == 1) rotated[mid] else (rotated[mid - 1] + rotated[mid]) / 2
 }

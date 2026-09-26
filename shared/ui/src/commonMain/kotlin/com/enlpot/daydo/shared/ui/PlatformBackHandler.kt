@@ -19,5 +19,4 @@ package com.enlpot.daydo.shared.ui
 import androidx.compose.runtime.Composable
 
 /** Intercept the platform back gesture/button when [enabled]; no-op on non-Android targets. */
-@Composable
-expect fun PlatformBackHandler(enabled: Boolean, onBack: () -> Unit)
+@Composable expect fun PlatformBackHandler(enabled: Boolean, onBack: () -> Unit)

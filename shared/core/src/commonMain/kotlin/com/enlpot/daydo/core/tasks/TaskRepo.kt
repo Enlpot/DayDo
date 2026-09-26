@@ -23,18 +23,11 @@ import kotlinx.datetime.LocalDateTime
 interface TaskRepo {
     fun getTasksFlow(): Flow<Map<Category, List<Task>>>
 
-    fun getCompletedTasksFlow(): Flow<List<Task>>
-
     /** All non-deleted tasks, for smart views (today / tomorrow / ... / inbox) */
     fun getAllTasksFlow(): Flow<List<Task>>
 
     /** Soft-deleted tasks (recycle bin) */
     fun getDeletedTasksFlow(): Flow<List<Task>>
-
-    suspend fun getTasks(): List<Task>
-
-    /** 含回收站软删任务的全量查询（备份/同步用，避免换机恢复后软删任务丢失） */
-    suspend fun getTasksIncludingDeleted(): List<Task>
 
     suspend fun getTaskById(id: Long): Task?
 
@@ -53,8 +46,6 @@ interface TaskRepo {
 
     suspend fun upsertTask(task: Task): Long
 
-    suspend fun deleteTask(task: Task)
-
     /** Soft-delete a task (moves it to the "Deleted" smart view) */
     suspend fun softDeleteTask(task: Task)
 
@@ -64,14 +55,10 @@ interface TaskRepo {
     /** Permanently delete a soft-deleted task */
     suspend fun purgeTask(task: Task)
 
-    suspend fun deleteAllTasks()
-
     /** Move tasks of a category to the inbox (categoryId = null) when the category is deleted */
     suspend fun moveTasksToInbox(categoryId: Long)
 
     suspend fun upsertCategory(category: Category)
 
     suspend fun deleteCategory(category: Category)
-
-    suspend fun deleteAllCategories()
 }

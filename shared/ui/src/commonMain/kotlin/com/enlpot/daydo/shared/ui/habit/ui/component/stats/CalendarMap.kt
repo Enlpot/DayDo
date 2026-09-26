@@ -28,11 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
-import com.kizitonwose.calendar.compose.CalendarState
-import com.kizitonwose.calendar.compose.HorizontalCalendar
-import com.kizitonwose.calendar.compose.rememberCalendarState
-import com.kizitonwose.calendar.core.minusYears
-import com.kizitonwose.calendar.core.now
 import com.enlpot.daydo.core.habits.HabitStatus
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.habit.daysStartingFrom
@@ -40,15 +35,20 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.CalendarMonthHeader
 import com.enlpot.daydo.shared.ui.habit.ui.component.CardArrows
 import com.enlpot.daydo.shared.ui.habit.ui.component.MonthlyCalendarDayContent
+import com.kizitonwose.calendar.compose.CalendarState
+import com.kizitonwose.calendar.compose.HorizontalCalendar
+import com.kizitonwose.calendar.compose.rememberCalendarState
+import com.kizitonwose.calendar.core.minusYears
+import com.kizitonwose.calendar.core.now
 import daydo.shared.ui.generated.resources.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
-import kotlinx.datetime.yearMonth
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.yearMonth
 import org.jetbrains.compose.resources.stringResource
 
 /**

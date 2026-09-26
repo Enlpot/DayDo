@@ -47,5 +47,4 @@ dependencyResolutionManagement {
 
 include(":androidApp")
 
-
 include(":shared:ui", ":shared:core")

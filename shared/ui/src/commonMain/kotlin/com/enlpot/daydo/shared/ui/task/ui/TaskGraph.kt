@@ -13,8 +13,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- * 任务页二级导航：任务列表（Root）+ 重复任务统计页（Stats）
  */
 package com.enlpot.daydo.shared.ui.task.ui
 
@@ -64,55 +62,63 @@ fun TaskGraph(
     initialStatsSeriesId: Long? = null,
     onInitialStatsHandled: () -> Unit = {},
     modifier: Modifier = Modifier,
-) = PageFill(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
-    val backStack = rememberNavBackStack(configuration, TaskRoutes.Root)
+) =
+    PageFill(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
+        val backStack = rememberNavBackStack(configuration, TaskRoutes.Root)
 
-    // 从首页跳转携带的初始统计系列：加载数据并进入统计页
-    LaunchedEffect(initialStatsSeriesId) {
-        if (initialStatsSeriesId != null) {
-            onAction(TaskAction.OpenTaskStats(initialStatsSeriesId))
-            backStack.add(TaskRoutes.Stats(initialStatsSeriesId))
-            onInitialStatsHandled()
+        // 从首页跳转携带的初始统计系列：加载数据并进入统计页
+        LaunchedEffect(initialStatsSeriesId) {
+            if (initialStatsSeriesId != null) {
+                onAction(TaskAction.OpenTaskStats(initialStatsSeriesId))
+                backStack.add(TaskRoutes.Stats(initialStatsSeriesId))
+                onInitialStatsHandled()
+            }
         }
-    }
 
-    LaunchedEffect(backStack.size) { onSubPageChange(backStack.size > 1) }
+        LaunchedEffect(backStack.size) { onSubPageChange(backStack.size > 1) }
 
-    NavDisplay(
-        modifier = Modifier.widthIn(max = 600.dp).fillMaxSize(),
-        backStack = backStack,
-        entryProvider =
-            entryProvider {
-                entry<TaskRoutes.Root> {
-                    TasksPage(
-                        state = state,
-                        onAction = onAction,
-                        onOpenStats = { seriesId ->
-                            onAction(TaskAction.OpenTaskStats(seriesId))
-                            backStack.add(TaskRoutes.Stats(seriesId))
-                        },
-                    )
-                }
+        // 系统返回：统计页时返回优先弹栈并清空统计状态，避免返回键直接退出任务页（P2-5）
+        PlatformBackHandler(enabled = backStack.size > 1) {
+            onAction(TaskAction.ClearTaskStats)
+            backStack.removeLastOrNull()
+        }
 
-                entry<TaskRoutes.Stats>(metadata = horizontalTransitionMetadata()) {
-                    // 优先读路由携带的 seriesId（进程恢复时 VM 状态为空，不能依赖 statsSeriesId）
-                    val seriesId =
-                        (backStack.lastOrNull() as? TaskRoutes.Stats)?.seriesId
-                            ?: state.statsSeriesId
-                            ?: 0L
-                    LaunchedEffect(seriesId) {
-                        if (state.statsSeriesId != seriesId) onAction(TaskAction.OpenTaskStats(seriesId))
+        NavDisplay(
+            modifier = Modifier.widthIn(max = 600.dp).fillMaxSize(),
+            backStack = backStack,
+            entryProvider =
+                entryProvider {
+                    entry<TaskRoutes.Root> {
+                        TasksPage(
+                            state = state,
+                            onAction = onAction,
+                            onOpenStats = { seriesId ->
+                                onAction(TaskAction.OpenTaskStats(seriesId))
+                                backStack.add(TaskRoutes.Stats(seriesId))
+                            },
+                        )
                     }
-                    TaskStatsPage(
-                        seriesId = seriesId,
-                        state = state,
-                        onAction = onAction,
-                        onNavigateBack = {
-                            onAction(TaskAction.ClearTaskStats)
-                            if (backStack.size != 1) backStack.removeLastOrNull()
-                        },
-                    )
-                }
-            },
-    )
-}
+
+                    entry<TaskRoutes.Stats>(metadata = horizontalTransitionMetadata()) {
+                        // 优先读路由携带的 seriesId（进程恢复时 VM 状态为空，不能依赖 statsSeriesId）
+                        val seriesId =
+                            (backStack.lastOrNull() as? TaskRoutes.Stats)?.seriesId
+                                ?: state.statsSeriesId
+                                ?: 0L
+                        LaunchedEffect(seriesId) {
+                            if (state.statsSeriesId != seriesId)
+                                onAction(TaskAction.OpenTaskStats(seriesId))
+                        }
+                        TaskStatsPage(
+                            seriesId = seriesId,
+                            state = state,
+                            onAction = onAction,
+                            onNavigateBack = {
+                                onAction(TaskAction.ClearTaskStats)
+                                if (backStack.size != 1) backStack.removeLastOrNull()
+                            },
+                        )
+                    }
+                },
+        )
+    }

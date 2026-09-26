@@ -15,14 +15,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.components
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 
-/**
- * 任务卡片统一圆角矩形样式，任务页与首页共用，改一处全局同步。
- * 圆角大小由设置-外观与风格-圆角大小控制。
- */
+/** 任务卡片统一圆角矩形样式，任务页与首页共用，改一处全局同步。 圆角大小由设置-外观与风格-圆角大小控制。 */
 @Composable
 fun taskItemShape(): RoundedCornerShape {
     return RoundedCornerShape(LocalCardCornerRadius.current.dp)

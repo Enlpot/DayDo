@@ -44,6 +44,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonShapes
@@ -51,7 +52,6 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -90,9 +90,9 @@ import com.enlpot.daydo.shared.ui.components.genericSaver
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.taskItemShape
 import com.enlpot.daydo.shared.ui.task.TaskAction
-import com.enlpot.daydo.shared.ui.task.label
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.TaskView
+import com.enlpot.daydo.shared.ui.task.label
 import com.enlpot.daydo.shared.ui.task.ui.component.CategoryUpsertSheet
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskCard
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskUpsertSheet
@@ -104,205 +104,209 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
-fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories: () -> Unit, onOpenStats: ((Task) -> Unit)? = null) =
-    PageFill {
-        val windowSizeClass = LocalWindowSizeClass.current
+fun TaskList(
+    state: TaskState,
+    onAction: (TaskAction) -> Unit,
+    onEditCategories: () -> Unit,
+    onOpenStats: ((Task) -> Unit)? = null,
+) = PageFill {
+    val windowSizeClass = LocalWindowSizeClass.current
 
-        var showTaskAddSheet by rememberSaveable { mutableStateOf(false) }
-        var showCategoryAddSheet by rememberSaveable { mutableStateOf(false) }
-        var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
-        var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
-        var editTask by rememberSaveable(stateSaver = genericSaver<Task?>()) { mutableStateOf<Task?>(null) }
-        var multiSelect by rememberSaveable { mutableStateOf(false) }
-        var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
+    var showTaskAddSheet by rememberSaveable { mutableStateOf(false) }
+    var showCategoryAddSheet by rememberSaveable { mutableStateOf(false) }
+    var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
+    var editTask by
+        rememberSaveable(stateSaver = genericSaver<Task?>()) { mutableStateOf<Task?>(null) }
+    var multiSelect by rememberSaveable { mutableStateOf(false) }
+    var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
 
-        fun exitMultiSelect() {
-            multiSelect = false
-            selectedTaskIds = emptySet()
-        }
-
-        PlatformBackHandler(enabled = multiSelect) { exitMultiSelect() }
-
-        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-
-        val isDeletedView =
-            state.currentView is TaskView.Smart &&
-                (state.currentView as TaskView.Smart).category == SmartCategory.DELETED
-
-        Column(
-            modifier =
-                Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-        ) {
-            TaskListTopBar(
-                state = state,
-                scrollBehavior = scrollBehavior,
-                onDeleteClick = { showDeleteDialog = true },
-                isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded,
-                multiSelect = multiSelect,
-                selectedCount = selectedTaskIds.size,
-                onSelectAll = {
-                    selectedTaskIds = (state.displayTasks + state.displayCompletedTasks).map { it.id }.toSet()
-                },
-                onDeleteSelected = { showDeleteConfirm = true },
-                onExitMultiSelect = ::exitMultiSelect,
-            )
-
-            CategorySelector(
-                state = state,
-                onAction = onAction,
-                onAddCategoryClick = {
-                    onAction(TaskAction.OnTaskCategorySheetOpened)
-                    showCategoryAddSheet = true
-                },
-                onEditCategoriesClick = onEditCategories,
-            )
-
-            TaskItemsSection(
-                state = state,
-                onAction = onAction,
-                onEditTask = { editTask = it },
-                isDeletedView = isDeletedView,
-                multiSelect = multiSelect,
-                selectedTaskIds = selectedTaskIds,
-                onToggleSelect = { task ->
-                    if (!multiSelect) multiSelect = true
-                    selectedTaskIds =
-                        if (task.id in selectedTaskIds) selectedTaskIds - task.id
-                        else selectedTaskIds + task.id
-                },
-                onExitMultiSelect = ::exitMultiSelect,
-            )
-        }
-
-        FloatingActionButton(
-            onClick = { showTaskAddSheet = true },
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-            modifier =
-                Modifier.align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .size(45.dp)
-                    .then(
-                        if (windowSizeClass.widthSizeClass != WindowWidthSizeClass.Expanded)
-                            Modifier
-                        else Modifier.navigationBarsPadding()
-                    )
-                    .animateFloatingActionButton(
-                        visible = !isDeletedView && !multiSelect,
-                        alignment = Alignment.BottomEnd,
-                        scaleAnimationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-                        alphaAnimationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
-                    ),
-        ) {
-            Icon(
-                imageVector = vectorResource(Res.drawable.add),
-                contentDescription = stringResource(Res.string.add_task),
-                modifier = Modifier.size(24.dp),
-            )
-        }
-
-        if (showDeleteDialog) {
-            DeleteTasksDialog(
-                onDismiss = { showDeleteDialog = false },
-                onConfirm = {
-                    onAction(TaskAction.DeleteTasks)
-                    showDeleteDialog = false
-                },
-            )
-        }
-
-        if (showDeleteConfirm) {
-            DeleteTasksDialog(
-                onDismiss = { showDeleteConfirm = false },
-                onConfirm = {
-                    (state.displayTasks + state.displayCompletedTasks)
-                        .filter { it.id in selectedTaskIds }
-                        .forEach { onAction(TaskAction.SoftDeleteTask(it)) }
-                    exitMultiSelect()
-                    showDeleteConfirm = false
-                },
-            )
-        }
-
-        if (showCategoryAddSheet) {
-            CategoryUpsertSheet(
-                onDismiss = {
-                    onAction(TaskAction.OnTaskCategorySheetDismissed)
-                    showCategoryAddSheet = false
-                },
-                // 新分类 index 取当前最大+1：分类重排过之后新建不再恒为 0 插最前（P3）
-                category =
-                    Category(
-                        name = "",
-                        color = CategoryColors.GRAY.color,
-                        index = (state.tasks.keys.maxOfOrNull { it.index } ?: -1) + 1,
-                    ),
-                onUpsertCategory = {
-                    onAction(TaskAction.AddCategory(it))
-                    onAction(TaskAction.OnTaskCategorySheetDismissed)
-                    showCategoryAddSheet = false
-                },
-            )
-        }
-
-        if (editTask != null) {
-            LaunchedEffect(editTask) { onAction(TaskAction.OnTaskSheetOpened) }
-            TaskUpsertSheet(
-                task = editTask!!,
-                categories = state.tasks.keys.toList(),
-                onDismissRequest = {
-                    onAction(TaskAction.OnTaskSheetDismissed)
-                    editTask = null
-                },
-                isEditSheet = true,
-                is24Hr = state.is24Hour,
-                onOpenStats =
-                    if (onOpenStats != null) {
-                        { onOpenStats(editTask!!) }
-                    } else {
-                        null
-                    },
-                onUpsert = {
-                    onAction(TaskAction.UpsertTask(it))
-                    onAction(TaskAction.OnTaskSheetDismissed)
-                },
-                onDelete = {
-                    editTask?.let { onAction(TaskAction.SoftDeleteTask(it)) }
-                    onAction(TaskAction.OnTaskSheetDismissed)
-                    editTask = null
-                },
-            )
-        }
-
-        if (showTaskAddSheet) {
-            LaunchedEffect(Unit) { onAction(TaskAction.OnTaskSheetOpened) }
-            val defaultCategoryId =
-                (state.currentView as? TaskView.Regular)?.category?.id
-            TaskUpsertSheet(
-                task =
-                    Task(
-                        categoryId = defaultCategoryId,
-                        title = "",
-                        index = state.displayTasks.size,
-                        status = false,
-                        reminder = null,
-                    ),
-                is24Hr = state.is24Hour,
-                categories = state.tasks.keys.toList(),
-                onDismissRequest = {
-                    onAction(TaskAction.OnTaskSheetDismissed)
-                    showTaskAddSheet = false
-                },
-                onUpsert = {
-                    onAction(TaskAction.UpsertTask(it))
-                    onAction(TaskAction.OnTaskSheetDismissed)
-                },
-                onDelete = {},
-            )
-        }
+    fun exitMultiSelect() {
+        multiSelect = false
+        selectedTaskIds = emptySet()
     }
+
+    PlatformBackHandler(enabled = multiSelect) { exitMultiSelect() }
+
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    val isDeletedView =
+        state.currentView is TaskView.Smart &&
+            (state.currentView as TaskView.Smart).category == SmartCategory.DELETED
+
+    Column(
+        modifier =
+            Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+    ) {
+        TaskListTopBar(
+            state = state,
+            scrollBehavior = scrollBehavior,
+            onDeleteClick = { showDeleteDialog = true },
+            isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded,
+            multiSelect = multiSelect,
+            selectedCount = selectedTaskIds.size,
+            onSelectAll = {
+                selectedTaskIds =
+                    (state.displayTasks + state.displayCompletedTasks).map { it.id }.toSet()
+            },
+            onDeleteSelected = { showDeleteConfirm = true },
+            onExitMultiSelect = ::exitMultiSelect,
+        )
+
+        CategorySelector(
+            state = state,
+            onAction = onAction,
+            onAddCategoryClick = {
+                onAction(TaskAction.OnTaskCategorySheetOpened)
+                showCategoryAddSheet = true
+            },
+            onEditCategoriesClick = onEditCategories,
+        )
+
+        TaskItemsSection(
+            state = state,
+            onAction = onAction,
+            onEditTask = { editTask = it },
+            isDeletedView = isDeletedView,
+            multiSelect = multiSelect,
+            selectedTaskIds = selectedTaskIds,
+            onToggleSelect = { task ->
+                if (!multiSelect) multiSelect = true
+                selectedTaskIds =
+                    if (task.id in selectedTaskIds) selectedTaskIds - task.id
+                    else selectedTaskIds + task.id
+            },
+            onExitMultiSelect = ::exitMultiSelect,
+        )
+    }
+
+    FloatingActionButton(
+        onClick = { showTaskAddSheet = true },
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        modifier =
+            Modifier.align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .size(45.dp)
+                .then(
+                    if (windowSizeClass.widthSizeClass != WindowWidthSizeClass.Expanded) Modifier
+                    else Modifier.navigationBarsPadding()
+                )
+                .animateFloatingActionButton(
+                    visible = !isDeletedView && !multiSelect,
+                    alignment = Alignment.BottomEnd,
+                    scaleAnimationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                    alphaAnimationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+                ),
+    ) {
+        Icon(
+            imageVector = vectorResource(Res.drawable.add),
+            contentDescription = stringResource(Res.string.add_task),
+            modifier = Modifier.size(24.dp),
+        )
+    }
+
+    if (showDeleteDialog) {
+        DeleteTasksDialog(
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                onAction(TaskAction.DeleteTasks)
+                showDeleteDialog = false
+            },
+        )
+    }
+
+    if (showDeleteConfirm) {
+        DeleteTasksDialog(
+            onDismiss = { showDeleteConfirm = false },
+            onConfirm = {
+                (state.displayTasks + state.displayCompletedTasks)
+                    .filter { it.id in selectedTaskIds }
+                    .forEach { onAction(TaskAction.SoftDeleteTask(it)) }
+                exitMultiSelect()
+                showDeleteConfirm = false
+            },
+        )
+    }
+
+    if (showCategoryAddSheet) {
+        CategoryUpsertSheet(
+            onDismiss = {
+                onAction(TaskAction.OnTaskCategorySheetDismissed)
+                showCategoryAddSheet = false
+            },
+            // 新分类 index 取当前最大+1：分类重排过之后新建不再恒为 0 插最前（P3）
+            category =
+                Category(
+                    name = "",
+                    color = CategoryColors.GRAY.color,
+                    index = (state.tasks.keys.maxOfOrNull { it.index } ?: -1) + 1,
+                ),
+            onUpsertCategory = {
+                onAction(TaskAction.AddCategory(it))
+                onAction(TaskAction.OnTaskCategorySheetDismissed)
+                showCategoryAddSheet = false
+            },
+        )
+    }
+
+    if (editTask != null) {
+        LaunchedEffect(editTask) { onAction(TaskAction.OnTaskSheetOpened) }
+        TaskUpsertSheet(
+            task = editTask!!,
+            categories = state.tasks.keys.toList(),
+            onDismissRequest = {
+                onAction(TaskAction.OnTaskSheetDismissed)
+                editTask = null
+            },
+            isEditSheet = true,
+            is24Hr = state.is24Hour,
+            onOpenStats =
+                if (onOpenStats != null) {
+                    { onOpenStats(editTask!!) }
+                } else {
+                    null
+                },
+            onUpsert = {
+                onAction(TaskAction.UpsertTask(it))
+                onAction(TaskAction.OnTaskSheetDismissed)
+            },
+            onDelete = {
+                editTask?.let { onAction(TaskAction.SoftDeleteTask(it)) }
+                onAction(TaskAction.OnTaskSheetDismissed)
+                editTask = null
+            },
+        )
+    }
+
+    if (showTaskAddSheet) {
+        LaunchedEffect(Unit) { onAction(TaskAction.OnTaskSheetOpened) }
+        val defaultCategoryId = (state.currentView as? TaskView.Regular)?.category?.id
+        TaskUpsertSheet(
+            task =
+                Task(
+                    categoryId = defaultCategoryId,
+                    title = "",
+                    index = state.displayTasks.size,
+                    status = false,
+                    reminder = null,
+                ),
+            is24Hr = state.is24Hour,
+            categories = state.tasks.keys.toList(),
+            onDismissRequest = {
+                onAction(TaskAction.OnTaskSheetDismissed)
+                showTaskAddSheet = false
+            },
+            onUpsert = {
+                onAction(TaskAction.UpsertTask(it))
+                onAction(TaskAction.OnTaskSheetDismissed)
+            },
+            onDelete = {},
+        )
+    }
+}
 
 @Composable
 private fun TaskListTopBar(
@@ -324,7 +328,10 @@ private fun TaskListTopBar(
         scrollBehavior = scrollBehavior,
         title = {
             if (multiSelect) {
-                Text(text = stringResource(Res.string.selected_count, selectedCount), fontFamily = flexFontEmphasis())
+                Text(
+                    text = stringResource(Res.string.selected_count, selectedCount),
+                    fontFamily = flexFontEmphasis(),
+                )
             } else {
                 Text(text = stringResource(Res.string.tasks), fontFamily = flexFontEmphasis())
             }
@@ -368,8 +375,6 @@ private fun TaskListTopBar(
                     )
                 }
             }
-
-
         },
     )
 }
@@ -394,9 +399,7 @@ private fun CategorySelector(
                         checked =
                             state.currentView is TaskView.Smart &&
                                 (state.currentView as TaskView.Smart).category == smart,
-                        onCheckedChange = {
-                            onAction(TaskAction.ChangeView(TaskView.Smart(smart)))
-                        },
+                        onCheckedChange = { onAction(TaskAction.ChangeView(TaskView.Smart(smart))) },
                     ) {
                         Text(text = smart.label())
                     }
@@ -409,9 +412,7 @@ private fun CategorySelector(
                     state.currentView is TaskView.Regular &&
                         // 按 id 比较：分类重命名后当前 chip 不失选（P3）
                         (state.currentView as TaskView.Regular).category.id == category.id,
-                onCheckedChange = {
-                    onAction(TaskAction.ChangeCategory(category))
-                },
+                onCheckedChange = { onAction(TaskAction.ChangeCategory(category)) },
             ) {
                 Text(text = category.name)
             }
@@ -420,16 +421,10 @@ private fun CategorySelector(
         item {
             Spacer(modifier = Modifier.width(4.dp))
             FilledTonalIconButton(onClick = onAddCategoryClick) {
-                Icon(
-                    imageVector = vectorResource(Res.drawable.add),
-                    contentDescription = null,
-                )
+                Icon(imageVector = vectorResource(Res.drawable.add), contentDescription = null)
             }
             FilledTonalIconButton(onClick = onEditCategoriesClick) {
-                Icon(
-                    imageVector = vectorResource(Res.drawable.edit),
-                    contentDescription = null,
-                )
+                Icon(imageVector = vectorResource(Res.drawable.edit), contentDescription = null)
             }
         }
     }
@@ -447,140 +442,147 @@ private fun TaskItemsSection(
     onExitMultiSelect: () -> Unit,
 ) {
 
-        val haptic = LocalHapticPerformer.current
-        val motionScheme = MaterialTheme.motionScheme
-        AnimatedContent(
-            targetState = state.currentView,
-            transitionSpec = {
-                fadeIn(motionScheme.fastEffectsSpec()) togetherWith
-                    fadeOut(motionScheme.fastEffectsSpec())
-            },
-        ) { view ->
-            val lazyListState = rememberLazyListState()
-            var draggedTaskId by remember { mutableStateOf<Long?>(null) }
-            // 只初始化一次：拖动排序时 DB 回流不再重置列表（避免打断拖动）
-            var reorderableTasks by remember(view) {
-                mutableStateOf(state.displayTasks + state.displayCompletedTasks)
+    val haptic = LocalHapticPerformer.current
+    val motionScheme = MaterialTheme.motionScheme
+    AnimatedContent(
+        targetState = state.currentView,
+        transitionSpec = {
+            fadeIn(motionScheme.fastEffectsSpec()) togetherWith
+                fadeOut(motionScheme.fastEffectsSpec())
+        },
+    ) { view ->
+        val lazyListState = rememberLazyListState()
+        var draggedTaskId by remember { mutableStateOf<Long?>(null) }
+        // 只初始化一次：拖动排序时 DB 回流不再重置列表（避免打断拖动）
+        var reorderableTasks by
+            remember(view) { mutableStateOf(state.displayTasks + state.displayCompletedTasks) }
+        // 同步判据 = DB 任务完整内容（data class equals）：
+        // 增删/编辑/分类视图切换 → 内容变化 → 整表同步；
+        // 拖动中 DB 尚未落库（列表未变），effect 不触发，不会打断拖动
+        LaunchedEffect(state.displayTasks, state.displayCompletedTasks) {
+            val dbContent = state.displayTasks + state.displayCompletedTasks
+            if (dbContent != reorderableTasks) {
+                reorderableTasks = dbContent
             }
-            // 同步判据 = DB 任务完整内容（data class equals）：
-            // 增删/编辑/分类视图切换 → 内容变化 → 整表同步；
-            // 拖动中 DB 尚未落库（列表未变），effect 不触发，不会打断拖动
-            LaunchedEffect(state.displayTasks, state.displayCompletedTasks) {
-                val dbContent = state.displayTasks + state.displayCompletedTasks
-                if (dbContent != reorderableTasks) {
-                    reorderableTasks = dbContent
+        }
+        val activeCount = state.displayTasks.size
+        val reorderableListState =
+            rememberReorderableLazyListState(lazyListState) { from, to ->
+                // 已完成任务固定按完成时间倒序，不接受拖动；活动任务也不允许拖入已完成区
+                val effectiveTo =
+                    if (from.index >= activeCount) {
+                        from.index
+                    } else {
+                        to.index.coerceAtMost(activeCount - 1)
+                    }
+                if (effectiveTo == from.index) {
+                    return@rememberReorderableLazyListState
                 }
+                // 普通任务/重复任务排序规则不同（普通按创建时间、重复按典型完成时间）：
+                // 禁止跨区拖动，否则拖后任务会弹回原位
+                val draggedIsRecurring = reorderableTasks.getOrNull(from.index)?.recurrence != null
+                val targetIsRecurring = reorderableTasks.getOrNull(effectiveTo)?.recurrence != null
+                if (draggedIsRecurring != targetIsRecurring) {
+                    return@rememberReorderableLazyListState
+                }
+                reorderableTasks =
+                    reorderableTasks.toMutableList().apply {
+                        add(effectiveTo, removeAt(from.index))
+                    }
             }
-            val activeCount = state.displayTasks.size
-            val reorderableListState =
-                rememberReorderableLazyListState(lazyListState) { from, to ->
-                    // 已完成任务固定按完成时间倒序，不接受拖动；活动任务也不允许拖入已完成区
-                    val effectiveTo =
-                        if (from.index >= activeCount) {
-                            from.index
-                        } else {
-                            to.index.coerceAtMost(activeCount - 1)
-                        }
-                    if (effectiveTo == from.index) {
-                        return@rememberReorderableLazyListState
-                    }
-                    // 普通任务/重复任务排序规则不同（普通按创建时间、重复按典型完成时间）：
-                    // 禁止跨区拖动，否则拖后任务会弹回原位
-                    val draggedIsRecurring = reorderableTasks.getOrNull(from.index)?.recurrence != null
-                    val targetIsRecurring = reorderableTasks.getOrNull(effectiveTo)?.recurrence != null
-                    if (draggedIsRecurring != targetIsRecurring) {
-                        return@rememberReorderableLazyListState
-                    }
-                    reorderableTasks =
-                        reorderableTasks.toMutableList().apply {
-                            add(effectiveTo, removeAt(from.index))
-                        }
-                }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = lazyListState,
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                if (isDeletedView) {
-                    itemsIndexed(items = state.displayTasks, key = { _, it -> it.id }) { index, task ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = lazyListState,
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            if (isDeletedView) {
+                itemsIndexed(items = state.displayTasks, key = { _, it -> it.id }) { index, task ->
+                    val cardShape = taskItemShape()
+                    DeletedTaskCard(
+                        task = task,
+                        shape = cardShape,
+                        modifier = Modifier.fillMaxWidth().clip(cardShape),
+                        onRestore = { onAction(TaskAction.RestoreTask(task)) },
+                        onPurge = { onAction(TaskAction.PurgeTask(task)) },
+                    )
+                }
+                if (state.displayTasks.isEmpty()) {
+                    item { Empty(modifier = Modifier.padding(top = 150.dp)) }
+                }
+            } else {
+                itemsIndexed(items = reorderableTasks, key = { _, it -> it.id }) { index, task ->
+                    ReorderableItem(reorderableListState, key = task.id) {
                         val cardShape = taskItemShape()
-                        DeletedTaskCard(
+
+                        TaskCard(
                             task = task,
+                            dragState = multiSelect,
+                            reorderIcon = {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.drag_indicator),
+                                    contentDescription = null,
+                                    modifier =
+                                        Modifier.draggableHandle(
+                                            onDragStarted = {
+                                                draggedTaskId = task.id
+                                                if (state.hapticFeedback) {
+                                                    haptic(HapticKind.DRAG_START)
+                                                }
+                                            },
+                                            onDragStopped = {
+                                                draggedTaskId?.let { id ->
+                                                    val pos =
+                                                        reorderableTasks.indexOfFirst {
+                                                            it.id == id
+                                                        }
+                                                    if (pos >= 0) {
+                                                        onAction(
+                                                            TaskAction.ReorderTask(
+                                                                id,
+                                                                reorderableTasks
+                                                                    .getOrNull(pos - 1)
+                                                                    ?.id,
+                                                                reorderableTasks
+                                                                    .getOrNull(pos + 1)
+                                                                    ?.id,
+                                                            )
+                                                        )
+                                                    }
+                                                }
+                                                draggedTaskId = null
+                                            },
+                                        ),
+                                )
+                            },
+                            is24Hr = state.is24Hour,
                             shape = cardShape,
                             modifier = Modifier.fillMaxWidth().clip(cardShape),
-                            onRestore = { onAction(TaskAction.RestoreTask(task)) },
-                            onPurge = { onAction(TaskAction.PurgeTask(task)) },
+                            selectionMode = multiSelect,
+                            selected = task.id in selectedTaskIds,
+                            hapticFeedback = state.hapticFeedback,
+                            onLongClick = { onToggleSelect(task) },
+                            onCheck = {
+                                if (multiSelect) onToggleSelect(task)
+                                else
+                                    onAction(
+                                        TaskAction.UpsertTask(task.copy(status = !task.status))
+                                    )
+                            },
+                            onClick = {
+                                if (multiSelect) onToggleSelect(task) else onEditTask(task)
+                            },
                         )
                     }
-                    if (state.displayTasks.isEmpty()) {
-                        item { Empty(modifier = Modifier.padding(top = 150.dp)) }
-                    }
-                } else {
-                    itemsIndexed(items = reorderableTasks, key = { _, it -> it.id }) { index, task ->
-                        ReorderableItem(reorderableListState, key = task.id) {
-                            val cardShape = taskItemShape()
+                }
 
-                            TaskCard(
-                                task = task,
-                                dragState = multiSelect,
-                                reorderIcon = {
-                                    Icon(
-                                        imageVector = vectorResource(Res.drawable.drag_indicator),
-                                        contentDescription = null,
-                                        modifier =
-                                            Modifier.draggableHandle(
-                                                onDragStarted = {
-                                                    draggedTaskId = task.id
-                                                    if (state.hapticFeedback) {
-                                                        haptic(HapticKind.DRAG_START)
-                                                    }
-                                                },
-                                                onDragStopped = {
-                                                    draggedTaskId?.let { id ->
-                                                        val pos = reorderableTasks.indexOfFirst { it.id == id }
-                                                        if (pos >= 0) {
-                                                            onAction(
-                                                                TaskAction.ReorderTask(
-                                                                    id,
-                                                                    reorderableTasks.getOrNull(pos - 1)?.id,
-                                                                    reorderableTasks.getOrNull(pos + 1)?.id,
-                                                                )
-                                                            )
-                                                        }
-                                                    }
-                                                    draggedTaskId = null
-                                                }
-                                            ),
-                                    )
-                                },
-                                is24Hr = state.is24Hour,
-                                shape = cardShape,
-                                modifier = Modifier.fillMaxWidth().clip(cardShape),
-                                selectionMode = multiSelect,
-                                selected = task.id in selectedTaskIds,
-                                hapticFeedback = state.hapticFeedback,
-                                onLongClick = { onToggleSelect(task) },
-                                onCheck = {
-                                    if (multiSelect) onToggleSelect(task)
-                                    else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
-                                },
-                                onClick = {
-                                    if (multiSelect) onToggleSelect(task)
-                                    else onEditTask(task)
-                                },
-                            )
-                        }
-                    }
-
-
-                    if (reorderableTasks.isEmpty() && state.displayCompletedTasks.isEmpty()) {
-                        item { Empty(modifier = Modifier.padding(top = 150.dp)) }
-                    }
+                if (reorderableTasks.isEmpty() && state.displayCompletedTasks.isEmpty()) {
+                    item { Empty(modifier = Modifier.padding(top = 150.dp)) }
                 }
             }
         }
+    }
 }
 
 @Composable
@@ -598,11 +600,19 @@ private fun DeletedTaskCard(
             Text(text = task.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
         },
         supportingContent = {
-            Text(text = stringResource(Res.string.deleted_with_date, task.dueDate?.toFormattedString() ?: stringResource(Res.string.none)))
+            Text(
+                text =
+                    stringResource(
+                        Res.string.deleted_with_date,
+                        task.dueDate?.toFormattedString() ?: stringResource(Res.string.none),
+                    )
+            )
         },
         trailingContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onRestore) { Text(text = stringResource(Res.string.restore_task)) }
+                TextButton(onClick = onRestore) {
+                    Text(text = stringResource(Res.string.restore_task))
+                }
                 FilledTonalIconButton(onClick = onPurge) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.delete),

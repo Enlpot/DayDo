@@ -37,7 +37,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -173,10 +172,7 @@ class SettingsViewModel(
                     val username = action.username
                     val password = action.password
                     _state.update {
-                        it.copy(
-                            webdavUploadState = WebDavState.WORKING,
-                            webdavUploadMessage = "",
-                        )
+                        it.copy(webdavUploadState = WebDavState.WORKING, webdavUploadMessage = "")
                     }
                     val result =
                         try {
@@ -239,7 +235,10 @@ class SettingsViewModel(
 
                 OnExport -> {
                     _state.update {
-                        it.copy(backupState = it.backupState.copy(exportState = EXPORTING, exportMessage = ""))
+                        it.copy(
+                            backupState =
+                                it.backupState.copy(exportState = EXPORTING, exportMessage = "")
+                        )
                     }
 
                     try {
@@ -250,7 +249,9 @@ class SettingsViewModel(
                                     mapOf("status" to "success"),
                                 )
                                 _state.update {
-                                    it.copy(backupState = it.backupState.copy(exportState = EXPORTED))
+                                    it.copy(
+                                        backupState = it.backupState.copy(exportState = EXPORTED)
+                                    )
                                 }
                             }
 
@@ -317,6 +318,9 @@ class SettingsViewModel(
                                     )
                             )
                         }
+                    } catch (t: kotlinx.coroutines.CancellationException) {
+                        // 协程取消必须向上传播，不能误报"恢复失败"（P3）
+                        throw t
                     } catch (t: Throwable) {
                         // 恢复异常：回到失败态，避免永久卡在"恢复中"导致按钮不可用
                         _state.update {
@@ -333,7 +337,6 @@ class SettingsViewModel(
                     settingsDatastore.setBiometricPref(action.pref)
                 }
 
-
                 is ChangeCornerRadius -> {
                     analytics.trackEvent(
                         AnalyticsWrapper.Companion.AnalyticsEvent.LOOK_AND_FEEL_UPDATED.name,
@@ -344,7 +347,6 @@ class SettingsViewModel(
                 is ChangeHapticFeedback -> {
                     settingsDatastore.setHapticFeedback(action.pref)
                 }
-
 
                 is ChangeHapticStrength -> {
                     settingsDatastore.setHapticStrength(action.strength)

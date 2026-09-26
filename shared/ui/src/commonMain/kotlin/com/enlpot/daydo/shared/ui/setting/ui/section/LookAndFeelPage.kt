@@ -22,7 +22,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +30,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,8 +43,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
@@ -53,14 +52,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import kotlin.math.roundToInt
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.theme.AppTheme
@@ -76,6 +72,7 @@ import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.toDisplayString
 import daydo.shared.ui.generated.resources.*
+import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
@@ -123,73 +120,90 @@ fun LookAndFeelPage(
                 // appTheme picker
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Column(
-                        modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
-                    // corner radius picker
-                    var sliderValue by
-                        remember(state.cornerRadius) { mutableFloatStateOf(state.cornerRadius.toFloat()) }
-                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
-                        ListItem(
-                            headlineContent = { Text(text = stringResource(Res.string.corner_radius)) },
-                            supportingContent = { Text(text = stringResource(Res.string.corner_radius_desc)) },
-                            colors = listItemColors(),
-                        )
-                        Box(
+                        // corner radius picker
+                        var sliderValue by
+                            remember(state.cornerRadius) {
+                                mutableFloatStateOf(state.cornerRadius.toFloat())
+                            }
+                        Column(
                             modifier =
-                                Modifier.fillParentMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
                         ) {
+                            ListItem(
+                                headlineContent = {
+                                    Text(text = stringResource(Res.string.corner_radius))
+                                },
+                                supportingContent = {
+                                    Text(text = stringResource(Res.string.corner_radius_desc))
+                                },
+                                colors = listItemColors(),
+                            )
                             Box(
                                 modifier =
-                                    Modifier.fillMaxWidth()
-                                        .height(64.dp)
-                                        .clip(RoundedCornerShape(sliderValue.roundToInt().dp))
-                                        .background(MaterialTheme.colorScheme.primaryContainer)
-                                        .padding(16.dp),
-                                contentAlignment = Alignment.Center,
+                                    Modifier.fillParentMaxWidth()
+                                        .background(listItemColors().containerColor)
+                                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
                             ) {
-                                Text(
-                                    text = stringResource(Res.string.radius_preview, sliderValue.roundToInt()),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                Box(
+                                    modifier =
+                                        Modifier.fillMaxWidth()
+                                            .height(64.dp)
+                                            .clip(RoundedCornerShape(sliderValue.roundToInt().dp))
+                                            .background(MaterialTheme.colorScheme.primaryContainer)
+                                            .padding(16.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text =
+                                            stringResource(
+                                                Res.string.radius_preview,
+                                                sliderValue.roundToInt(),
+                                            ),
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    )
+                                }
+                            }
+                            Row(
+                                modifier =
+                                    Modifier.fillParentMaxWidth()
+                                        .background(listItemColors().containerColor)
+                                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Slider(
+                                    value = sliderValue,
+                                    onValueChange = { sliderValue = it },
+                                    valueRange = 0f..40f,
+                                    onValueChangeFinished = {
+                                        onAction(
+                                            SettingsAction.ChangeCornerRadius(
+                                                sliderValue.roundToInt()
+                                            )
+                                        )
+                                    },
+                                    colors =
+                                        SliderDefaults.colors(
+                                            thumbColor = MaterialTheme.colorScheme.primary,
+                                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                                            inactiveTrackColor =
+                                                MaterialTheme.colorScheme.surfaceVariant,
+                                        ),
+                                    thumb = {
+                                        Box(
+                                            modifier =
+                                                Modifier.size(20.dp)
+                                                    .clip(CircleShape)
+                                                    .background(MaterialTheme.colorScheme.primary)
+                                        )
+                                    },
+                                    modifier = Modifier.weight(1f),
                                 )
                             }
                         }
-                        Row(
-                            modifier =
-                                Modifier.fillParentMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Slider(
-                                value = sliderValue,
-                                onValueChange = { sliderValue = it },
-                                valueRange = 0f..40f,
-                                onValueChangeFinished = {
-                                    onAction(SettingsAction.ChangeCornerRadius(sliderValue.roundToInt()))
-                                },
-                                colors =
-                                    SliderDefaults.colors(
-                                        thumbColor = MaterialTheme.colorScheme.primary,
-                                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    ),
-                                thumb = {
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .size(20.dp)
-                                                .clip(CircleShape)
-                                                .background(MaterialTheme.colorScheme.primary),
-                                    )
-                                },
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                    }
-
 
                         ListItem(
                             leadingContent = {
@@ -225,7 +239,6 @@ fun LookAndFeelPage(
                                 Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
                                     .clickable { showAppThemeDialog = true },
                         )
-
                     }
 
                     ListItem(
@@ -289,7 +302,7 @@ fun LookAndFeelPage(
                                             contentColor =
                                                 contentColorFor(Color(state.theme.seedColor)),
                                         ),
-                                            ) {
+                                ) {
                                     Icon(
                                         imageVector = vectorResource(Res.drawable.edit),
                                         contentDescription = stringResource(Res.string.select_seed),
@@ -297,7 +310,8 @@ fun LookAndFeelPage(
                                 }
                             },
                             colors = listItemColors(),
-                            modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
                         )
 
                         // palette style picker
@@ -315,7 +329,6 @@ fun LookAndFeelPage(
         }
     }
 
-
     if (showMaterialYouDialog) {
         GritBottomSheet(onDismissRequest = { showMaterialYouDialog = false }) {
             Text(
@@ -327,27 +340,31 @@ fun LookAndFeelPage(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                listOf(false to stringResource(Res.string.off), true to stringResource(Res.string.on)).forEach { (on, label) ->
-                    ListItem(
-                        headlineContent = { Text(text = label) },
-                        colors = listItemColors(),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable {
-                                    onAction(SettingsAction.ChangeMaterialYou(on))
-                                    showMaterialYouDialog = false
-                                },
-                        trailingContent = {
-                            if (state.theme.isMaterialYou == on) {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.check),
-                                    contentDescription = null,
-                                )
-                            }
-                        },
+                listOf(
+                        false to stringResource(Res.string.off),
+                        true to stringResource(Res.string.on),
                     )
-                }
+                    .forEach { (on, label) ->
+                        ListItem(
+                            headlineContent = { Text(text = label) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable {
+                                        onAction(SettingsAction.ChangeMaterialYou(on))
+                                        showMaterialYouDialog = false
+                                    },
+                            trailingContent = {
+                                if (state.theme.isMaterialYou == on) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
+                            },
+                        )
+                    }
             }
         }
     }
@@ -363,27 +380,31 @@ fun LookAndFeelPage(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                listOf(false to stringResource(Res.string.off), true to stringResource(Res.string.on)).forEach { (on, label) ->
-                    ListItem(
-                        headlineContent = { Text(text = label) },
-                        colors = listItemColors(),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable {
-                                    onAction(SettingsAction.ChangeAmoled(on))
-                                    showAmoledDialog = false
-                                },
-                        trailingContent = {
-                            if (state.theme.isAmoled == on) {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.check),
-                                    contentDescription = null,
-                                )
-                            }
-                        },
+                listOf(
+                        false to stringResource(Res.string.off),
+                        true to stringResource(Res.string.on),
                     )
-                }
+                    .forEach { (on, label) ->
+                        ListItem(
+                            headlineContent = { Text(text = label) },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable {
+                                        onAction(SettingsAction.ChangeAmoled(on))
+                                        showAmoledDialog = false
+                                    },
+                            trailingContent = {
+                                if (state.theme.isAmoled == on) {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.check),
+                                        contentDescription = null,
+                                    )
+                                }
+                            },
+                        )
+                    }
             }
         }
     }
@@ -400,7 +421,9 @@ fun LookAndFeelPage(
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 AppTheme.entries.forEach { appTheme ->
                     ListItem(
-                        headlineContent = { Text(text = stringResource(appTheme.toDisplayString())) },
+                        headlineContent = {
+                            Text(text = stringResource(appTheme.toDisplayString()))
+                        },
                         colors = listItemColors(),
                         modifier =
                             Modifier.fillMaxWidth()
@@ -446,12 +469,6 @@ expect fun PaletteStylePicker(
 @Composable
 private fun Preview() {
     GritTheme(theme = Theme(appTheme = AppTheme.DARK)) {
-        Surface {
-            LookAndFeelPage(
-                state = SettingsState(),
-                onAction = {},
-                onNavigateBack = {},
-            )
-        }
+        Surface { LookAndFeelPage(state = SettingsState(), onAction = {}, onNavigateBack = {}) }
     }
 }

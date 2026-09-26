@@ -19,6 +19,7 @@ package com.enlpot.daydo.core.settings.backup
 interface ExportRepo {
     /**
      * 导出全部数据为 JSON 文件。
+     *
      * @return Success=已写入文件；Cancelled=用户取消保存对话框；Failure=序列化/IO 失败
      */
     suspend fun exportToJson(): ExportResult

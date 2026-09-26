@@ -72,13 +72,13 @@ import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
-import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import com.enlpot.daydo.shared.ui.components.GritTimePicker
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.endItemShape
 import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.middleItemShape
+import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
@@ -190,7 +190,8 @@ fun HabitUpsertSheetContent(
                             imeAction = ImeAction.Next,
                         ),
                     label = {
-                        if (newHabit.title.length <= TITLE_STRING_LIMIT) {
+                        // 用输入框实时文本判断（C10）：newHabit.title 是提交时才同步，会滞后
+                        if (titleTextFieldState.text.length <= TITLE_STRING_LIMIT) {
                             Text(
                                 text =
                                     stringResource(
@@ -219,7 +220,8 @@ fun HabitUpsertSheetContent(
                         ),
                     modifier = Modifier.fillMaxWidth(),
                     label = {
-                        if (newHabit.description.length <= DESCRIPTION_STRING_LIMIT) {
+                        // 用输入框实时文本判断（C10）：newHabit.description 会滞后
+                        if (descTextFieldState.text.length <= DESCRIPTION_STRING_LIMIT) {
                             Text(
                                 text =
                                     stringResource(
@@ -278,7 +280,9 @@ fun HabitUpsertSheetContent(
                                                 newHabit.days.contains(dayOfWeek)),
                                         modifier = Modifier.weight(1f),
                                         colors = ToggleButtonDefaults.tonalToggleButtonColors(),
-                                        content = { Text(text = weekdayShortLabels()[dayOfWeek.ordinal]) },
+                                        content = {
+                                            Text(text = weekdayShortLabels()[dayOfWeek.ordinal])
+                                        },
                                     )
                                 }
                             }

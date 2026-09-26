@@ -50,7 +50,6 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import kotlinx.coroutines.flow.first
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
 import com.enlpot.daydo.shared.ui.components.PageFill
@@ -124,8 +123,9 @@ fun HabitsGraph(
                     backstack.add(HabitRoutes.HabitAnalytics(habitId))
                 }
                 onAction(HabitsAction.PrepareAnalytics(target.habit))
-                onInitialAnalyticsHandled()
             }
+            // 无效深链 id 也标记已处理：结束 LaunchedEffect 空跑（P2-5）
+            onInitialAnalyticsHandled()
         }
 
         NavDisplay(
@@ -236,8 +236,9 @@ fun HabitsGraph(
             val target = state.habitsWithAnalytics.firstOrNull { it.habit.id == habitId }
             if (target != null) {
                 onAction(HabitsAction.PrepareAnalytics(target.habit))
-                onInitialAnalyticsHandled()
             }
+            // 无效深链 id 也标记已处理：结束 LaunchedEffect 空跑（P2-5）
+            onInitialAnalyticsHandled()
         }
 
         ExpandedScreen(
@@ -311,6 +312,10 @@ private fun ExpandedScreen(
                             backstack.removeLastOrNull()
                         }
                     } else {
+                        // 切换到不同习惯/总览：先弹回根再入栈，避免返回栈无限增长（P4）
+                        while (backstack.size > 1) {
+                            backstack.removeLastOrNull()
+                        }
                         backstack.add(target)
                     }
                 }

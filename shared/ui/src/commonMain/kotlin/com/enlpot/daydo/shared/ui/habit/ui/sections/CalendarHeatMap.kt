@@ -57,13 +57,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kizitonwose.calendar.compose.VerticalCalendar
-import com.kizitonwose.calendar.compose.VerticalYearCalendar
-import com.kizitonwose.calendar.compose.rememberCalendarState
-import com.kizitonwose.calendar.compose.yearcalendar.rememberYearCalendarState
-import com.kizitonwose.calendar.core.DayPosition
-import com.kizitonwose.calendar.core.Year
-import com.kizitonwose.calendar.core.now
 import com.enlpot.daydo.core.habits.CalendarType
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
@@ -75,9 +68,15 @@ import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.ui.component.CalendarMonthHeader
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.toStringRes
+import com.kizitonwose.calendar.compose.VerticalCalendar
+import com.kizitonwose.calendar.compose.VerticalYearCalendar
+import com.kizitonwose.calendar.compose.rememberCalendarState
+import com.kizitonwose.calendar.compose.yearcalendar.rememberYearCalendarState
+import com.kizitonwose.calendar.core.DayPosition
+import com.kizitonwose.calendar.core.Year
+import com.kizitonwose.calendar.core.now
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.yearMonth
 import org.jetbrains.compose.resources.stringResource
@@ -215,7 +214,15 @@ private fun YearlyMap(
     val maxHeatCount = state.overallAnalytics.heatMapData.values.maxOrNull() ?: 1
     val calendarState =
         rememberYearCalendarState(
-            startYear = Year(state.habitsWithAnalytics.minOfOrNull { it.habit.time.date.year } ?: today.year),
+            // clamp：habit.time 在未来（改过备份/跨时区恢复/时钟回拨）时 start>end 崩溃（P2-3）
+            startYear =
+                Year(
+                    minOf(
+                        state.habitsWithAnalytics.minOfOrNull { it.habit.time.date.year }
+                            ?: today.year,
+                        today.yearMonth.year,
+                    )
+                ),
             endYear = Year(today.yearMonth.year),
             firstVisibleYear = Year(today.yearMonth.year),
             firstDayOfWeek = state.startingDay,
@@ -274,7 +281,8 @@ private fun YearlyMap(
 
                                     else ->
                                         MaterialTheme.colorScheme.primary.copy(
-                                            alpha = (count.toFloat() / maxHeatCount).coerceIn(0.15f, 1f)
+                                            alpha =
+                                                (count.toFloat() / maxHeatCount).coerceIn(0.15f, 1f)
                                         )
                                 },
                         )
@@ -297,11 +305,14 @@ private fun MonthlyMap(
     val maxHeatCount = state.overallAnalytics.heatMapData.values.maxOrNull() ?: 1
     val calendarState =
         rememberCalendarState(
-            // 起点取最早习惯的创建月（而非写死 2024），避免历史数据不可达
+            // 起点取最早习惯的创建月（而非写死 2024），避免历史数据不可达；
+            // clamp：习惯创建时间在未来时 start>end 崩溃（P2-3）
             startMonth =
-                state.habitsWithAnalytics
-                    .minOfOrNull { it.habit.time.date.yearMonth }
-                    ?: YearMonth.now(),
+                minOf(
+                    state.habitsWithAnalytics.minOfOrNull { it.habit.time.date.yearMonth }
+                        ?: YearMonth.now(),
+                    YearMonth.now(),
+                ),
             endMonth = YearMonth.now(),
             firstVisibleMonth = YearMonth.now(),
             firstDayOfWeek = state.startingDay,
@@ -336,7 +347,8 @@ private fun MonthlyMap(
 
                                     else ->
                                         MaterialTheme.colorScheme.primary.copy(
-                                            alpha = (count.toFloat() / maxHeatCount).coerceIn(0.15f, 1f)
+                                            alpha =
+                                                (count.toFloat() / maxHeatCount).coerceIn(0.15f, 1f)
                                         )
                                 },
                         )

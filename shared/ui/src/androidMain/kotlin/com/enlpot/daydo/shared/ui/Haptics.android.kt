@@ -21,19 +21,17 @@ import android.media.SoundPool
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-
 import com.enlpot.daydo.core.settings.HapticSound
 import kotlin.math.roundToInt
 
 /**
- * Android implementation of haptic feedback: vibration with user-configured
- * strength plus a built-in completion sound. [strength] is 0-100 percent.
+ * Android implementation of haptic feedback: vibration with user-configured strength plus a
+ * built-in completion sound. [strength] is 0-100 percent.
  */
 fun performAndroidHaptic(context: Context, kind: HapticKind, strength: Int, sound: HapticSound) {
     val vibrator =
         (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)
-            ?.defaultVibrator
-            ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
+            ?.defaultVibrator ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
 
     val amplitude = (strength.coerceIn(0, 100) / 100f * 255).roundToInt().coerceIn(1, 255)
 
@@ -59,32 +57,33 @@ private val soundReady = mutableSetOf<HapticSound>()
 private var pendingSound: HapticSound? = null
 private val soundLock = Any()
 
-private fun playBuiltinSound(context: Context, sound: HapticSound) = synchronized(soundLock) {
-    if (sound == HapticSound.NONE) return@synchronized
-    val sp =
-        soundPool
-            ?: SoundPool.Builder().setMaxStreams(1).build().also { pool ->
-                soundPool = pool
-                soundIds[HapticSound.CHIME] = pool.load(context, R.raw.daydo_chime, 1)
-                soundIds[HapticSound.DING] = pool.load(context, R.raw.daydo_ding, 1)
-                soundIds[HapticSound.TICK] = pool.load(context, R.raw.daydo_tick, 1)
-                pool.setOnLoadCompleteListener { _, sampleId, status ->
-                    val loaded = soundIds.entries.firstOrNull { it.value == sampleId }?.key
-                    if (loaded != null && status == 0) {
-                        synchronized(soundLock) {
-                            soundReady += loaded
-                            if (pendingSound == loaded) {
-                                pendingSound = null
-                                pool.play(sampleId, 1f, 1f, 1, 0, 1f)
+private fun playBuiltinSound(context: Context, sound: HapticSound) =
+    synchronized(soundLock) {
+        if (sound == HapticSound.NONE) return@synchronized
+        val sp =
+            soundPool
+                ?: SoundPool.Builder().setMaxStreams(1).build().also { pool ->
+                    soundPool = pool
+                    soundIds[HapticSound.CHIME] = pool.load(context, R.raw.daydo_chime, 1)
+                    soundIds[HapticSound.DING] = pool.load(context, R.raw.daydo_ding, 1)
+                    soundIds[HapticSound.TICK] = pool.load(context, R.raw.daydo_tick, 1)
+                    pool.setOnLoadCompleteListener { _, sampleId, status ->
+                        val loaded = soundIds.entries.firstOrNull { it.value == sampleId }?.key
+                        if (loaded != null && status == 0) {
+                            synchronized(soundLock) {
+                                soundReady += loaded
+                                if (pendingSound == loaded) {
+                                    pendingSound = null
+                                    pool.play(sampleId, 1f, 1f, 1, 0, 1f)
+                                }
                             }
                         }
                     }
                 }
-            }
-    val id = soundIds[sound] ?: return@synchronized
-    if (sound in soundReady) {
-        sp.play(id, 1f, 1f, 1, 0, 1f)
-    } else {
-        pendingSound = sound
+        val id = soundIds[sound] ?: return@synchronized
+        if (sound in soundReady) {
+            sp.play(id, 1f, 1f, 1, 0, 1f)
+        } else {
+            pendingSound = sound
+        }
     }
-}

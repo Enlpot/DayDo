@@ -15,7 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component.stats
-import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,12 +40,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
-import com.kizitonwose.calendar.compose.HeatMapCalendar
-import com.kizitonwose.calendar.compose.heatmapcalendar.HeatMapCalendarState
-import com.kizitonwose.calendar.compose.heatmapcalendar.rememberHeatMapCalendarState
-import com.kizitonwose.calendar.core.minusDays
-import com.kizitonwose.calendar.core.now
-import com.kizitonwose.calendar.core.plusDays
 import com.enlpot.daydo.core.habits.HabitStatus
 import com.enlpot.daydo.core.habits.StreakPosition
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
@@ -57,6 +50,13 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.AnalyticsCard
 import com.enlpot.daydo.shared.ui.habit.ui.component.CardArrows
 import com.enlpot.daydo.shared.ui.heatMapStreakShape
 import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
+import com.kizitonwose.calendar.compose.HeatMapCalendar
+import com.kizitonwose.calendar.compose.heatmapcalendar.HeatMapCalendarState
+import com.kizitonwose.calendar.compose.heatmapcalendar.rememberHeatMapCalendarState
+import com.kizitonwose.calendar.core.minusDays
+import com.kizitonwose.calendar.core.now
+import com.kizitonwose.calendar.core.plusDays
 import daydo.shared.ui.generated.resources.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
@@ -148,8 +148,10 @@ fun WeeklyBooleanHeatMap(
                         Box(modifier = Modifier.padding(2.dp)) {
                             Text(
                                 text =
-                                    stringResource(Res.string.month_n, it.yearMonth.month.ordinal + 1) +
-                                        " " + it.yearMonth.year,
+                                    stringResource(
+                                        Res.string.month_n,
+                                        it.yearMonth.month.ordinal + 1,
+                                    ) + " " + it.yearMonth.year,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.align(Alignment.Center),
@@ -184,7 +186,9 @@ fun WeeklyBooleanHeatMap(
                                 Modifier.padding(horizontal = 1.dp)
                                     .size(35.dp)
                                     .clip(shape)
-                                    .clickable(enabled = done || validDay) { onDateClick(day.date) },
+                                    .clickable(enabled = done || validDay) {
+                                        onDateClick(day.date)
+                                    },
                             contentAlignment = Alignment.Center,
                         ) {
                             if (done) {

@@ -35,19 +35,19 @@ import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -167,17 +167,18 @@ class HabitRepository(
     /** 对齐次日 00:00 触发一次（P2-2）：替代每分钟空转，仅日期变化时向下游 emit，驱动跨午夜自动刷新 */
     private fun dateTicker(): Flow<LocalDate> =
         flow {
-            while (true) {
-                emit(LocalDate.now())
-                val tz = TimeZone.currentSystemDefault()
-                val nowMs = LocalDateTime.now().toInstant(tz).toEpochMilliseconds()
-                val nextMidnight =
-                    LocalDateTime(LocalDate.now().plus(1, DateTimeUnit.DAY), LocalTime(0, 0))
-                val nextMs = nextMidnight.toInstant(tz).toEpochMilliseconds()
-                // 兜底至少等 1 秒，避免极端情况下 sleep 0 导致忙循环
-                delay((nextMs - nowMs).coerceAtLeast(1_000L))
+                while (true) {
+                    emit(LocalDate.now())
+                    val tz = TimeZone.currentSystemDefault()
+                    val nowMs = LocalDateTime.now().toInstant(tz).toEpochMilliseconds()
+                    val nextMidnight =
+                        LocalDateTime(LocalDate.now().plus(1, DateTimeUnit.DAY), LocalTime(0, 0))
+                    val nextMs = nextMidnight.toInstant(tz).toEpochMilliseconds()
+                    // 兜底至少等 1 秒，避免极端情况下 sleep 0 导致忙循环
+                    delay((nextMs - nowMs).coerceAtLeast(1_000L))
+                }
             }
-        }.distinctUntilChanged()
+            .distinctUntilChanged()
 
     override fun getOverallAnalytics(): Flow<OverallAnalytics> {
         return habits
@@ -189,8 +190,7 @@ class HabitRepository(
                 val statusesByHabit = habitStatusesFlow.groupBy { it.habitId }
                 val habitConsistencies =
                     habitsFlow.map { habit ->
-                        val dates =
-                            (statusesByHabit[habit.id] ?: emptyList()).map { it.date }
+                        val dates = (statusesByHabit[habit.id] ?: emptyList()).map { it.date }
                         habit.title to calculateConsistency(dates, habit.days, habit.time.date)
                     }
 
@@ -236,7 +236,8 @@ class HabitRepository(
         val completedStatuses = habitStatusDao.getCompletedStatuses(date)
         if (completedStatuses.isEmpty()) return emptyList()
         // 一次 IN 查询替代逐条 getHabitById（N+1 → 1）
-        val byId = habitDao.getHabitsByIds(completedStatuses.map { it.habitId }).associateBy { it.id }
+        val byId =
+            habitDao.getHabitsByIds(completedStatuses.map { it.habitId }).associateBy { it.id }
         return completedStatuses.mapNotNull { byId[it.habitId]?.toHabit() }
     }
 }

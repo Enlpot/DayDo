@@ -22,8 +22,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.YearMonth
 
-private val WEEKDAY_CN =
-    arrayOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
+private val WEEKDAY_CN = arrayOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
 
 private val DayOfWeek.cnLabel: String
     get() = WEEKDAY_CN[ordinal]

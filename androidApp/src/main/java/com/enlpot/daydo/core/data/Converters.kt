@@ -42,14 +42,16 @@ object Converters {
     fun dayOfWeekFromString(value: String): Set<DayOfWeek> {
         return if (value.isBlank()) emptySet()
         // 容错：单条脏数据不崩掉整个习惯数据流，非法条目跳过
-        else value.split(",").mapNotNull { runCatching { DayOfWeek.valueOf(it) }.getOrNull() }.toSet()
+        else
+            value
+                .split(",")
+                .mapNotNull { runCatching { DayOfWeek.valueOf(it) }.getOrNull() }
+                .toSet()
     }
 
     @ColumnTypeConverter
     fun dateFromTimestamp(value: Long?): LocalDateTime? {
-        return value?.let {
-            Instant.fromEpochSeconds(value).toLocalDateTime(TimeZone.UTC)
-        }
+        return value?.let { Instant.fromEpochSeconds(value).toLocalDateTime(TimeZone.UTC) }
     }
 
     @ColumnTypeConverter
@@ -57,16 +59,14 @@ object Converters {
         return date?.toInstant(TimeZone.UTC)?.epochSeconds
     }
 
-    /**
-     * 存量数据迁移用：旧版按「本机时区」折算的 epochSeconds → 改为 UTC 语义。
-     * 先还原原本地时刻，再按 UTC 重新折算；中国等无夏令时地区等价于 +8h。
-     */
-    fun localEpochToUtc(seconds: Long?): Long? = seconds?.let {
-        Instant.fromEpochSeconds(it)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-            .toInstant(TimeZone.UTC)
-            .epochSeconds
-    }
+    /** 存量数据迁移用：旧版按「本机时区」折算的 epochSeconds → 改为 UTC 语义。 先还原原本地时刻，再按 UTC 重新折算；中国等无夏令时地区等价于 +8h。 */
+    fun localEpochToUtc(seconds: Long?): Long? =
+        seconds?.let {
+            Instant.fromEpochSeconds(it)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .toInstant(TimeZone.UTC)
+                .epochSeconds
+        }
 
     @ColumnTypeConverter
     fun dayFromTimestamp(value: Long): LocalDate {

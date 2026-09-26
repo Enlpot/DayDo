@@ -14,14 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import androidx.room3.Room
 import androidx.room3.testing.MigrationTestHelper
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.sqlite.execSQL
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.google.common.truth.Truth.assertThat
 import com.enlpot.daydo.tasks.data.database.TaskDatabase
+import com.google.common.truth.Truth.assertThat
 import kotlin.time.Clock
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone

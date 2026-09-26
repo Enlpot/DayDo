@@ -16,13 +16,14 @@
  */
 package com.enlpot.daydo.shared.ui.task
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.Composable
 import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
 import daydo.shared.ui.generated.resources.*
+import kotlinx.datetime.DayOfWeek
 import org.jetbrains.compose.resources.stringResource
 
 /** The view currently shown in the task list: a smart view or a user category. */
@@ -43,6 +44,7 @@ data class TaskState(
     val displayCompletedTasks: List<Task> = emptyList(),
     val hiddenSmartViews: Set<SmartCategory> = emptySet(),
     val is24Hour: Boolean = false,
+    val startOfWeek: DayOfWeek = DayOfWeek.MONDAY,
     val hapticFeedback: Boolean = true,
     /** 当前查看统计的重复任务系列 ID */
     val statsSeriesId: Long? = null,

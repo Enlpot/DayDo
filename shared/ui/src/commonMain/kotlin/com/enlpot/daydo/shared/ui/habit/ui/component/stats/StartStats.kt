@@ -15,7 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component.stats
-import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
 import kotlin.math.roundToInt
 import kotlinx.datetime.LocalDate

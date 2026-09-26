@@ -15,7 +15,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component
-import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,18 +35,18 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.enlpot.daydo.core.habits.StreakPosition
+import com.enlpot.daydo.shared.ui.calendarMapStreakShape
+import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.CalendarMonth
 import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.minusDays
 import com.kizitonwose.calendar.core.plusDays
-import com.enlpot.daydo.core.habits.StreakPosition
-import com.enlpot.daydo.shared.ui.calendarMapStreakShape
 import daydo.shared.ui.generated.resources.*
-import org.jetbrains.compose.resources.stringResource
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.YearMonth
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CalendarMonthHeader(
@@ -60,7 +59,8 @@ fun CalendarMonthHeader(
         Text(
             text =
                 stringResource(Res.string.month_n, calendarMonth.yearMonth.month.ordinal + 1) +
-                    " " + calendarMonth.yearMonth.year,
+                    " " +
+                    calendarMonth.yearMonth.year,
             style =
                 style.copy(
                     color = MaterialTheme.colorScheme.secondary,
@@ -151,7 +151,8 @@ private fun CalendarStreakCell(
     if (day.position != DayPosition.MonthDate) return
 
     val done = day.date in doneDates
-    val validDate = day.date >= habitStartDate && day.date <= today && day.date.dayOfWeek in habitDays
+    val validDate =
+        day.date >= habitStartDate && day.date <= today && day.date.dayOfWeek in habitDays
 
     val donePrevious = day.date.minusDays(1) in doneDates
     val doneAfter = day.date.plusDays(1) in doneDates
@@ -166,12 +167,7 @@ private fun CalendarStreakCell(
     Box(
         modifier =
             modifier
-                .padding(
-                    top = 1.dp,
-                    bottom = 1.dp,
-                    start = startPadding,
-                    end = endPadding,
-                )
+                .padding(top = 1.dp, bottom = 1.dp, start = startPadding, end = endPadding)
                 .fillMaxWidth()
                 .height(height)
                 .clip(

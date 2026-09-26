@@ -17,7 +17,6 @@
 package com.enlpot.daydo.tasks.data.database
 
 import androidx.room3.Dao
-import androidx.room3.Delete
 import androidx.room3.Query
 import androidx.room3.Upsert
 import kotlinx.coroutines.flow.Flow
@@ -25,14 +24,7 @@ import kotlinx.datetime.LocalDateTime
 
 @Dao
 interface TasksDao {
-    @Query("SELECT * FROM task WHERE deletedAt IS NULL")
-    fun getTasksFlow(): Flow<List<TaskEntity>>
-
-    @Query("SELECT * FROM task WHERE deletedAt IS NULL")
-    suspend fun getTasks(): List<TaskEntity>
-
-    @Query("SELECT * FROM task")
-    suspend fun getAllTasksIncludingDeleted(): List<TaskEntity>
+    @Query("SELECT * FROM task WHERE deletedAt IS NULL") fun getTasksFlow(): Flow<List<TaskEntity>>
 
     // 导出分页用：含软删全量，按主键顺序稳定翻页
     @Query("SELECT * FROM task ORDER BY id LIMIT :limit OFFSET :offset")
@@ -52,13 +44,10 @@ interface TasksDao {
 
     @Upsert suspend fun upsertTask(taskEntity: TaskEntity): Long
 
-    @Delete suspend fun deleteTask(taskEntity: TaskEntity)
-
     @Query("UPDATE task SET deletedAt = :timestamp WHERE id = :id")
     suspend fun softDeleteTask(id: Long, timestamp: Long)
 
-    @Query("UPDATE task SET deletedAt = NULL WHERE id = :id")
-    suspend fun restoreTask(id: Long)
+    @Query("UPDATE task SET deletedAt = NULL WHERE id = :id") suspend fun restoreTask(id: Long)
 
     // 开机重排用：只需未完成且提醒时间在未来（含当天）的任务；完成/过期的不再挂闹钟
     @Query(

@@ -48,13 +48,13 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.enlpot.daydo.core.now
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import com.enlpot.daydo.core.tasks.Task
+import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.HapticKind
 import com.enlpot.daydo.shared.ui.LocalHapticPerformer
-import com.enlpot.daydo.core.toFormattedString
 import daydo.shared.ui.generated.resources.*
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.resources.vectorResource
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -116,8 +116,7 @@ fun TaskCard(
             if (!dragState || selectionMode) {
                 Checkbox(
                     checked = if (selectionMode) selected else task.status,
-                    modifier =
-                        Modifier.padding(vertical = 2.dp),
+                    modifier = Modifier.padding(vertical = 2.dp),
                     onCheckedChange = {
                         if (!selectionMode && hapticFeedback && !task.status) {
                             haptic(HapticKind.COMPLETE)
@@ -136,7 +135,7 @@ fun TaskCard(
                             onClick = { onClick() },
                             onLongClick = onLongClick,
                         )
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
             ) {
                 Text(
                     text = task.title,

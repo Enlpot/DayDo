@@ -13,8 +13,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
- * 重复任务统计页：累计完成 / 完成率 / 连续完成 / 近 30 天日历 / 周几分布 / 完成时刻分布
  */
 package com.enlpot.daydo.shared.ui.task.ui
 
@@ -58,12 +56,10 @@ import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.isoDayNumber
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
-
-
 
 @Composable
 fun TaskStatsPage(
@@ -74,7 +70,8 @@ fun TaskStatsPage(
 ) {
     val title = state.seriesTasks.firstOrNull()?.title ?: stringResource(Res.string.repeat_task)
     val today: LocalDate = LocalDate.now()
-    val stats: SeriesStats = remember(state.seriesTasks, today) { computeSeriesStats(state.seriesTasks, today) }
+    val stats: SeriesStats =
+        remember(state.seriesTasks, today) { computeSeriesStats(state.seriesTasks, today) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(
@@ -110,11 +107,11 @@ fun TaskStatsPage(
 
             item { Box(modifier = Modifier.height(12.dp)) }
 
-            item { CalendarCard(stats, today) }
+            item { CalendarCard(stats, today, startOfWeek = state.startOfWeek) }
 
             item { Box(modifier = Modifier.height(12.dp)) }
 
-            item { WeekdayCard(stats) }
+            item { WeekdayCard(stats, state.startOfWeek) }
 
             item { Box(modifier = Modifier.height(12.dp)) }
 
@@ -145,12 +142,24 @@ private fun OverviewCard(stats: SeriesStats) {
     ) {
         SectionTitle(stringResource(Res.string.overview))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MetricCell(label = stringResource(Res.string.total_completed), value = stats.totalCompleted.toString())
-            MetricCell(label = stringResource(Res.string.completion_rate), value = "${stats.completionRate}%")
+            MetricCell(
+                label = stringResource(Res.string.total_completed),
+                value = stats.totalCompleted.toString(),
+            )
+            MetricCell(
+                label = stringResource(Res.string.completion_rate),
+                value = "${stats.completionRate}%",
+            )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MetricCell(label = stringResource(Res.string.current_ongoing_streak), value = stats.currentStreak.toString())
-            MetricCell(label = stringResource(Res.string.longest_ongoing_streak), value = stats.longestStreak.toString())
+            MetricCell(
+                label = stringResource(Res.string.current_ongoing_streak),
+                value = stats.currentStreak.toString(),
+            )
+            MetricCell(
+                label = stringResource(Res.string.longest_ongoing_streak),
+                value = stats.longestStreak.toString(),
+            )
         }
     }
 }
@@ -180,7 +189,7 @@ private fun RowScope.MetricCell(label: String, value: String) {
 
 /** 近 30 天完成日历 */
 @Composable
-private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
+private fun CalendarCard(stats: SeriesStats, today: LocalDate, startOfWeek: DayOfWeek) {
     Column(
         modifier =
             Modifier.fillMaxWidth()
@@ -199,8 +208,12 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
             )
         }
 
+        // 表头按用户周起始日旋转（P2-5）：周一..周日 或 周日..周六 等
+        val startIso = startOfWeek.isoDayNumber
+        val allLabels = weekdayLabels()
+        val rotatedLabels = allLabels.drop(startIso - 1) + allLabels.take(startIso - 1)
         Row(modifier = Modifier.fillMaxWidth()) {
-            weekdayLabels().forEach { label ->
+            rotatedLabels.forEach { label ->
                 Text(
                     text = label.removePrefix(stringResource(Res.string.weekday_prefix)),
                     style = MaterialTheme.typography.labelSmall,
@@ -211,9 +224,9 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
             }
         }
 
-        // 数据首日对齐到周表头（周一..周日）：首日若为周三则前面补 2 个空位
+        // 数据首日对齐到旋转后的周表头：首日为周三且周一起始时前面补 2 个空位（P2-5）
         val firstDate = stats.calendar.firstOrNull()?.date ?: today
-        val leadingOffset = firstDate.dayOfWeek.isoDayNumber - 1
+        val leadingOffset = (firstDate.dayOfWeek.isoDayNumber - startIso + 7) % 7
 
         // 动态行数：30 天 + 首日偏移可能超过 5 行（35 槽），按需向上取整，避免尾部日期被裁切
         val totalSlots = leadingOffset + stats.calendar.size
@@ -234,10 +247,17 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(
                                     when {
-                                        day == null -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                                        day == null ->
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(
+                                                alpha = 0.25f
+                                            )
                                         day.completed -> MaterialTheme.colorScheme.primary
-                                        isToday -> MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                                        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+                                        isToday ->
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                                        else ->
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(
+                                                alpha = 0.55f
+                                            )
                                     }
                                 ),
                         contentAlignment = Alignment.Center,
@@ -260,10 +280,13 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate) {
 
 /** 周几分布柱状图 */
 @Composable
-private fun WeekdayCard(stats: SeriesStats) {
+private fun WeekdayCard(stats: SeriesStats, startOfWeek: DayOfWeek) {
+    val allLabels = weekdayLabels()
+    val rotated =
+        allLabels.drop(startOfWeek.isoDayNumber - 1) + allLabels.take(startOfWeek.isoDayNumber - 1)
     BarChartCard(
         title = stringResource(Res.string.weekday_distribution),
-        labels = weekdayLabels(),
+        labels = rotated,
         counts = stats.weekdayCounts,
         emptyText = stringResource(Res.string.no_completion_record),
     )
@@ -330,8 +353,11 @@ private fun BarChartCard(
                                     .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                     .background(
                                         if (count > 0) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                                    ),
+                                        else
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(
+                                                alpha = 0.4f
+                                            )
+                                    )
                         )
                         Text(
                             text = labels[index],

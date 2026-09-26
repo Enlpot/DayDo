@@ -96,7 +96,9 @@ class GritIntentReceiver : BroadcastReceiver(), KoinComponent {
         }
 
         // 与 UI 完成路径一致：记录完成时间（通知栏完成不设 completedAt 会污染统计口径）
-        taskRepo.upsertTask(task.copy(status = true, reminder = null, completedAt = LocalDateTime.now()))
+        taskRepo.upsertTask(
+            task.copy(status = true, reminder = null, completedAt = LocalDateTime.now())
+        )
 
         Log.d(TAG, "Task marked as complete successfully")
 
@@ -107,14 +109,26 @@ class GritIntentReceiver : BroadcastReceiver(), KoinComponent {
     private suspend fun addHabitStatus(intent: Intent) {
         Log.d(TAG, "Add habit status intent received")
         val habitId = intent.getLongExtra("habit_id", -1)
-        if (habitId < 0 || get<HabitsDao>().getHabitById(habitId) == null) {
+        val habit = get<HabitsDao>().getHabitById(habitId)
+        if (habitId < 0 || habit == null) {
             Log.e(TAG, "Invalid Habit Id: $habitId")
             return
         }
 
         val habitRepo = get<HabitRepo>()
 
-        habitRepo.insertHabitStatus(HabitStatus(habitId = habitId, date = LocalDate.now()))
+        // 打卡守卫（P2-4）：提醒跨午夜点击可能落在非计划日；未到创建日也不记录，
+        // 避免污染统计（HabitViewModel 打卡路径同样校验）
+        val today = LocalDate.now()
+        // ISO 周几 = ordinal+1（兼容 kotlinx/java.time DayOfWeek，toIso 非库 API）
+        val dayIso = today.dayOfWeek.ordinal + 1
+        val validDay = habit.days.isEmpty() || habit.days.any { it.ordinal + 1 == dayIso }
+        if (!validDay || today < habit.time.date) {
+            Log.w(TAG, "Habit $habitId 今天非计划日或未到创建日，忽略打卡")
+            return
+        }
+
+        habitRepo.insertHabitStatus(HabitStatus(habitId = habitId, date = today))
 
         Log.d(TAG, "Habit status added successfully")
 

@@ -17,6 +17,7 @@
 package com.enlpot.daydo.core.data.webdav
 
 import android.util.Base64
+import com.enlpot.daydo.core.data.backup.BACKUP_FORMAT_VERSION
 import com.enlpot.daydo.core.data.backup.CategorySchema
 import com.enlpot.daydo.core.data.backup.HabitSchema
 import com.enlpot.daydo.core.data.backup.HabitStatusSchema
@@ -57,147 +58,165 @@ class WebDavImpl(
         // 与本地导出一致：分页加载，避免数十万条记录全量驻留内存
         const val PAGE_SIZE = 2_000
     }
-    override suspend fun upload(
-        server: String,
-        username: String,
-        password: String,
-    ): WebDavResult = withContext(Dispatchers.IO) {
-        val conn =
-            try {
-                openConnection(server, username, password, "PUT")
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                return@withContext WebDavResult.Failure("连接失败：${e.message}")
-            }
-        try {
-            // 流式拼接导出 JSON（与本地导出 ExportImpl 一致），分页读取避免全量驻留内存
-            val body =
+
+    override suspend fun upload(server: String, username: String, password: String): WebDavResult =
+        withContext(Dispatchers.IO) {
+            val conn =
                 try {
-                buildString {
-                    append("{\"tasksSchemaVersion\":").append(TaskDatabase.SCHEMA_VERSION)
-                        .append(",\"habitsSchemaVersion\":").append(HabitDatabase.SCHEMA_VERSION)
-                    append(",\"habits\":[")
-                    habitsRepo.getHabits().forEachIndexed { index, habit ->
-                        if (index > 0) append(',')
-                        append(Json.encodeToString(HabitSchema.serializer(), habit.toHabitSchema()))
-                    }
-                    append("],\"habitStatus\":[")
-                    var first = true
-                    var offset = 0
-                    while (true) {
-                        val page = habitStatusDao.getStatusPage(offset, PAGE_SIZE)
-                        if (page.isEmpty()) break
-                        page.forEach { status ->
-                            if (!first) append(',')
-                            first = false
-                            append(
-                                Json.encodeToString(
-                                    HabitStatusSchema.serializer(),
-                                    status.toHabitStatus().toHabitStatusSchema(),
+                    openConnection(server, username, password, "PUT")
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    return@withContext WebDavResult.Failure("连接失败：${e.message}")
+                }
+            try {
+                // 流式拼接导出 JSON（与本地导出 ExportImpl 一致），分页读取避免全量驻留内存
+                val body =
+                    try {
+                        buildString {
+                            append("{\"tasksSchemaVersion\":")
+                                .append(TaskDatabase.SCHEMA_VERSION)
+                                .append(",\"habitsSchemaVersion\":")
+                                .append(HabitDatabase.SCHEMA_VERSION)
+                                .append(",\"backupFormatVersion\":")
+                                .append(BACKUP_FORMAT_VERSION)
+                            append(",\"habits\":[")
+                            habitsRepo.getHabits().forEachIndexed { index, habit ->
+                                if (index > 0) append(',')
+                                append(
+                                    Json.encodeToString(
+                                        HabitSchema.serializer(),
+                                        habit.toHabitSchema(),
+                                    )
                                 )
-                            )
+                            }
+                            append("],\"habitStatus\":[")
+                            var first = true
+                            var offset = 0
+                            while (true) {
+                                val page = habitStatusDao.getStatusPage(offset, PAGE_SIZE)
+                                if (page.isEmpty()) break
+                                page.forEach { status ->
+                                    if (!first) append(',')
+                                    first = false
+                                    append(
+                                        Json.encodeToString(
+                                            HabitStatusSchema.serializer(),
+                                            status.toHabitStatus().toHabitStatusSchema(),
+                                        )
+                                    )
+                                }
+                                offset += page.size
+                            }
+                            append("],\"tasks\":[")
+                            first = true
+                            offset = 0
+                            while (true) {
+                                val page = taskDao.getTasksPage(offset, PAGE_SIZE)
+                                if (page.isEmpty()) break
+                                page.forEach { task ->
+                                    if (!first) append(',')
+                                    first = false
+                                    append(
+                                        Json.encodeToString(
+                                            TaskSchema.serializer(),
+                                            task.toTask().toTaskSchema(),
+                                        )
+                                    )
+                                }
+                                offset += page.size
+                            }
+                            append("],\"categories\":[")
+                            taskRepo.getCategories().forEachIndexed { index, category ->
+                                if (index > 0) append(',')
+                                append(
+                                    Json.encodeToString(
+                                        CategorySchema.serializer(),
+                                        category.toCategorySchema(),
+                                    )
+                                )
+                            }
+                            append("]}")
                         }
-                        offset += page.size
+                    } catch (e: OutOfMemoryError) {
+                        // 大备份整串序列化 OOM：明确失败（P2-10）
+                        return@withContext WebDavResult.Failure("备份过大，内存不足，无法上传")
                     }
-                    append("],\"tasks\":[")
-                    first = true
-                    offset = 0
-                    while (true) {
-                        val page = taskDao.getTasksPage(offset, PAGE_SIZE)
-                        if (page.isEmpty()) break
-                        page.forEach { task ->
-                            if (!first) append(',')
-                            first = false
-                            append(Json.encodeToString(TaskSchema.serializer(), task.toTask().toTaskSchema()))
-                        }
-                        offset += page.size
-                    }
-                    append("],\"categories\":[")
-                    taskRepo.getCategories().forEachIndexed { index, category ->
-                        if (index > 0) append(',')
-                        append(Json.encodeToString(CategorySchema.serializer(), category.toCategorySchema()))
-                    }
-                    append("]}")
-                }
-                } catch (e: OutOfMemoryError) {
-                    // 大备份整串序列化 OOM：明确失败（P2-10）
-                    return@withContext WebDavResult.Failure("备份过大，内存不足，无法上传")
-                }
 
-            conn.doOutput = true
-            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            // 字符流直写，避免 String → ByteArray 双份驻留（几十万行备份时省一份大内存）
-            conn.outputStream.writer(Charsets.UTF_8).use { it.write(body) }
-            val code = conn.responseCode
+                conn.doOutput = true
+                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                // 字符流直写，避免 String → ByteArray 双份驻留（几十万行备份时省一份大内存）
+                conn.outputStream.writer(Charsets.UTF_8).use { it.write(body) }
+                val code = conn.responseCode
 
-            if (code in 200..299) {
-                WebDavResult.Success
-            } else {
-                // 关闭错误流，避免连接复用泄漏
-                conn.errorStream?.close()
-                WebDavResult.Failure("上传失败（HTTP $code）")
+                if (code in 200..299) {
+                    WebDavResult.Success
+                } else {
+                    // 关闭错误流，避免连接复用泄漏
+                    conn.errorStream?.close()
+                    WebDavResult.Failure("上传失败（HTTP $code）")
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e // 协程取消不吞
+            } catch (e: Exception) {
+                WebDavResult.Failure("上传失败：${e.message}")
+            } finally {
+                conn.disconnect()
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e // 协程取消不吞
-        } catch (e: Exception) {
-            WebDavResult.Failure("上传失败：${e.message}")
-        } finally {
-            conn.disconnect()
         }
-    }
 
     override suspend fun download(
         server: String,
         username: String,
         password: String,
-    ): WebDavResult = withContext(Dispatchers.IO) {
-        val conn =
-            try {
-                openConnection(server, username, password, "GET")
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                return@withContext WebDavResult.Failure("连接失败：${e.message}")
-            }
-        try {
-            val code = conn.responseCode
-            if (code != 200) {
-                conn.errorStream?.close()
-                WebDavResult.Failure("下载失败（HTTP $code）")
-            } else {
-                val body =
-                    try {
-                        conn.inputStream.bufferedReader().use { it.readText() }
-                    } catch (e: OutOfMemoryError) {
-                        // 下载备份整串驻留内存 OOM：明确失败（P2-10）
-                        return@withContext WebDavResult.Failure("备份文件过大，内存不足，无法恢复")
-                    }
-                when (val result = restoreRepo.restoreFromJson(body)) {
-                    is RestoreResult.Success -> WebDavResult.Success
-                    is RestoreResult.Failure ->
-                        WebDavResult.Failure(
-                            when (result.exceptionType) {
-                                is com.enlpot.daydo.core.settings.backup.RestoreFailedException.OldSchema ->
-                                    "备份文件版本过旧，无法恢复"
-                                is com.enlpot.daydo.core.settings.backup.RestoreFailedException.InvalidFile ->
-                                    "备份文件无效"
-                                is com.enlpot.daydo.core.settings.backup.RestoreFailedException.InconsistentData ->
-                                    "备份数据不完整（分类/习惯引用缺失），已取消恢复"
-                                is com.enlpot.daydo.core.settings.backup.RestoreFailedException.PartialRestore ->
-                                    "恢复中途失败，数据可能部分更新，请重新下载恢复"
-                            }
-                        )
+    ): WebDavResult =
+        withContext(Dispatchers.IO) {
+            val conn =
+                try {
+                    openConnection(server, username, password, "GET")
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    return@withContext WebDavResult.Failure("连接失败：${e.message}")
                 }
+            try {
+                val code = conn.responseCode
+                if (code != 200) {
+                    conn.errorStream?.close()
+                    WebDavResult.Failure("下载失败（HTTP $code）")
+                } else {
+                    val body =
+                        try {
+                            conn.inputStream.bufferedReader().use { it.readText() }
+                        } catch (e: OutOfMemoryError) {
+                            // 下载备份整串驻留内存 OOM：明确失败（P2-10）
+                            return@withContext WebDavResult.Failure("备份文件过大，内存不足，无法恢复")
+                        }
+                    when (val result = restoreRepo.restoreFromJson(body)) {
+                        is RestoreResult.Success -> WebDavResult.Success
+                        is RestoreResult.Failure ->
+                            WebDavResult.Failure(
+                                when (result.exceptionType) {
+                                    is com.enlpot.daydo.core.settings.backup.RestoreFailedException.OldSchema ->
+                                        "备份文件版本过旧，无法恢复"
+                                    is com.enlpot.daydo.core.settings.backup.RestoreFailedException.InvalidFile ->
+                                        "备份文件无效"
+                                    is com.enlpot.daydo.core.settings.backup.RestoreFailedException.InconsistentData ->
+                                        "备份数据不完整（分类/习惯引用缺失），已取消恢复"
+                                    is com.enlpot.daydo.core.settings.backup.RestoreFailedException.PartialRestore ->
+                                        "恢复中途失败，数据可能部分更新，请重新下载恢复"
+                                }
+                            )
+                    }
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e // 协程取消不吞
+            } catch (e: Exception) {
+                WebDavResult.Failure("下载失败：${e.message}")
+            } finally {
+                conn.disconnect()
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e // 协程取消不吞
-        } catch (e: Exception) {
-            WebDavResult.Failure("下载失败：${e.message}")
-        } finally {
-            conn.disconnect()
         }
-    }
 
     private fun openConnection(
         server: String,

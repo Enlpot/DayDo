@@ -18,8 +18,8 @@ package com.enlpot.daydo.di
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.enlpot.daydo.analytics.AnalyticsImpl
 import com.enlpot.daydo.BuildConfig
+import com.enlpot.daydo.analytics.AnalyticsImpl
 import com.enlpot.daydo.core.data.datastore.DatastoreFactory
 import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
 import com.enlpot.daydo.core.interfaces.AppVersionProvider

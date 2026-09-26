@@ -17,7 +17,6 @@
 package com.enlpot.daydo.shared.ui.setting.ui.section
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,7 +46,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -96,7 +95,10 @@ fun BackupPage(
         MediumFlexibleTopAppBar(
             scrollBehavior = scrollBehavior,
             title = {
-                Text(text = stringResource(Res.string.backup_and_sync), fontFamily = flexFontEmphasis())
+                Text(
+                    text = stringResource(Res.string.backup_and_sync),
+                    fontFamily = flexFontEmphasis(),
+                )
             },
             navigationIcon = {
                 FilledTonalIconButton(onClick = onNavigateBack) {
@@ -116,7 +118,10 @@ fun BackupPage(
             // 本地导出/恢复
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
+                    Column(
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                    ) {
                         ListItem(
                             headlineContent = { Text(text = stringResource(Res.string.export)) },
                             leadingContent = {
@@ -139,30 +144,34 @@ fun BackupPage(
                             trailingContent = {
                                 Button(
                                     onClick = { onAction(SettingsAction.OnExport) },
-                                    enabled =
-                                        state.backupState.exportState == ExportState.IDLE ||
-                                            state.backupState.exportState == ExportState.FAILURE,
+                                    // 导出完成后可再次导出（EXPORTED 不锁定按钮，C5）
+                                    enabled = state.backupState.exportState != ExportState.EXPORTING,
                                 ) {
                                     when (state.backupState.exportState) {
                                         IDLE ->
                                             Icon(
                                                 painter = painterResource(Res.drawable.play_arrow),
-                                                contentDescription = stringResource(Res.string.start),
+                                                contentDescription =
+                                                    stringResource(Res.string.start),
                                             )
 
                                         EXPORTING ->
-                                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp)
+                                            )
 
                                         EXPORTED ->
                                             Icon(
-                                                imageVector = vectorResource(Res.drawable.check_circle),
+                                                imageVector =
+                                                    vectorResource(Res.drawable.check_circle),
                                                 contentDescription = stringResource(Res.string.done),
                                             )
 
                                         FAILURE ->
                                             Icon(
                                                 imageVector = vectorResource(Res.drawable.warning),
-                                                contentDescription = stringResource(Res.string.retry),
+                                                contentDescription =
+                                                    stringResource(Res.string.retry),
                                             )
                                     }
                                 }
@@ -170,7 +179,10 @@ fun BackupPage(
                         )
                     }
 
-                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
+                    Column(
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                    ) {
                         ListItem(
                             colors = listItemColors(),
                             leadingContent = {
@@ -186,23 +198,27 @@ fun BackupPage(
                             trailingContent = {
                                 Button(
                                     onClick = { showRestoreConfirm = true },
+                                    // 恢复完成后可再次恢复（RESTORED 不锁定按钮，C5）
                                     enabled =
-                                        state.backupState.restoreState == RestoreState.IDLE ||
-                                            state.backupState.restoreState == RestoreState.FAILURE,
+                                        state.backupState.restoreState != RestoreState.RESTORING,
                                 ) {
                                     when (state.backupState.restoreState) {
                                         IDLE ->
                                             Icon(
                                                 painter = painterResource(Res.drawable.play_arrow),
-                                                contentDescription = stringResource(Res.string.start),
+                                                contentDescription =
+                                                    stringResource(Res.string.start),
                                             )
 
                                         RESTORING ->
-                                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp)
+                                            )
 
                                         RESTORED ->
                                             Icon(
-                                                imageVector = vectorResource(Res.drawable.check_circle),
+                                                imageVector =
+                                                    vectorResource(Res.drawable.check_circle),
                                                 contentDescription = stringResource(Res.string.done),
                                             )
 
@@ -249,7 +265,7 @@ fun BackupPage(
                                             password = password,
                                         )
                                     )
-                                },
+                                }
                             ) {
                                 Text(text = stringResource(Res.string.save_config))
                             }
@@ -288,25 +304,42 @@ fun BackupPage(
                         modifier = Modifier.padding(start = 20.dp, top = 2.dp),
                     )
 
+                    // 保存配置结果消息：成功/失败都展示（C8，此前只写不读静默失败）
+                    if (state.webdavConfigMessage.isNotEmpty()) {
+                        Text(
+                            text = state.webdavConfigMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(start = 20.dp, top = 4.dp),
+                        )
+                    }
                 }
             }
 
             // WebDAV 上传/下载
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
+                    Column(
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                    ) {
                         ListItem(
                             colors = listItemColors(),
-                            headlineContent = { Text(text = stringResource(Res.string.upload_backup)) },
+                            headlineContent = {
+                                Text(text = stringResource(Res.string.upload_backup))
+                            },
                             supportingContent = {
                                 Text(
                                     text =
                                         when (state.webdavUploadState) {
                                             WebDavState.DONE ->
-                                    stringResource(
-                                        Res.string.uploaded_to,
-                                        state.webdavServer.ifBlank { stringResource(Res.string.webdav_server) },
-                                    )
+                                                stringResource(
+                                                    Res.string.uploaded_to,
+                                                    // 用本次填写的地址而非已保存配置（C9）
+                                                    server.ifBlank {
+                                                        stringResource(Res.string.webdav_server)
+                                                    },
+                                                )
                                             WebDavState.FAILURE -> state.webdavUploadMessage
                                             else -> stringResource(Res.string.upload_all_to_webdav)
                                         }
@@ -314,7 +347,11 @@ fun BackupPage(
                             },
                             trailingContent = {
                                 Button(
-                                    onClick = { onAction(SettingsAction.WebDavUpload(server, username, password)) },
+                                    onClick = {
+                                        onAction(
+                                            SettingsAction.WebDavUpload(server, username, password)
+                                        )
+                                    },
                                     enabled = state.webdavUploadState != WebDavState.WORKING,
                                 ) {
                                     if (state.webdavUploadState == WebDavState.WORKING) {
@@ -327,10 +364,15 @@ fun BackupPage(
                         )
                     }
 
-                    Column(modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))) {
+                    Column(
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                    ) {
                         ListItem(
                             colors = listItemColors(),
-                            headlineContent = { Text(text = stringResource(Res.string.download_restore)) },
+                            headlineContent = {
+                                Text(text = stringResource(Res.string.download_restore))
+                            },
                             supportingContent = {
                                 Text(
                                     text =
@@ -367,9 +409,7 @@ fun BackupPage(
                                 text = stringResource(Res.string.restore),
                                 style = MaterialTheme.typography.titleMedium,
                             )
-                            Text(
-                                text = stringResource(Res.string.restore_confirm),
-                            )
+                            Text(text = stringResource(Res.string.restore_confirm))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End,
@@ -381,7 +421,7 @@ fun BackupPage(
                                     onClick = {
                                         showRestoreConfirm = false
                                         onAction(SettingsAction.OnRestore)
-                                    },
+                                    }
                                 ) {
                                     Text(text = stringResource(Res.string.confirm))
                                 }
@@ -400,9 +440,7 @@ fun BackupPage(
                                 text = stringResource(Res.string.download_restore),
                                 style = MaterialTheme.typography.titleMedium,
                             )
-                            Text(
-                                text = stringResource(Res.string.download_confirm),
-                            )
+                            Text(text = stringResource(Res.string.download_confirm))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End,
@@ -413,8 +451,14 @@ fun BackupPage(
                                 TextButton(
                                     onClick = {
                                         showDownloadConfirm = false
-                                        onAction(SettingsAction.WebDavDownload(server, username, password))
-                                    },
+                                        onAction(
+                                            SettingsAction.WebDavDownload(
+                                                server,
+                                                username,
+                                                password,
+                                            )
+                                        )
+                                    }
                                 ) {
                                     Text(text = stringResource(Res.string.confirm))
                                 }

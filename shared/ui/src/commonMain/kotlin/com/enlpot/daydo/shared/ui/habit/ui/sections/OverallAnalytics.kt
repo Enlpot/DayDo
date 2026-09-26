@@ -37,22 +37,20 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kizitonwose.calendar.compose.heatmapcalendar.rememberHeatMapCalendarState
-import com.kizitonwose.calendar.core.minusMonths
-import com.kizitonwose.calendar.core.now
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
 import com.enlpot.daydo.shared.ui.habit.HabitState
-import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.HabitHeatMap
 import com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeekDayBreakdown
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
+import com.kizitonwose.calendar.compose.heatmapcalendar.rememberHeatMapCalendarState
+import com.kizitonwose.calendar.core.minusMonths
+import com.kizitonwose.calendar.core.now
 import daydo.shared.ui.generated.resources.*
 import kotlin.math.roundToInt
 import kotlinx.datetime.YearMonth
@@ -69,7 +67,7 @@ fun OverallAnalytics(
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
 
-    val currentMonth = remember { YearMonth.now() }
+    val currentMonth = YearMonth.now() // 跨月后重组自然取新值（P4）
     val heatMapState =
         rememberHeatMapCalendarState(
             startMonth = currentMonth.minusMonths(12),

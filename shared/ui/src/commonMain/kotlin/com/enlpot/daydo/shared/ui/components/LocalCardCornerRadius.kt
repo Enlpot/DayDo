@@ -18,8 +18,5 @@ package com.enlpot.daydo.shared.ui.components
 
 import androidx.compose.runtime.staticCompositionLocalOf
 
-/**
- * 全局卡片圆角大小（dp），由 设置-外观与风格-圆角大小 控制，
- * 任务卡 / 首页卡 / 设置页卡片等统一引用，改一处全局同步。
- */
+/** 全局卡片圆角大小（dp），由 设置-外观与风格-圆角大小 控制， 任务卡 / 首页卡 / 设置页卡片等统一引用，改一处全局同步。 */
 val LocalCardCornerRadius = staticCompositionLocalOf { 20 }

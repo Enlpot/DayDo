@@ -45,12 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.kizitonwose.calendar.compose.VerticalCalendar
-import com.kizitonwose.calendar.compose.VerticalYearCalendar
-import com.kizitonwose.calendar.compose.rememberCalendarState
-import com.kizitonwose.calendar.compose.yearcalendar.rememberYearCalendarState
-import com.kizitonwose.calendar.core.Year
-import com.kizitonwose.calendar.core.now
 import com.enlpot.daydo.core.habits.CalendarType
 import com.enlpot.daydo.core.habits.Habit
 import com.enlpot.daydo.core.habits.HabitWithAnalytics
@@ -62,10 +56,15 @@ import com.enlpot.daydo.shared.ui.habit.ui.component.MonthlyCalendarDayContent
 import com.enlpot.daydo.shared.ui.habit.ui.component.YearlyCalendarDayContent
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import com.enlpot.daydo.shared.ui.toStringRes
+import com.kizitonwose.calendar.compose.VerticalCalendar
+import com.kizitonwose.calendar.compose.VerticalYearCalendar
+import com.kizitonwose.calendar.compose.rememberCalendarState
+import com.kizitonwose.calendar.compose.yearcalendar.rememberYearCalendarState
+import com.kizitonwose.calendar.core.Year
+import com.kizitonwose.calendar.core.now
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.yearMonth
 import org.jetbrains.compose.resources.stringResource
@@ -93,9 +92,7 @@ fun Calendar(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            TextButton(onClick = onNavigateBack) {
-                Text(stringResource(Res.string.back))
-            }
+            TextButton(onClick = onNavigateBack) { Text(stringResource(Res.string.back)) }
         }
         return
     }
@@ -187,7 +184,8 @@ private fun YearlyCalendar(
 ) {
     val calendarState =
         rememberYearCalendarState(
-            startYear = Year(currentHabit.habit.time.date.year),
+            // clamp：习惯创建时间在未来时 start>end 崩溃（P2-3）
+            startYear = Year(minOf(currentHabit.habit.time.date.year, today.yearMonth.year)),
             endYear = Year(today.yearMonth.year),
             firstVisibleYear = Year(today.yearMonth.year),
             firstDayOfWeek = state.startingDay,
@@ -250,7 +248,15 @@ private fun MonthlyCalendar(
 ) {
     val calendarState =
         rememberCalendarState(
-            startMonth = YearMonth(year = currentHabit.habit.time.date.year, month = currentHabit.habit.time.date.month),
+            // clamp：习惯创建时间在未来时 start>end 崩溃（P2-3）
+            startMonth =
+                minOf(
+                    YearMonth(
+                        year = currentHabit.habit.time.date.year,
+                        month = currentHabit.habit.time.date.month,
+                    ),
+                    YearMonth.now(),
+                ),
             endMonth = YearMonth.now(),
             firstVisibleMonth = YearMonth.now(),
             firstDayOfWeek = state.startingDay,

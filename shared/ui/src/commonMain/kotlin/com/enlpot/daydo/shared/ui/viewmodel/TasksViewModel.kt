@@ -19,10 +19,11 @@ package com.enlpot.daydo.shared.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.enlpot.daydo.core.interfaces.AlarmScheduler
-import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
+import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Category
+import com.enlpot.daydo.core.tasks.REPOS_POS_BASE
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.tasks.TaskRepo
@@ -33,9 +34,8 @@ import com.enlpot.daydo.core.tasks.sortActiveTasks
 import com.enlpot.daydo.core.tasks.sortCompletedTasks
 import com.enlpot.daydo.core.tasks.sortOverdueTasks
 import com.enlpot.daydo.core.tasks.taskOccursOn
-import com.enlpot.daydo.core.tasks.typicalCompletionMinuteOfSeries
-import com.enlpot.daydo.core.tasks.REPOS_POS_BASE
 import com.enlpot.daydo.core.tasks.taskSortKeyOrCreated
+import com.enlpot.daydo.core.tasks.typicalCompletionMinuteOfSeries
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
 import com.enlpot.daydo.shared.ui.task.TaskView
@@ -93,251 +93,285 @@ class TasksViewModel(
 
     fun onAction(action: TaskAction) {
         viewModelScope.launch {
+            // 分类操作需要短暂延迟稳定动画：delay 移出 Mutex（C4），避免阻塞后续动作
+            var postDelay = false
             actionMutex.withLock {
                 when (action) {
-                is UpsertTask -> {
-                    // 重复任务未设置日期时，默认锚点日期=今天（当天全天任务），避免落入收集箱
-                    val task = action.task
-                    handleUpsertTask(
-                        if (task.recurrence != null && task.dueDate == null) {
-                            task.copy(dueDate = LocalDate.now())
-                        } else {
-                            task
-                        }
-                    )
-                }
-
-                is OpenTaskStats -> {
-                    val s = _state.value
-                    _state.update {
-                        it.copy(
-                            statsSeriesId = action.seriesId,
-                            seriesTasks = s.allTasks.filter { task ->
-                                task.seriesId == action.seriesId && task.deletedAt == null
-                            },
+                    is UpsertTask -> {
+                        // 重复任务未设置日期时，默认锚点日期=今天（当天全天任务），避免落入收集箱
+                        val task = action.task
+                        handleUpsertTask(
+                            if (task.recurrence != null && task.dueDate == null) {
+                                task.copy(dueDate = LocalDate.now())
+                            } else {
+                                task
+                            }
                         )
                     }
-                }
 
-                ClearTaskStats ->
-                    _state.update {
-                        it.copy(statsSeriesId = null, seriesTasks = emptyList())
-                    }
-
-                DeleteTasks -> deleteCompletedTasks()
-
-                is ChangeCategory -> switchView(TaskView.Regular(action.category))
-
-                is ChangeView -> switchView(action.view)
-
-                is AddCategory -> {
-                    if (action.category.id == 0L) {
-                        analytics.trackEvent(
-                            AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_CREATED.name,
-                            emptyMap(),
-                        )
-                    } else {
-                        analytics.trackEvent(
-                            AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_EDITED.name,
-                            emptyMap(),
-                        )
-                    }
-                    upsertCategory(action.category)
-                    // 新建/编辑/重命名分类都不再切换当前视图（避免编辑时被切走）
-                }
-
-                is ReorderTask -> {
-                    // 已完成任务固定按完成时间倒序，不接受拖动
-                    val moved = _state.value.allTasks.firstOrNull { it.id == action.taskId }
-                    if (moved != null && !moved.status) {
-                        if (moved.recurrence != null) {
-                            // 重复任务：按当前显示链索引精确落位（拖到哪停哪）。
-                            // sortKey 量纲 = 链位置 × REPOS_POS_BASE；当天拖过在排序器中按
-                            // sortKey 插入未拖过（典型完成时间排序）的链中，次日自动回归频率排序。
-                            val chain = _state.value.displayTasks.filter { it.recurrence != null }
-                            val idxOf: (Long?) -> Int? = { id ->
-                                id?.let { i -> chain.indexOfFirst { t -> t.id == i } }
-                                    ?.takeIf { it >= 0 }
-                            }
-                            val upperIdx = idxOf(action.aboveId)
-                            val lowerIdx = idxOf(action.belowId)
-                            var newKey =
-                                when {
-                                    upperIdx != null && lowerIdx != null && lowerIdx - upperIdx > 1 ->
-                                        (upperIdx * REPOS_POS_BASE + lowerIdx * REPOS_POS_BASE) / 2
-                                    upperIdx != null && lowerIdx == null -> upperIdx * REPOS_POS_BASE + 1
-                                    lowerIdx != null -> lowerIdx * REPOS_POS_BASE - 1
-                                    else -> moved.sortKey ?: 0L
-                                }
-                            // 相邻索引无空隙：整段按当前链顺序重编号（步长 REPOS_POS_BASE）腾出空间，
-                            // 被拖任务再取目标插值（未拖过的重编号不动 sortKeyDate，次日仍回归频率排序）
-                            if (upperIdx != null && lowerIdx != null && lowerIdx - upperIdx <= 1) {
-                                chain.forEachIndexed { i, t ->
-                                    repo.updateTaskSortKeyById(t.id, i * REPOS_POS_BASE)
-                                }
-                                val newUpper = idxOf(action.aboveId)
-                                val newLower = idxOf(action.belowId)
-                                newKey =
-                                    when {
-                                        newUpper != null && newLower != null ->
-                                            (newUpper * REPOS_POS_BASE + newLower * REPOS_POS_BASE) / 2
-                                        newUpper != null -> newUpper * REPOS_POS_BASE + 1
-                                        newLower != null -> newLower * REPOS_POS_BASE - 1
-                                        else -> newKey
-                                    }
-                            }
-                            repo.updateTaskSortKeyAndDateById(
-                                action.taskId,
-                                newKey,
-                                LocalDate.now().toEpochDays(),
-                            )
-                        } else {
-                            val all = _state.value.allTasks
-                        // 已完成任务固定按完成时间倒序，不作为活动任务排序键的邻居参与中点计算
-                        val aboveKey =
-                            action.aboveId?.let { id -> all.firstOrNull { it.id == id } }
-                                ?.takeIf { !it.status }
-                                ?.let { taskSortKeyOrCreated(it) }
-                        val belowKey =
-                            action.belowId?.let { id -> all.firstOrNull { it.id == id } }
-                                ?.takeIf { !it.status }
-                                ?.let { taskSortKeyOrCreated(it) }
-                        var newKey =
-                            when {
-                                aboveKey != null && belowKey != null && aboveKey - belowKey > 1 ->
-                                    belowKey + (aboveKey - belowKey) / 2
-                                aboveKey != null && belowKey == null -> aboveKey - 1
-                                belowKey != null -> belowKey + 1
-                                else -> taskSortKeyOrCreated(moved)
-                            }
-                        // 相邻键差 1 时中点/±1 会撞同键（排序截断）：整段按当前顺序重编号（步长 2）腾出空间
-                        if (aboveKey != null && belowKey != null && aboveKey - belowKey <= 1) {
-                            val active =
-                                all
-                                    .filter { !it.status }
-                                    .sortedWith(compareBy { taskSortKeyOrCreated(it) })
-                            active.forEachIndexed { idx, t ->
-                                repo.updateTaskSortKeyById(t.id, idx * 2L)
-                            }
-                            val newAbove =
-                                action.aboveId
-                                    ?.let { id -> active.firstOrNull { it.id == id } }
-                                    ?.let { active.indexOf(it) * 2L }
-                            val newBelow =
-                                action.belowId
-                                    ?.let { id -> active.firstOrNull { it.id == id } }
-                                    ?.let { active.indexOf(it) * 2L }
-                            newKey =
-                                when {
-                                    newAbove != null && newBelow != null ->
-                                        newBelow + (newAbove - newBelow) / 2
-                                    newAbove != null -> newAbove - 1
-                                    newBelow != null -> newBelow + 1
-                                    else -> newKey
-                                }
-                        }
-                        // 拖动日期一并落库：重复任务当天拖过优先，次日回归典型完成时间排序
-                        repo.updateTaskSortKeyAndDateById(
-                            action.taskId,
-                            newKey,
-                            LocalDate.now().toEpochDays(),
-                        )
-                        }
-                    }
-                }
-
-                is ReorderCategories -> {
-                    for (category in action.mapping) {
-                        upsertCategory(category.second.copy(index = category.first))
-                    }
-                    delay(REORDER_DELAY.milliseconds)
-                    // 拖动排序分类不再切换当前视图
-                }
-
-                is DeleteCategory -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_DELETED.name,
-                        emptyMap(),
-                    )
-                    // 仅当删除的是当前查看的分类时才切换到其他分类；删除非当前分类保持视图
-                    val wasCurrent =
-                        (_state.value.currentView as? TaskView.Regular)
-                            ?.category?.id == action.category.id
-                    deleteCategory(action.category)
-
-                    delay(REORDER_DELAY.milliseconds)
-
-                    if (wasCurrent) {
+                    is OpenTaskStats -> {
+                        val s = _state.value
                         _state.update {
                             it.copy(
-                                currentView =
-                                    it.tasks.keys.firstOrNull()?.let { category ->
-                                        TaskView.Regular(category)
-                                    } ?: TaskView.Smart(SmartCategory.ALL)
+                                statsSeriesId = action.seriesId,
+                                seriesTasks =
+                                    s.allTasks.filter { task ->
+                                        task.seriesId == action.seriesId && task.deletedAt == null
+                                    },
                             )
                         }
                     }
-                }
 
-                is SoftDeleteTask -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.TASK_DELETED.name,
-                        mapOf("has_reminder" to (action.task.reminder != null)),
-                    )
-                    // 移入回收站也取消已挂闹钟：否则到点照样弹通知，Purge 后残留幽灵闹钟
-                    scheduler.cancel(action.task)
-                    repo.softDeleteTask(action.task)
-                }
+                    ClearTaskStats ->
+                        _state.update { it.copy(statsSeriesId = null, seriesTasks = emptyList()) }
 
-                is RestoreTask -> {
-                    repo.restoreTask(action.task)
-                    scheduler.schedule(action.task.copy(deletedAt = null))
-                }
+                    DeleteTasks -> deleteCompletedTasks()
 
-                is PurgeTask -> {
-                    scheduler.cancel(action.task)
-                    repo.purgeTask(action.task)
-                }
+                    is ChangeCategory -> switchView(TaskView.Regular(action.category))
 
-                is ToggleSmartViewVisibility -> toggleSmartView(action.category)
+                    is ChangeView -> switchView(action.view)
 
-                OnTasksOpened -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.TASKS_OPENED.name,
-                        emptyMap(),
-                    )
-                }
+                    is AddCategory -> {
+                        if (action.category.id == 0L) {
+                            analytics.trackEvent(
+                                AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_CREATED
+                                    .name,
+                                emptyMap(),
+                            )
+                        } else {
+                            analytics.trackEvent(
+                                AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_EDITED.name,
+                                emptyMap(),
+                            )
+                        }
+                        upsertCategory(action.category)
+                        // 新建/编辑/重命名分类都不再切换当前视图（避免编辑时被切走）
+                    }
 
-                OnTaskSheetOpened -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.TASK_SHEET_OPENED.name,
-                        emptyMap(),
-                    )
-                }
+                    is ReorderTask -> {
+                        // 已完成任务固定按完成时间倒序，不接受拖动
+                        val moved = _state.value.allTasks.firstOrNull { it.id == action.taskId }
+                        if (moved != null && !moved.status) {
+                            // 原地释放（拖起又放回原位）不写排序键（P3）：避免把任务"钉住"当日顺序，
+                            // 重复任务次日仍可回归典型完成时间排序
+                            val displayChain =
+                                _state.value.displayTasks.filter { it.id != action.taskId }
+                            val curIdx = displayChain.indexOfFirst { it.id == action.taskId }
+                            val aboveIsPrev =
+                                action.aboveId == displayChain.getOrNull(curIdx - 1)?.id
+                            val belowIsNext =
+                                action.belowId == displayChain.getOrNull(curIdx + 1)?.id
+                            if (aboveIsPrev && belowIsNext) {
+                                return@withLock
+                            }
+                            if (moved.recurrence != null) {
+                                // 重复任务：按当前显示链索引精确落位（拖到哪停哪）。
+                                // sortKey 量纲 = 链位置 × REPOS_POS_BASE；当天拖过在排序器中按
+                                // sortKey 插入未拖过（典型完成时间排序）的链中，次日自动回归频率排序。
+                                // 链坐标与排序器一致：排除被拖任务本身（排序器按"未拖链索引"落位），
+                                // 否则向下拖动时被拖项之后少算 1，中点键偏高一个 REPOS_POS_BASE（P2-2）
+                                val chain =
+                                    _state.value.displayTasks.filter {
+                                        it.recurrence != null && it.id != action.taskId
+                                    }
+                                val idxOf: (Long?) -> Int? = { id ->
+                                    id?.let { i -> chain.indexOfFirst { t -> t.id == i } }
+                                        ?.takeIf { it >= 0 }
+                                }
+                                val upperIdx = idxOf(action.aboveId)
+                                val lowerIdx = idxOf(action.belowId)
+                                var newKey =
+                                    when {
+                                        upperIdx != null &&
+                                            lowerIdx != null &&
+                                            lowerIdx - upperIdx > 1 ->
+                                            (upperIdx * REPOS_POS_BASE +
+                                                lowerIdx * REPOS_POS_BASE) / 2
+                                        upperIdx != null && lowerIdx == null ->
+                                            upperIdx * REPOS_POS_BASE + 1
+                                        lowerIdx != null -> lowerIdx * REPOS_POS_BASE - 1
+                                        else -> moved.sortKey ?: 0L
+                                    }
+                                // 相邻索引无空隙：整段按当前链顺序重编号（步长 REPOS_POS_BASE）腾出空间，
+                                // 被拖任务再取目标插值（未拖过的重编号不动 sortKeyDate，次日仍回归频率排序）
+                                if (
+                                    upperIdx != null && lowerIdx != null && lowerIdx - upperIdx <= 1
+                                ) {
+                                    // 重编号同样基于排除被拖任务的链（被拖任务由 newKey 覆盖，不参与腾位）
+                                    chain.forEachIndexed { i, t ->
+                                        repo.updateTaskSortKeyById(t.id, i * REPOS_POS_BASE)
+                                    }
+                                    val newUpper = idxOf(action.aboveId)
+                                    val newLower = idxOf(action.belowId)
+                                    newKey =
+                                        when {
+                                            newUpper != null && newLower != null ->
+                                                (newUpper * REPOS_POS_BASE +
+                                                    newLower * REPOS_POS_BASE) / 2
+                                            newUpper != null -> newUpper * REPOS_POS_BASE + 1
+                                            newLower != null -> newLower * REPOS_POS_BASE - 1
+                                            else -> newKey
+                                        }
+                                }
+                                repo.updateTaskSortKeyAndDateById(
+                                    action.taskId,
+                                    newKey,
+                                    LocalDate.now().toEpochDays(),
+                                )
+                            } else {
+                                val all = _state.value.allTasks
+                                // 已完成任务固定按完成时间倒序，不作为活动任务排序键的邻居参与中点计算
+                                val aboveKey =
+                                    action.aboveId
+                                        ?.let { id -> all.firstOrNull { it.id == id } }
+                                        ?.takeIf { !it.status }
+                                        ?.let { taskSortKeyOrCreated(it) }
+                                val belowKey =
+                                    action.belowId
+                                        ?.let { id -> all.firstOrNull { it.id == id } }
+                                        ?.takeIf { !it.status }
+                                        ?.let { taskSortKeyOrCreated(it) }
+                                var newKey =
+                                    when {
+                                        aboveKey != null &&
+                                            belowKey != null &&
+                                            aboveKey - belowKey > 1 ->
+                                            belowKey + (aboveKey - belowKey) / 2
+                                        aboveKey != null && belowKey == null -> aboveKey - 1
+                                        belowKey != null -> belowKey + 1
+                                        else -> taskSortKeyOrCreated(moved)
+                                    }
+                                // 相邻键差 1 时中点/±1 会撞同键（排序截断）：整段按当前顺序重编号（步长 2）腾出空间
+                                if (
+                                    aboveKey != null && belowKey != null && aboveKey - belowKey <= 1
+                                ) {
+                                    val active =
+                                        all.filter { !it.status }
+                                            .sortedWith(compareBy { taskSortKeyOrCreated(it) })
+                                    active.forEachIndexed { idx, t ->
+                                        repo.updateTaskSortKeyById(t.id, idx * 2L)
+                                    }
+                                    val newAbove =
+                                        action.aboveId
+                                            ?.let { id -> active.firstOrNull { it.id == id } }
+                                            ?.let { active.indexOf(it) * 2L }
+                                    val newBelow =
+                                        action.belowId
+                                            ?.let { id -> active.firstOrNull { it.id == id } }
+                                            ?.let { active.indexOf(it) * 2L }
+                                    newKey =
+                                        when {
+                                            newAbove != null && newBelow != null ->
+                                                newBelow + (newAbove - newBelow) / 2
+                                            newAbove != null -> newAbove - 1
+                                            newBelow != null -> newBelow + 1
+                                            else -> newKey
+                                        }
+                                }
+                                // 拖动日期一并落库：重复任务当天拖过优先，次日回归典型完成时间排序
+                                repo.updateTaskSortKeyAndDateById(
+                                    action.taskId,
+                                    newKey,
+                                    LocalDate.now().toEpochDays(),
+                                )
+                            }
+                        }
+                    }
 
-                OnTaskSheetDismissed -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.TASK_SHEET_DISMISSED.name,
-                        emptyMap(),
-                    )
-                }
+                    is ReorderCategories -> {
+                        for (category in action.mapping) {
+                            upsertCategory(category.second.copy(index = category.first))
+                        }
+                        postDelay = true
+                        // 拖动排序分类不再切换当前视图
+                    }
 
-                OnTaskCategorySheetOpened -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_SHEET_OPENED.name,
-                        emptyMap(),
-                    )
-                }
+                    is DeleteCategory -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_DELETED.name,
+                            emptyMap(),
+                        )
+                        // 仅当删除的是当前查看的分类时才切换到其他分类；删除非当前分类保持视图
+                        val wasCurrent =
+                            (_state.value.currentView as? TaskView.Regular)?.category?.id ==
+                                action.category.id
+                        deleteCategory(action.category)
 
-                OnTaskCategorySheetDismissed -> {
-                    analytics.trackEvent(
-                        AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_SHEET_DISMISSED
-                            .name,
-                        emptyMap(),
-                    )
-                }
+                        postDelay = true
+
+                        if (wasCurrent) {
+                            _state.update {
+                                it.copy(
+                                    currentView =
+                                        it.tasks.keys.firstOrNull()?.let { category ->
+                                            TaskView.Regular(category)
+                                        } ?: TaskView.Smart(SmartCategory.ALL)
+                                )
+                            }
+                        }
+                    }
+
+                    is SoftDeleteTask -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.TASK_DELETED.name,
+                            mapOf("has_reminder" to (action.task.reminder != null)),
+                        )
+                        // 移入回收站也取消已挂闹钟：否则到点照样弹通知，Purge 后残留幽灵闹钟
+                        scheduler.cancel(action.task)
+                        repo.softDeleteTask(action.task)
+                    }
+
+                    is RestoreTask -> {
+                        repo.restoreTask(action.task)
+                        scheduler.schedule(action.task.copy(deletedAt = null))
+                    }
+
+                    is PurgeTask -> {
+                        scheduler.cancel(action.task)
+                        repo.purgeTask(action.task)
+                    }
+
+                    is ToggleSmartViewVisibility -> toggleSmartView(action.category)
+
+                    OnTasksOpened -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.TASKS_OPENED.name,
+                            emptyMap(),
+                        )
+                    }
+
+                    OnTaskSheetOpened -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.TASK_SHEET_OPENED.name,
+                            emptyMap(),
+                        )
+                    }
+
+                    OnTaskSheetDismissed -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.TASK_SHEET_DISMISSED.name,
+                            emptyMap(),
+                        )
+                    }
+
+                    OnTaskCategorySheetOpened -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_SHEET_OPENED
+                                .name,
+                            emptyMap(),
+                        )
+                    }
+
+                    OnTaskCategorySheetDismissed -> {
+                        analytics.trackEvent(
+                            AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_SHEET_DISMISSED
+                                .name,
+                            emptyMap(),
+                        )
+                    }
                 }
             }
+            if (postDelay) delay(REORDER_DELAY.milliseconds)
         }
     }
 
@@ -381,8 +415,7 @@ class TasksViewModel(
                     seriesTask.seriesId
                         ?.let { seriesId -> repo.getTasksBySeries(seriesId) }
                         ?.mapNotNull { it.dueDate }
-                        ?.toSet()
-                        ?: emptySet()
+                        ?.toSet() ?: emptySet()
 
                 val tasksToCreate = mutableListOf<Task>()
                 var cursor = recurrence.nextDateAfter(base, base)
@@ -436,7 +469,9 @@ class TasksViewModel(
             val baseTask =
                 if (task.id == 0L) {
                     task.copy(
-                        seriesId = if (task.recurrence != null && task.seriesId == null) Random.nextLong() else task.seriesId,
+                        seriesId =
+                            if (task.recurrence != null && task.seriesId == null) Random.nextLong()
+                            else task.seriesId,
                         createdAt = LocalDateTime.now(),
                     )
                 } else if (task.recurrence != null && task.seriesId == null) {
@@ -521,18 +556,20 @@ class TasksViewModel(
         }
     }
 
-        private fun observeDatastore() {
+    private fun observeDatastore() {
         observerJob?.cancel()
         observerJob =
             viewModelScope.launch {
                 combine(
-                    datastore.getIs24Hr(),
-                    datastore.getHiddenSmartViewsFlow(),
-                    datastore.getHapticFeedbackPref(),
-                ) { is24Hr, hidden, hapticFeedback ->
+                        datastore.getIs24Hr(),
+                        datastore.getStartOfTheWeekPref(),
+                        datastore.getHiddenSmartViewsFlow(),
+                        datastore.getHapticFeedbackPref(),
+                    ) { is24Hr, startOfWeek, hidden, hapticFeedback ->
                         _state.update {
                             it.copy(
                                 is24Hour = is24Hr,
+                                startOfWeek = startOfWeek,
                                 hapticFeedback = hapticFeedback,
                                 hiddenSmartViews = hidden,
                             )
@@ -545,29 +582,36 @@ class TasksViewModel(
     /** 每分钟检查一次日期，仅当天变化时向下游 emit，驱动跨午夜自动刷新列表 */
     private fun dateTicker(): Flow<LocalDate> =
         flow {
-            while (true) {
-                emit(LocalDate.now())
-                delay(60_000)
+                while (true) {
+                    val today = LocalDate.now() // 单次快照，跨午夜瞬间不跳一天（P4）
+                    emit(today)
+                    // 每分钟轮询（与习惯侧午夜方案不一致，P4 提示；commonMain 无 Instant 毫秒 API，
+                    // 跨午夜最多延迟 60s 刷新，无功能影响）
+                    delay(60_000)
+                }
             }
-        }.distinctUntilChanged()
+            .distinctUntilChanged()
 
     private fun observeTasks() {
         savedJob?.cancel()
         savedJob =
             viewModelScope.launch {
                 combine(
-                    repo.getTasksFlow(),
-                    repo.getAllTasksFlow(),
-                    repo.getDeletedTasksFlow(),
-                    dateTicker(),
-                ) { tasksByCategory, allTasks, deletedTasks, today ->
+                        repo.getTasksFlow(),
+                        repo.getAllTasksFlow(),
+                        repo.getDeletedTasksFlow(),
+                        dateTicker(),
+                    ) { tasksByCategory, allTasks, deletedTasks, today ->
                         val today = today
-                        val view = resolveView(_state.value.currentView, tasksByCategory.keys.toList())
+                        val view =
+                            resolveView(_state.value.currentView, tasksByCategory.keys.toList())
                         // 系列典型完成时间表：全量只算一次，供所有视图排序复用
                         val typicalBySeries =
                             allTasks
                                 .groupBy { it.seriesId }
-                                .mapValues { (_, seriesTasks) -> typicalCompletionMinuteOfSeries(seriesTasks) }
+                                .mapValues { (_, seriesTasks) ->
+                                    typicalCompletionMinuteOfSeries(seriesTasks)
+                                }
                         val (display, displayCompleted) =
                             displayTasksFor(view, allTasks, deletedTasks, today, typicalBySeries)
 
@@ -639,7 +683,8 @@ class TasksViewModel(
 
             is TaskView.Smart ->
                 when (view.category) {
-                    SmartCategory.ALL -> sortActiveTasks(active, typicalBySeries) to sortCompletedTasks(completed)
+                    SmartCategory.ALL ->
+                        sortActiveTasks(active, typicalBySeries) to sortCompletedTasks(completed)
 
                     SmartCategory.TODAY ->
                         sortActiveTasks(active.filter { it.dueDate == today }, typicalBySeries) to
@@ -647,8 +692,10 @@ class TasksViewModel(
 
                     SmartCategory.TOMORROW -> {
                         val tomorrow = today.plusDaysSafe(1)
-                        sortActiveTasks(active.filter { it.dueDate == tomorrow }, typicalBySeries) to
-                            sortCompletedTasks(completed.filter { it.dueDate == tomorrow })
+                        sortActiveTasks(
+                            active.filter { it.dueDate == tomorrow },
+                            typicalBySeries,
+                        ) to sortCompletedTasks(completed.filter { it.dueDate == tomorrow })
                     }
 
                     SmartCategory.NEXT_7_DAYS -> {
@@ -670,8 +717,7 @@ class TasksViewModel(
                                 val due = it.dueDate
                                 due != null && due < today && it.completedAt?.date == today
                             }
-                        sortOverdueTasks(overdueActive + overdueCompletedToday) to
-                            emptyList()
+                        sortOverdueTasks(overdueActive + overdueCompletedToday) to emptyList()
                     }
 
                     SmartCategory.COMPLETED -> sortCompletedTasks(completed) to emptyList()
@@ -679,8 +725,10 @@ class TasksViewModel(
                     SmartCategory.DELETED -> deletedTasks to emptyList()
 
                     SmartCategory.INBOX ->
-                        sortActiveTasks(active.filter { it.categoryId == null && it.dueDate == null }, typicalBySeries) to
-                            emptyList()
+                        sortActiveTasks(
+                            active.filter { it.categoryId == null && it.dueDate == null },
+                            typicalBySeries,
+                        ) to emptyList()
                 }
         }
     }
@@ -696,5 +744,3 @@ private fun Task.dueDateTimeFor(date: LocalDate): LocalDateTime? {
 
 private fun LocalDate.plusDaysSafe(days: Long): LocalDate =
     LocalDate.fromEpochDays(toEpochDays() + days)
-
-
