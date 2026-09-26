@@ -65,6 +65,7 @@ import com.enlpot.daydo.shared.ui.HapticKind
 import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.PlatformBackHandler
 import com.enlpot.daydo.shared.ui.components.Empty
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.PageFill
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.taskItemShape
@@ -492,7 +493,7 @@ private fun TodayHabitsSection(
             index,
             habitWithAnalytics ->
             val completed = state.completedHabitIds.contains(habitWithAnalytics.habit.id)
-            val cardShape = detachedItemShape(radius = 28)
+            val cardShape = detachedItemShape(radius = LocalCardCornerRadius.current)
 
             HabitCard(
                 habitWithAnalytics = habitWithAnalytics,
@@ -500,7 +501,8 @@ private fun TodayHabitsSection(
                 action = onAction,
                 onNavigateToAnalytics = { _ -> onOpenHabitAnalytics(habitWithAnalytics.habit) },
                 onOpenDetails = { editHabit = habitWithAnalytics.habit },
-                editState = false,
+                editState = state.editState,
+                selected = habitWithAnalytics.habit.id in state.selectedHabitIds,
                 compactView = state.compactHabitView,
                 analyticsEnabled = true,
                 startingDay = state.startingDay,

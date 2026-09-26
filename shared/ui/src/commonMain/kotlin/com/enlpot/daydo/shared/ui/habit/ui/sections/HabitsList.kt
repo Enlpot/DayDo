@@ -39,6 +39,7 @@ import com.enlpot.daydo.core.now
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
 import com.enlpot.daydo.shared.ui.PlatformBackHandler
 import com.enlpot.daydo.shared.ui.components.Empty
+import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.endItemShape
 import com.enlpot.daydo.shared.ui.components.leadingItemShape
@@ -91,13 +92,14 @@ fun HabitsList(
                 habitWithAnalytics ->
                 ReorderableItem(reorderableListState, key = habitWithAnalytics.habit.id) {
                     val completed = habitWithAnalytics.habit.id in completedIds
+                    val corner = LocalCardCornerRadius.current
                     val shape =
                         when {
                             state.habitsWithAnalytics.size == 1 || !completed ->
-                                detachedItemShape(radius = 28)
-                            index == 0 -> leadingItemShape(topRadius = 28, bottomRadius = 8)
+                                detachedItemShape(radius = corner)
+                            index == 0 -> leadingItemShape(topRadius = corner, bottomRadius = 8)
                             index == state.habitsWithAnalytics.size - 1 ->
-                                endItemShape(bottomRadius = 28, topRadius = 8)
+                                endItemShape(bottomRadius = corner, topRadius = 8)
                             else -> middleItemShape(radius = 8)
                         }
 
