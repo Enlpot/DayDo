@@ -4,9 +4,9 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="file" path="datastore/"/>
+        <exclude domain="file" path="grit.preferences_pb"/>
     </cloud-backup>
     <device-transfer>
-        <exclude domain="file" path="datastore/"/>
+        <exclude domain="file" path="grit.preferences_pb"/>
     </device-transfer>
 </data-extraction-rules>

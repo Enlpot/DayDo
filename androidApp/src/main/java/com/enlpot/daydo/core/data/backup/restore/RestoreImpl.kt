@@ -84,9 +84,6 @@ class RestoreImpl(
                 ) {
                     throw SchemaMismatchException()
                 }
-                // 先取消全部旧闹钟，再清空重建（清库不会自动清 AlarmManager 里已调度的提醒）
-                alarmScheduler.cancelAll()
-
                 val habits = jsonDeserialized.habits.map { it.toHabit() }
                 val statuses = jsonDeserialized.habitStatus.map { it.toHabitStatus() }
                 val categories = jsonDeserialized.categories.map { it.toCategory() }
@@ -103,6 +100,9 @@ class RestoreImpl(
                     categories.map { it.toCategoryEntity() },
                 )
 
+                // 两库写入全部成功后再取消旧闹钟并重建调度：
+                // 写库中途失败时本地数据回滚/保持原状，已挂闹钟不被动过
+                alarmScheduler.cancelAll()
                 // 重建提醒调度：习惯全部调度；任务仅未完成且提醒时间未过的补调度
                 habits.forEach { alarmScheduler.schedule(it) }
                 tasks

@@ -47,6 +47,10 @@ interface TasksDao {
     @Query("UPDATE task SET sortKey = :newKey WHERE id = :id")
     suspend fun updateTaskSortKeyById(id: Long, newKey: Long)
 
+    // 拖动落库：排序键 + 拖动日期一起写（重复任务"当天拖过优先"据此判定）
+    @Query("UPDATE task SET sortKey = :newKey, sortKeyDate = :sortKeyDate WHERE id = :id")
+    suspend fun updateTaskSortKeyAndDateById(id: Long, newKey: Long, sortKeyDate: Long)
+
     @Query("SELECT * FROM task WHERE id = :id") suspend fun getTaskById(id: Long): TaskEntity?
 
     @Upsert suspend fun upsertTask(taskEntity: TaskEntity): Long

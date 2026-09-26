@@ -59,6 +59,7 @@ data class TaskSchema(
     val completedAt: Long? = null,
     val createdAt: Long? = null,
     val sortKey: Long? = null,
+    val sortKeyDate: Long? = null,
 )
 
 @Serializable

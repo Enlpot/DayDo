@@ -235,7 +235,7 @@ class SettingsViewModel(
 
                 OnExport -> {
                     _state.update {
-                        it.copy(backupState = it.backupState.copy(exportState = EXPORTING))
+                        it.copy(backupState = it.backupState.copy(exportState = EXPORTING, exportMessage = ""))
                     }
 
                     try {
@@ -274,6 +274,8 @@ class SettingsViewModel(
                             }
                         }
                     } catch (t: Throwable) {
+                        // 协程取消（页面退出/任务取消）不是导出失败，向上放行（与 WebDAV 路径对齐）
+                        if (t is kotlinx.coroutines.CancellationException) throw t
                         // 兜底：导出失败显式标记 FAILURE，避免永久卡在"导出中"且不静默
                         _state.update {
                             it.copy(

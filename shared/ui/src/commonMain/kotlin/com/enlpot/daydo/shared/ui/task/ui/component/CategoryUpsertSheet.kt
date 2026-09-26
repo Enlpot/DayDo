@@ -134,7 +134,7 @@ fun CategoryUpsertSheet(
 
             Button(
                 onClick = {
-                    onUpsertCategory(newCategory.copy(name = textFieldState.text.toString()))
+                    onUpsertCategory(newCategory.copy(name = textFieldState.text.toString().trim()))
                 },
                 shapes =
                     ButtonShapes(

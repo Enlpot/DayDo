@@ -117,6 +117,10 @@ class HabitRepository(
     override fun getHabitsWithAnalytics(): Flow<List<HabitWithAnalytics>> {
         return habits
             .combine(habitStatuses) { habitsFlow, habitStatusesFlow ->
+                habitsFlow to habitStatusesFlow
+            }
+            .combine(dateTicker()) { pair, today ->
+                val (habitsFlow, habitStatusesFlow) = pair
                 // 按 habitId 分组一次，避免每个 habit 全量过滤全部打卡记录（O(N×M) → O(N+M)）
                 val statusesByHabit = habitStatusesFlow.groupBy { it.habitId }
                 habitsFlow.map { habit ->
@@ -135,14 +139,12 @@ class HabitRepository(
                                 habitStatuses = habitStatusesForHabit,
                             ),
                         weekDayFrequencyData = prepareWeekDayFrequencyData(dates = dates),
-                        startedDaysAgo = habit.time.date.daysUntil(LocalDate.now()).toLong(),
+                        // today 由 dateTicker 驱动：跨午夜自动重算（startedDaysAgo/consistency 依赖今天）
+                        startedDaysAgo = habit.time.date.daysUntil(today).toLong(),
                         consistency = calculateConsistency(dates, habit.days, habit.time.date),
                     )
                 }
             }
-            .flowOn(Dispatchers.Default)
-            // 日期驱动：跨午夜自动重算（startedDaysAgo/consistency 依赖今天）
-            .combine(dateTicker()) { result, _ -> result }
             .flowOn(Dispatchers.Default)
             // 统计结果同样共享：多个界面订阅同一分析流时只算一遍
             .shareIn(scope, SharingStarted.WhileSubscribed(5_000), replay = 1)
@@ -168,6 +170,10 @@ class HabitRepository(
     override fun getOverallAnalytics(): Flow<OverallAnalytics> {
         return habits
             .combine(habitStatuses) { habitsFlow, habitStatusesFlow ->
+                habitsFlow to habitStatusesFlow
+            }
+            .combine(dateTicker()) { pair, _ ->
+                val (habitsFlow, habitStatusesFlow) = pair
                 val statusesByHabit = habitStatusesFlow.groupBy { it.habitId }
                 val habitConsistencies =
                     habitsFlow.map { habit ->
@@ -196,22 +202,22 @@ class HabitRepository(
                 )
             }
             .flowOn(Dispatchers.Default)
-            // 日期驱动：跨午夜自动重算
-            .combine(dateTicker()) { result, _ -> result }
-            .flowOn(Dispatchers.Default)
     }
 
     override fun getHabitsWithStatus(): Flow<List<Pair<Habit, Boolean>>> {
         return habits
             .combine(habitStatuses) { habitsFlow, statusFlow ->
+                habitsFlow to statusFlow
+            }
+            .combine(dateTicker()) { pair, today ->
+                val (habitsFlow, statusFlow) = pair
                 habitsFlow.map { habit ->
                     val dates = statusFlow.filter { it.habitId == habit.id }.map { it.date }
 
-                    habit to dates.any { it == LocalDate.now() }
+                    // today 由 dateTicker 驱动：跨午夜自动刷新今日完成状态
+                    habit to dates.any { it == today }
                 }
             }
-            // 日期驱动：跨午夜自动刷新今日完成状态
-            .combine(dateTicker()) { result, _ -> result }
     }
 
     override suspend fun getStatusForHabit(id: Long): List<HabitStatus> {

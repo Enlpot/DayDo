@@ -112,6 +112,10 @@ class TasksRepository(
         tasksDao.updateTaskSortKeyById(id, newKey)
     }
 
+    override suspend fun updateTaskSortKeyAndDateById(id: Long, newKey: Long, sortKeyDate: Long) {
+        tasksDao.updateTaskSortKeyAndDateById(id, newKey, sortKeyDate)
+    }
+
     override suspend fun upsertTask(task: Task): Long {
         return if (task.id == 0L) {
             tasksDao.upsertTask(task.toTaskEntity())

@@ -43,6 +43,8 @@ data class Task(
     val createdAt: LocalDateTime? = null,
     /** 手动拖拽排序键：null=未拖过（按创建时间排），非 null=拖过后按相对位置固定 */
     val sortKey: Long? = null,
+    /** 拖拽发生的日期：重复任务"拖过优先"只在当天生效，次日回归典型完成时间排序 */
+    val sortKeyDate: LocalDate? = null,
 )
 
 /** Convenience accessor: full due date-time, or null when no due date set */

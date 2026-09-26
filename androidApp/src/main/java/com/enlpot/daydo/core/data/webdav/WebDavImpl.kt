@@ -124,7 +124,8 @@ class WebDavImpl(
 
             conn.doOutput = true
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            conn.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+            // 字符流直写，避免 String → ByteArray 双份驻留（几十万行备份时省一份大内存）
+            conn.outputStream.writer(Charsets.UTF_8).use { it.write(body) }
             val code = conn.responseCode
 
             if (code in 200..299) {

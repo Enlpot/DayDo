@@ -55,4 +55,5 @@ data class TaskEntity(
     @ColumnInfo(name = "completedAt", defaultValue = "NULL") val completedAt: LocalDateTime? = null,
     @ColumnInfo(name = "createdAt", defaultValue = "NULL") val createdAt: LocalDateTime? = null,
     @ColumnInfo(name = "sortKey", defaultValue = "NULL") val sortKey: Long? = null,
+    @ColumnInfo(name = "sortKeyDate", defaultValue = "NULL") val sortKeyDate: LocalDate? = null,
 )

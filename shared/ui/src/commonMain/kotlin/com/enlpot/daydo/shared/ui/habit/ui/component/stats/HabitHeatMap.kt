@@ -169,7 +169,7 @@ fun HabitHeatMap(
                                                     MaterialTheme.colorScheme.primary.copy(
                                                         alpha =
                                                             (count.toFloat() / maxHeatCount)
-                                                                .coerceIn(0f, 1f)
+                                                                .coerceIn(0.15f, 1f)
                                                     )
                                             },
                                     )

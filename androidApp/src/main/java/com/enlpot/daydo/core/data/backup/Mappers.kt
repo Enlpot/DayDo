@@ -79,6 +79,7 @@ fun TaskSchema.toTask(): Task {
         completedAt = completedAt?.let { Converters.dateFromTimestamp(it) },
         createdAt = createdAt?.let { Converters.dateFromTimestamp(it) },
         sortKey = sortKey,
+        sortKeyDate = sortKeyDate?.let { Converters.dayFromTimestamp(it) },
     )
 }
 
@@ -99,6 +100,7 @@ fun Task.toTaskSchema(): TaskSchema {
         completedAt = completedAt?.let { Converters.dateToTimestamp(it) },
         createdAt = createdAt?.let { Converters.dateToTimestamp(it) },
         sortKey = sortKey,
+        sortKeyDate = sortKeyDate?.let { Converters.dayToTimestamp(it) },
     )
 }
 

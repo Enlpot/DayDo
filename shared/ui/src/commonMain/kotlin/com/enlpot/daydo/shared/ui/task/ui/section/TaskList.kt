@@ -461,19 +461,16 @@ private fun TaskItemsSection(
         ) { view ->
             val lazyListState = rememberLazyListState()
             var draggedTaskId by remember { mutableStateOf<Long?>(null) }
-            // 只初始化一次：拖动排序时 DB 回流不再重置列表（避免打断拖动）；
-            // 仅内容变化（增删/完成状态/分类视图切换）时同步，否则本地列表 stale
+            // 只初始化一次：拖动排序时 DB 回流不再重置列表（避免打断拖动）
             var reorderableTasks by remember(view) {
                 mutableStateOf(state.displayTasks + state.displayCompletedTasks)
             }
-            LaunchedEffect(
-                state.displayTasks.map { it.id to it.status },
-                state.displayCompletedTasks.map { it.id to it.status },
-            ) {
+            // 同步判据 = DB 任务完整内容（data class equals）：
+            // 增删/编辑/分类视图切换 → 内容变化 → 整表同步；
+            // 拖动中 DB 尚未落库（列表未变），effect 不触发，不会打断拖动
+            LaunchedEffect(state.displayTasks, state.displayCompletedTasks) {
                 val dbContent = state.displayTasks + state.displayCompletedTasks
-                val localContent = reorderableTasks.map { it.id to it.status }.toSet()
-                val dbNow = dbContent.map { it.id to it.status }.toSet()
-                if (localContent != dbNow) {
+                if (dbContent != reorderableTasks) {
                     reorderableTasks = dbContent
                 }
             }

@@ -48,6 +48,9 @@ interface TaskRepo {
 
     suspend fun updateTaskSortKeyById(id: Long, newKey: Long)
 
+    /** 拖动落库：排序键 + 拖动日期一起写（重复任务"当天拖过优先"据此判定，次日回归典型时间排序） */
+    suspend fun updateTaskSortKeyAndDateById(id: Long, newKey: Long, sortKeyDate: Long)
+
     suspend fun upsertTask(task: Task): Long
 
     suspend fun deleteTask(task: Task)

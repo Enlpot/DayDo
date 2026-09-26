@@ -192,7 +192,7 @@ private fun CategoryEditDialog(
                             supportingContent = {
                                 Text(
                                     text =
-                                        "${state.tasks[category]?.size ?: "0"} ${
+                                        "${state.tasks[category]?.size ?: 0} ${
                                             stringResource(
                                                 Res.string.tasks
                                             )

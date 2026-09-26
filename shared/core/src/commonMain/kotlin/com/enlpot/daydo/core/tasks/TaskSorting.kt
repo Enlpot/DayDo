@@ -16,6 +16,8 @@
  */
 package com.enlpot.daydo.core.tasks
 
+import com.enlpot.daydo.core.now
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 
@@ -41,14 +43,23 @@ fun sortActiveTasks(tasks: List<Task>, typicalBySeries: Map<Long?, Int?>): List<
     // 普通任务：被拖过的按相对排序键（越大越上），未拖过的按创建时间倒序（新在顶）
     val normalSorted = normal.sortedByDescending { taskSortKeyOrCreated(it, tz) }
 
-    // 重复任务：典型完成时间只取一次，避免 filter/sortedBy 各算一遍
-    val recTypical = recurring.map { task -> task to typicalBySeries[task.seriesId] }
-    val recWithTypical =
-        recTypical.filter { it.second != null }.sortedBy { it.second ?: Int.MAX_VALUE }
-    val recWithoutTypical =
-        recTypical.filter { it.second == null }.sortedByDescending { createdAtKey(it.first, tz) }
+    // 重复任务：当天拖过的按拖位（sortKey 越大越上），其余按典型完成时间升序；
+    // 未拖/非当天拖的次日自动回归"频率排序"（典型完成时间），无稳定模式的按创建时间倒序
+    val todayEpoch = LocalDate.now().toEpochDays()
+    val recSorted =
+        recurring.sortedWith(
+            compareBy(
+                // 1. 当天拖过的排最前
+                { !(it.sortKeyDate?.toEpochDays() == todayEpoch && it.sortKey != null) },
+                // 2. 当天拖过的按 sortKey 降序（与普通任务一致：越大越上）
+                { if (it.sortKeyDate?.toEpochDays() == todayEpoch) -(it.sortKey ?: 0L) else Long.MIN_VALUE },
+                // 3. 其余：有典型按典型时间升序，无典型按创建时间倒序（新的在顶）
+                { typicalBySeries[it.seriesId] ?: Int.MAX_VALUE },
+                { -createdAtKey(it, tz) },
+            )
+        )
 
-    return normalSorted + recWithTypical.map { it.first } + recWithoutTypical.map { it.first }
+    return normalSorted + recSorted
 }
 
 fun sortCompletedTasks(tasks: List<Task>): List<Task> {

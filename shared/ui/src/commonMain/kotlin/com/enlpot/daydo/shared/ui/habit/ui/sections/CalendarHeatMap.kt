@@ -93,7 +93,6 @@ fun CalendarHeatMap(
     var calendarType by rememberSaveable { mutableStateOf(CalendarType.MONTH) }
     val windowSizeClass = LocalWindowSizeClass.current
     val today = LocalDate.now()
-    val totalHabits = state.habitsWithAnalytics.size
     var selectedDay: LocalDate? by
         rememberSaveable(stateSaver = LocalDateSaver) { mutableStateOf(null) }
 
@@ -186,7 +185,6 @@ fun CalendarHeatMap(
                     YearlyMap(
                         today = today,
                         state = state,
-                        totalHabits = totalHabits,
                         selectedDay = selectedDay,
                         onChangeSelectedDay = { selectedDay = it },
                     )
@@ -196,7 +194,6 @@ fun CalendarHeatMap(
                     MonthlyMap(
                         state = state,
                         today = today,
-                        totalHabits = totalHabits,
                         selectedDay = selectedDay,
                         onChangeSelectedDay = { selectedDay = it },
                     )
@@ -211,10 +208,11 @@ private fun YearlyMap(
     modifier: Modifier = Modifier,
     today: LocalDate,
     state: HabitState,
-    totalHabits: Int,
     selectedDay: LocalDate?,
     onChangeSelectedDay: (LocalDate) -> Unit,
 ) {
+    // 归一化基准取历史峰值：加/删习惯不会重排历史颜色（原按当前习惯总数，历史色随总量漂移）
+    val maxHeatCount = state.overallAnalytics.heatMapData.values.maxOrNull() ?: 1
     val calendarState =
         rememberYearCalendarState(
             startYear = Year(state.habitsWithAnalytics.minOfOrNull { it.habit.time.date.year } ?: today.year),
@@ -259,8 +257,6 @@ private fun YearlyMap(
             if (day.date > today || day.position != DayPosition.MonthDate)
                 return@VerticalYearCalendar
             val count = state.overallAnalytics.heatMapData[day.date]
-            // 归一化基准取历史峰值：加/删习惯不会重排历史颜色（原按当前习惯总数，历史色随总量漂移）
-            val maxHeatCount = state.overallAnalytics.heatMapData.values.maxOrNull() ?: 1
 
             val corners by
                 animateDpAsState(targetValue = if (selectedDay == day.date) 1000.dp else 2.dp)
@@ -296,10 +292,11 @@ private fun MonthlyMap(
     modifier: Modifier = Modifier,
     state: HabitState,
     today: LocalDate,
-    totalHabits: Int,
     selectedDay: LocalDate?,
     onChangeSelectedDay: (LocalDate) -> Unit,
 ) {
+    // 归一化基准取历史峰值：加/删习惯不会重排历史颜色（原按当前习惯总数，历史色随总量漂移）
+    val maxHeatCount = state.overallAnalytics.heatMapData.values.maxOrNull() ?: 1
     val calendarState =
         rememberCalendarState(
             // 起点取最早习惯的创建月（而非写死 2024），避免历史数据不可达
@@ -324,8 +321,6 @@ private fun MonthlyMap(
         dayContent = { day ->
             if (day.date > today || day.position != DayPosition.MonthDate) return@VerticalCalendar
             val count = state.overallAnalytics.heatMapData[day.date]
-            // 归一化基准取历史峰值：加/删习惯不会重排历史颜色（原按当前习惯总数，历史色随总量漂移）
-            val maxHeatCount = state.overallAnalytics.heatMapData.values.maxOrNull() ?: 1
 
             val corners by
                 animateDpAsState(targetValue = if (selectedDay == day.date) 1000.dp else 8.dp)

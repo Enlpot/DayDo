@@ -38,6 +38,7 @@ fun Task.toTaskEntity(): TaskEntity {
         completedAt = completedAt,
         createdAt = createdAt,
         sortKey = sortKey,
+        sortKeyDate = sortKeyDate,
     )
 }
 
@@ -58,6 +59,7 @@ fun TaskEntity.toTask(): Task {
         completedAt = completedAt,
         createdAt = createdAt,
         sortKey = sortKey,
+        sortKeyDate = sortKeyDate,
     )
 }
 

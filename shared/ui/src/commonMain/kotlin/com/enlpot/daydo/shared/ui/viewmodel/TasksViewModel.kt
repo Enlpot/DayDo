@@ -211,7 +211,12 @@ class TasksViewModel(
                                     else -> newKey
                                 }
                         }
-                        repo.updateTaskSortKeyById(action.taskId, newKey)
+                        // 拖动日期一并落库：重复任务当天拖过优先，次日回归典型完成时间排序
+                        repo.updateTaskSortKeyAndDateById(
+                            action.taskId,
+                            newKey,
+                            LocalDate.now().toEpochDays(),
+                        )
                     }
                 }
 
