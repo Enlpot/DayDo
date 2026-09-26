@@ -29,9 +29,9 @@ sealed interface SettingsAction {
 
 data class SetWebDavConfig(val server: String, val username: String, val password: String) : SettingsAction
 
-data object WebDavUpload : SettingsAction
+data class WebDavUpload(val server: String, val username: String, val password: String) : SettingsAction
 
-data object WebDavDownload : SettingsAction
+data class WebDavDownload(val server: String, val username: String, val password: String) : SettingsAction
 
     data object OnExport : SettingsAction
 

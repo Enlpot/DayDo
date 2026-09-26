@@ -30,6 +30,7 @@ import org.jetbrains.compose.resources.FontResource
 
 val TYPOGRAPHY = Typography()
 
+// Font(Res.font...) 为 @Composable 构造且资源层自带缓存：保持直接构造（P3 性能项实测收益极低，维持现状）
 @Composable
 fun flexFontEmphasis(): FontFamily = FontFamily(Font(Res.font.figtree))
 

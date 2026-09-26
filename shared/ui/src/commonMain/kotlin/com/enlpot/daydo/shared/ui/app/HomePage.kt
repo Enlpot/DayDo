@@ -56,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -105,12 +106,29 @@ fun HomePage(
     // 首页三组列表已由 TasksViewModel 预计算并排好序（避免每次重组全量过滤）
     val todayTasks = taskState.homeTodayTasks
     val overdueTasks = taskState.homeOverdueTasks
+    // pager 组合内避免每帧新建 filter List（P3）
+    val overdueActive = remember(overdueTasks) { overdueTasks.filter { !it.status } }
+    val overdueCompleted = remember(overdueTasks) { overdueTasks.filter { it.status } }
     val hasOverdue = overdueTasks.isNotEmpty()
     val habitPageIndex = if (hasOverdue) 2 else 1
 
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { if (hasOverdue) 3 else 2 })
+
+    // 逻辑 tab 跟踪（0=任务，1=习惯；已过期页归任务类）：过期页插入/移除时
+    // 保持用户所在逻辑位置，避免停在 index 不变导致被切到错误 tab（P2-12）
+    var currentTab by rememberSaveable { mutableStateOf(0) }
     LaunchedEffect(hasOverdue) {
-        if (!hasOverdue && pagerState.currentPage > 1) pagerState.scrollToPage(1)
+        val target = when {
+            currentTab == 1 -> habitPageIndex
+            else -> if (hasOverdue) 1 else 0
+        }
+        if (pagerState.currentPage != target) pagerState.scrollToPage(target)
+    }
+    // 点击/滑动后同步逻辑 tab（当前页==习惯页则归习惯，其余归任务）
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            currentTab = if (page == habitPageIndex) 1 else 0
+        }
     }
     val scope = rememberCoroutineScope()
 
@@ -224,8 +242,8 @@ fun HomePage(
                     TodayTasksSection(
                         state = taskState,
                         onAction = onTaskAction,
-                        activeTasks = overdueTasks.filter { !it.status },
-                        completedTasks = overdueTasks.filter { it.status },
+                        activeTasks = overdueActive,
+                        completedTasks = overdueCompleted,
                         multiSelect = multiSelect,
                         selectedTaskIds = selectedTaskIds,
                         onToggleSelect = { task ->
@@ -476,7 +494,7 @@ private fun TodayHabitsSection(
                 habitWithAnalytics = habitWithAnalytics,
                 completed = completed,
                 action = onAction,
-                onNavigateToAnalytics = {
+                onNavigateToAnalytics = { _ ->
                     onOpenHabitAnalytics(habitWithAnalytics.habit)
                 },
                 editState = false,

@@ -2,7 +2,7 @@
 <resources>
     <style name="Theme.Grit.Splash" parent="Theme.SplashScreen" >
         <item name="windowSplashScreenAnimatedIcon">@drawable/daydo_splash_icon</item>
-        <item name="windowSplashScreenBackground">@color/black</item>
+        <item name="windowSplashScreenBackground">@android:color/system_accent1_800</item>
         <item name="postSplashScreenTheme">@style/Theme.Grit</item>
     </style>
 </resources>

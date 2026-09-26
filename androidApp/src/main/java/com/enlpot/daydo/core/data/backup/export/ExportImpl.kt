@@ -74,6 +74,11 @@ class ExportImpl(
             val content = withContext(Dispatchers.IO) { buildExportJson() }
             file.writeString(content)
             ExportResult.Success
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e // 页面退出取消不吞（P3）
+        } catch (e: OutOfMemoryError) {
+            // 数十万条数据整串序列化可能 OOM：明确失败而非崩溃（P2-10 上限保护）
+            ExportResult.Failure("导出内容过大，内存不足（请清理数据后重试）")
         } catch (e: Exception) {
             // 序列化/IO 失败：明确返回失败态，供 UI 提示与埋点（不再静默吞掉）
             ExportResult.Failure(e.message ?: "导出失败")

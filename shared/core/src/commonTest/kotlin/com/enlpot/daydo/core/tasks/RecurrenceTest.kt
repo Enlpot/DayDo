@@ -213,6 +213,58 @@ class RecurrenceTest {
         )
     }
 
+    // ---------- 第五轮：跨 12 月对齐反例（旧码死循环触发面） ----------
+    @Test
+    fun monthlyUnalignedAcrossYearBoundaryJumpsToAlignedCycle() {
+        // 第五轮报告的旧码反例：base=2026-12 / interval=2 / from=2027-01（1-based/0-based 编码混用会死循环）
+        val r = Recurrence.Monthly(interval = 2, days = setOf(5))
+        val base = LocalDate(2026, 12, 5)
+        assertEquals(
+            LocalDate(2027, 2, 5),
+            r.nextDateAfter(LocalDate(2027, 1, 15), base),
+        )
+    }
+
+    @Test
+    fun monthlyUnalignedAcrossYearBoundaryInterval4() {
+        // 反例二：base=2026-11 / interval=4 / from=2026-12 -> 下一个对齐周期 2027-03
+        val r = Recurrence.Monthly(interval = 4, days = setOf(5))
+        val base = LocalDate(2026, 11, 5)
+        assertEquals(
+            LocalDate(2027, 3, 5),
+            r.nextDateAfter(LocalDate(2026, 12, 15), base),
+        )
+    }
+
+    // ---------- 第五轮：全规则序列严格递增性质（锁死"旧死循环/重复生成"回归面） ----------
+    @Test
+    fun allRulesProduceStrictlyIncreasingSequences() {
+        val rules: List<Pair<Recurrence, LocalDate>> =
+            listOf(
+                Recurrence.Daily to LocalDate(2026, 9, 1),
+                Recurrence.EveryNDays(interval = 3) to LocalDate(2026, 9, 1),
+                Recurrence.Weekly(interval = 1, days = setOf(2, 5)) to LocalDate(2026, 9, 1),
+                Recurrence.Weekly(interval = 3, days = setOf(1)) to LocalDate(2026, 9, 1),
+                Recurrence.Monthly(interval = 1, days = setOf(15, 28)) to LocalDate(2026, 1, 15),
+                Recurrence.Monthly(interval = 2, days = setOf(5)) to LocalDate(2026, 1, 5),
+                Recurrence.Yearly(interval = 1, months = setOf(3, 11), days = setOf(1)) to
+                    LocalDate(2026, 3, 1),
+                Recurrence.Yearly(interval = 2, months = setOf(6), days = setOf(10)) to
+                    LocalDate(2026, 6, 10),
+            )
+        for ((rule, base) in rules) {
+            val seq =
+                generateSequence(rule.nextDateAfter(base, base)) { rule.nextDateAfter(it, base) }
+                    .take(30)
+                    .toList()
+            assertEquals(30, seq.size, "sequence size for $rule")
+            assertTrue(
+                seq.zipWithNext().all { (a, b) -> b > a },
+                "strictly increasing for $rule",
+            )
+        }
+    }
+
     @Test
     fun yearlyUnalignedFromJumpsToAlignedCycle() {
         // base 2026（offset 0），interval=2；from 2027（offset 1）未对齐 -> 应跳到 2028

@@ -41,7 +41,6 @@ data class TaskState(
     val currentView: TaskView = TaskView.Smart(SmartCategory.ALL),
     val displayTasks: List<Task> = emptyList(),
     val displayCompletedTasks: List<Task> = emptyList(),
-    val completedTasks: List<Task> = emptyList(),
     val hiddenSmartViews: Set<SmartCategory> = emptySet(),
     val is24Hour: Boolean = false,
     val hapticFeedback: Boolean = true,

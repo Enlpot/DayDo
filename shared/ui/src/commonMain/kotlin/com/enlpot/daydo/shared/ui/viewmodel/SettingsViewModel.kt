@@ -156,23 +156,26 @@ class SettingsViewModel(
                             it.copy(
                                 webdavUploadState = WebDavState.IDLE,
                                 webdavDownloadState = WebDavState.IDLE,
-                                webdavMessage = "",
+                                webdavConfigMessage = "",
+                                webdavUploadMessage = "",
+                                webdavDownloadMessage = "",
                             )
                         }
                     } catch (e: Exception) {
                         // 加密/存储异常不崩溃，提示用户（如 Keystore 不可用）
-                        _state.update { it.copy(webdavMessage = "保存配置失败：${e.message}") }
+                        _state.update { it.copy(webdavConfigMessage = "保存配置失败：${e.message}") }
                     }
                 }
 
-                WebDavUpload -> {
-                    val server = _state.value.webdavServer
-                    val username = _state.value.webdavUsername
-                    val password = _state.value.webdavPassword
+                is WebDavUpload -> {
+                    // P2-7：使用输入框当前值（未保存配置也能按当前输入操作）
+                    val server = action.server
+                    val username = action.username
+                    val password = action.password
                     _state.update {
                         it.copy(
                             webdavUploadState = WebDavState.WORKING,
-                            webdavMessage = "",
+                            webdavUploadMessage = "",
                         )
                     }
                     val result =
@@ -188,7 +191,7 @@ class SettingsViewModel(
                             webdavUploadState =
                                 if (result is WebDavResult.Success) WebDavState.DONE
                                 else WebDavState.FAILURE,
-                            webdavMessage =
+                            webdavUploadMessage =
                                 if (result is WebDavResult.Success) ""
                                 else (result as WebDavResult.Failure).message,
                         )
@@ -199,14 +202,15 @@ class SettingsViewModel(
                     )
                 }
 
-                WebDavDownload -> {
-                    val server = _state.value.webdavServer
-                    val username = _state.value.webdavUsername
-                    val password = _state.value.webdavPassword
+                is WebDavDownload -> {
+                    // P2-7：使用输入框当前值
+                    val server = action.server
+                    val username = action.username
+                    val password = action.password
                     _state.update {
                         it.copy(
                             webdavDownloadState = WebDavState.WORKING,
-                            webdavMessage = "",
+                            webdavDownloadMessage = "",
                         )
                     }
                     val result =
@@ -222,7 +226,7 @@ class SettingsViewModel(
                             webdavDownloadState =
                                 if (result is WebDavResult.Success) WebDavState.DONE
                                 else WebDavState.FAILURE,
-                            webdavMessage =
+                            webdavDownloadMessage =
                                 if (result is WebDavResult.Success) ""
                                 else (result as WebDavResult.Failure).message,
                         )

@@ -77,7 +77,7 @@ fun HabitCard(
     habitWithAnalytics: HabitWithAnalytics,
     completed: Boolean,
     action: (HabitsAction) -> Unit,
-    onNavigateToAnalytics: () -> Unit,
+    onNavigateToAnalytics: (Long) -> Unit,
     editState: Boolean,
     compactView: Boolean,
     analyticsEnabled: Boolean,
@@ -205,7 +205,7 @@ fun HabitCard(
                     IconButton(
                         onClick = {
                             action(HabitsAction.PrepareAnalytics(habitWithAnalytics.habit))
-                            onNavigateToAnalytics()
+                            onNavigateToAnalytics(habitWithAnalytics.habit.id)
                         },
                         modifier =
                             Modifier.size(
@@ -289,7 +289,7 @@ fun HabitCard(
                                 .clip(shape = RoundedCornerShape(20.dp))
                                 .clickable(
                                     role = Role.Button,
-                                    enabled = validDay,
+                                    enabled = done || validDay,
                                     onClick = {
                                         action(
                                             HabitsAction.InsertStatus(

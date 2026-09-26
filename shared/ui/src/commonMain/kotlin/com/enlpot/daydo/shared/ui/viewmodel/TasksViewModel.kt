@@ -594,8 +594,6 @@ class TasksViewModel(
                                 currentView = view,
                                 displayTasks = display,
                                 displayCompletedTasks = displayCompleted,
-                                completedTasks =
-                                    tasksByCategory.values.flatten().filter { task -> task.status },
                                 homeTodayTasks = homeTodayActive,
                                 homeTodayCompleted = homeTodayCompleted,
                                 homeOverdueTasks = homeOverdueTasks,

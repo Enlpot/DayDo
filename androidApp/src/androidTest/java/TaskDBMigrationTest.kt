@@ -141,10 +141,10 @@ class TaskDBMigrationTest {
     fun testAllMigrations() = runBlocking {
         helper.createDatabase(4).close()
 
-        // 全链验证 4→11：autoMigrations(4→9) + 手动 MIGRATION_9_10 / MIGRATION_10_11
+        // 全链验证 4→12：autoMigrations(4→9、11→12) + 手动 MIGRATION_9_10 / MIGRATION_10_11
         helper
             .runMigrationsAndValidate(
-                11,
+                12,
                 listOf(TaskDatabase.MIGRATION_9_10, TaskDatabase.MIGRATION_10_11),
             )
             .close()

@@ -37,7 +37,9 @@ val webdavUsername: String = "",
 val webdavPassword: String = "",
 val webdavUploadState: WebDavState = WebDavState.IDLE,
 val webdavDownloadState: WebDavState = WebDavState.IDLE,
-val webdavMessage: String = "",
+val webdavConfigMessage: String = "",
+val webdavUploadMessage: String = "",
+val webdavDownloadMessage: String = "",
 
     // datastore
     val theme: Theme = Theme(),

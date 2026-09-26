@@ -28,6 +28,9 @@ data class MainAppState(
     val isAppUnlocked: Boolean = false,
     val isBiometricLockOn: Boolean? = null,
     val startingSection: Sections = Sections.Home,
+
+    /** 关键设置（起始页/生物识别锁）流就绪门：未就绪不展示内容，避免竞态与永久 Loading */
+    val isLoaded: Boolean = false,
     val cornerRadius: Int = 20,
     val hapticFeedback: Boolean = true,
     val hapticStrength: Int = 50,

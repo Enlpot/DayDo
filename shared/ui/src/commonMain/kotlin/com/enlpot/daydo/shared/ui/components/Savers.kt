@@ -22,16 +22,22 @@ import kotlinx.serialization.json.Json
 
 val LocalDateSaver =
     Saver<LocalDate?, String>(save = { it?.toString() ?: "" }) {
-        if (it.isEmpty()) null else LocalDate.parse(it)
+        // 恢复容错：非法存档（非 ISO 日期）不崩溃，回退 null 触发初始值（P3）
+        if (it.isEmpty()) null else runCatching { LocalDate.parse(it) }.getOrNull()
     }
 
 // 恢复路径容错：忽略未知键、非法枚举/越界值回退默认，避免旧版本存档反序列化崩溃
+// Json 实例惰性共享，避免每次重组/调用新建（P3 性能）；inline 泛型函数需 @PublishedApi
+@PublishedApi
+internal val lenientJson by lazy {
+    Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+    }
+}
+
 inline fun <reified T> genericSaver(): Saver<T, String> {
-    val json =
-        Json {
-            ignoreUnknownKeys = true
-            coerceInputValues = true
-        }
+    val json = lenientJson
     return Saver<T, String>(
         save = { json.encodeToString(it) },
         // 恢复容错：反序列化失败返回 null，触发初始值回退，避免旧存档崩溃

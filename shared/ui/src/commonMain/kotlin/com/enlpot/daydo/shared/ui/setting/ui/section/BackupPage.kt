@@ -307,14 +307,14 @@ fun BackupPage(
                                         Res.string.uploaded_to,
                                         state.webdavServer.ifBlank { stringResource(Res.string.webdav_server) },
                                     )
-                                            WebDavState.FAILURE -> state.webdavMessage
+                                            WebDavState.FAILURE -> state.webdavUploadMessage
                                             else -> stringResource(Res.string.upload_all_to_webdav)
                                         }
                                 )
                             },
                             trailingContent = {
                                 Button(
-                                    onClick = { onAction(SettingsAction.WebDavUpload) },
+                                    onClick = { onAction(SettingsAction.WebDavUpload(server, username, password)) },
                                     enabled = state.webdavUploadState != WebDavState.WORKING,
                                 ) {
                                     if (state.webdavUploadState == WebDavState.WORKING) {
@@ -336,7 +336,7 @@ fun BackupPage(
                                     text =
                                         when (state.webdavDownloadState) {
                                             WebDavState.DONE -> stringResource(Res.string.restored)
-                                            WebDavState.FAILURE -> state.webdavMessage
+                                            WebDavState.FAILURE -> state.webdavDownloadMessage
                                             else -> stringResource(Res.string.download_from_webdav)
                                         }
                                 )
@@ -413,7 +413,7 @@ fun BackupPage(
                                 TextButton(
                                     onClick = {
                                         showDownloadConfirm = false
-                                        onAction(SettingsAction.WebDavDownload)
+                                        onAction(SettingsAction.WebDavDownload(server, username, password))
                                     },
                                 ) {
                                     Text(text = stringResource(Res.string.confirm))

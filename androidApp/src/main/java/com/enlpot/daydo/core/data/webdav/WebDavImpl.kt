@@ -57,8 +57,6 @@ class WebDavImpl(
         // 与本地导出一致：分页加载，避免数十万条记录全量驻留内存
         const val PAGE_SIZE = 2_000
     }
-    private val json = Json { ignoreUnknownKeys = true }
-
     override suspend fun upload(
         server: String,
         username: String,
@@ -75,6 +73,7 @@ class WebDavImpl(
         try {
             // 流式拼接导出 JSON（与本地导出 ExportImpl 一致），分页读取避免全量驻留内存
             val body =
+                try {
                 buildString {
                     append("{\"tasksSchemaVersion\":").append(TaskDatabase.SCHEMA_VERSION)
                         .append(",\"habitsSchemaVersion\":").append(HabitDatabase.SCHEMA_VERSION)
@@ -121,6 +120,10 @@ class WebDavImpl(
                     }
                     append("]}")
                 }
+                } catch (e: OutOfMemoryError) {
+                    // 大备份整串序列化 OOM：明确失败（P2-10）
+                    return@withContext WebDavResult.Failure("备份过大，内存不足，无法上传")
+                }
 
             conn.doOutput = true
             conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
@@ -163,7 +166,13 @@ class WebDavImpl(
                 conn.errorStream?.close()
                 WebDavResult.Failure("下载失败（HTTP $code）")
             } else {
-                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                val body =
+                    try {
+                        conn.inputStream.bufferedReader().use { it.readText() }
+                    } catch (e: OutOfMemoryError) {
+                        // 下载备份整串驻留内存 OOM：明确失败（P2-10）
+                        return@withContext WebDavResult.Failure("备份文件过大，内存不足，无法恢复")
+                    }
                 when (val result = restoreRepo.restoreFromJson(body)) {
                     is RestoreResult.Success -> WebDavResult.Success
                     is RestoreResult.Failure ->

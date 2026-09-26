@@ -183,7 +183,7 @@ private fun CalendarStreakCell(
                         isLastDayOfMonth = day.date.plusDays(1).day == 1,
                     )
                 )
-                .clickable(enabled = validDate) { onDateClick(day.date) },
+                .clickable(enabled = done || validDate) { onDateClick(day.date) },
         contentAlignment = Alignment.Center,
     ) {
         if (done) {

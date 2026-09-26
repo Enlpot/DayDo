@@ -29,6 +29,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.enlpot.daydo.R
+import com.enlpot.daydo.app.MainActivity
 import com.enlpot.daydo.core.data.GritIntentReceiver
 import com.enlpot.daydo.core.habits.Habit
 import com.enlpot.daydo.core.interfaces.IntentActions
@@ -39,9 +40,6 @@ import org.koin.core.annotation.Single
 class GritNotificationManager(private val context: Context) {
     companion object {
         private const val TAG = "NotificationManager"
-        // 习惯与任务的通知 ID 空间隔离：任务占 1000 起，习惯占 100 万起，避免 id 增长后互相覆盖
-        private const val HABIT_NOTIF_ID_OFFSET = 1_000_000
-        private const val TASK_NOTIF_ID_OFFSET = 1000
 
         fun createNotificationChannel(context: Context) {
             val importance = NotificationManager.IMPORTANCE_DEFAULT
@@ -57,6 +55,10 @@ class GritNotificationManager(private val context: Context) {
     }
 
     private val notificationManager by lazy { NotificationManagerCompat.from(context) }
+
+    // 通知 ID 位段防撞：任务占低 30 位、习惯置高位置 1，Long 自增 id 增长后两类通知互不覆盖（P3）
+    private fun habitNotifyId(id: Long): Int = ((id and 0x3FFFFFFF).toInt() or (1 shl 30))
+    private fun taskNotifyId(id: Long): Int = (id and 0x3FFFFFFF).toInt()
 
     // shows habit notification if permission granted
     fun habitNotification(habit: Habit) {
@@ -75,6 +77,15 @@ class GritNotificationManager(private val context: Context) {
                 PendingIntent.FLAG_IMMUTABLE,
             )
 
+        val contentIntent =
+            PendingIntent.getActivity(
+                context,
+                habitNotifyId(habit.id),
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                },
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
         val builder =
             NotificationCompat.Builder(context, "1")
                 .setSmallIcon(R.drawable.notif_icon)
@@ -82,10 +93,11 @@ class GritNotificationManager(private val context: Context) {
                 .setContentText(habit.description)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
+                .setContentIntent(contentIntent)
                 .addAction(R.drawable.notif_icon, context.getString(R.string.notif_mark_done), pendingBroadcast)
 
         if (canPost()) {
-            notificationManager.notify(habit.id.toInt() + HABIT_NOTIF_ID_OFFSET, builder.build())
+            notificationManager.notify(habitNotifyId(habit.id), builder.build())
         } else {
             Log.e(TAG, "Notification permission denied!")
         }
@@ -105,27 +117,37 @@ class GritNotificationManager(private val context: Context) {
                 intent,
                 PendingIntent.FLAG_IMMUTABLE,
             )
+        val contentIntent =
+            PendingIntent.getActivity(
+                context,
+                taskNotifyId(task.id),
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                },
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
         val builder =
             NotificationCompat.Builder(context, "1")
                 .setSmallIcon(R.drawable.notif_icon)
                 .setContentTitle(task.title)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
+                .setContentIntent(contentIntent)
                 .addAction(R.drawable.notif_icon, context.getString(R.string.notif_mark_done), pendingBroadcast)
 
         if (canPost()) {
-            notificationManager.notify(task.id.toInt() + TASK_NOTIF_ID_OFFSET, builder.build())
+            notificationManager.notify(taskNotifyId(task.id), builder.build())
         } else {
             Log.e(TAG, "Notification permission denied!")
         }
     }
 
     fun cancelNotification(habitId: Int) {
-        notificationManager.cancel(habitId + HABIT_NOTIF_ID_OFFSET)
+        notificationManager.cancel(habitNotifyId(habitId.toLong()))
     }
 
     fun cancelNotification(task: Task) {
-        notificationManager.cancel(task.id.toInt() + TASK_NOTIF_ID_OFFSET)
+        notificationManager.cancel(taskNotifyId(task.id))
     }
 
     /**

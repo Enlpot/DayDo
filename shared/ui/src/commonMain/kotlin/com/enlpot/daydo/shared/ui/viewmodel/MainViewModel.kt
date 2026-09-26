@@ -44,6 +44,10 @@ class MainViewModel(
 ) : ViewModel() {
     var observerJob: Job? = null
 
+    // 关键设置流到达标志（isBiometricLockOn/startingSection）：DataStore 流异常或迟到时不永久 Loading
+    private var biometricLoaded = false
+    private var startingSectionLoaded = false
+
     private val _state = MutableStateFlow(MainAppState())
 
     val state =
@@ -68,6 +72,13 @@ class MainViewModel(
 
     fun setBiometricLock(value: Boolean) {
         viewModelScope.launch { settingsDatastore.setBiometricPref(value) }
+    }
+
+    /** 两个关键设置流均到达后置 loaded，MainActivity 据此放行内容（不再依赖 isBiometricLockOn != null 当就绪门） */
+    private fun markLoadedIfReady() {
+        if (biometricLoaded && startingSectionLoaded) {
+            _state.update { it.copy(isLoaded = true) }
+        }
     }
 
     private fun observeDatastore() {
@@ -103,7 +114,11 @@ class MainViewModel(
 
                 settingsDatastore
                     .getStartingSectionPref()
-                    .onEach { pref -> _state.update { it.copy(startingSection = pref) } }
+                    .onEach { pref ->
+                        _state.update { it.copy(startingSection = pref) }
+                        startingSectionLoaded = true
+                        markLoadedIfReady()
+                    }
                     .launchIn(this)
 
                 settingsDatastore
@@ -125,7 +140,11 @@ class MainViewModel(
                     .launchIn(this)
                 settingsDatastore
                     .getBiometricLockPref()
-                    .onEach { pref -> _state.update { it.copy(isBiometricLockOn = pref) } }
+                    .onEach { pref ->
+                        _state.update { it.copy(isBiometricLockOn = pref) }
+                        biometricLoaded = true
+                        markLoadedIfReady()
+                    }
                     .launchIn(this)
             }
     }

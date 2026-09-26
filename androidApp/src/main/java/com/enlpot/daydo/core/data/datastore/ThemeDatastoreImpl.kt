@@ -39,7 +39,6 @@ class ThemeDatastoreImpl(private val datastore: DataStore<Preferences>) : ThemeD
         private val amoledKey = booleanPreferencesKey("amoled")
         private val paletteKey = stringPreferencesKey("palette")
         private val materialYouKey = booleanPreferencesKey("material_you")
-        private val hapticPrefKey = booleanPreferencesKey("haptic")
     }
 
     override suspend fun resetAppTheme() {

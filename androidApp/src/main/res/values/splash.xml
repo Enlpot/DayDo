@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
+    <!-- API<31 低版本：system_accent1_* 平台色不存在，用自有色避免启动 NotFoundException -->
     <style name="Theme.Grit.Splash" parent="Theme.SplashScreen" >
         <item name="windowSplashScreenAnimatedIcon">@drawable/daydo_splash_icon</item>
-        <item name="windowSplashScreenBackground" tools:targetApi="31">@android:color/system_accent1_200</item>
+        <item name="windowSplashScreenBackground">@color/white</item>
         <item name="postSplashScreenTheme">@style/Theme.Grit</item>
     </style>
 </resources>

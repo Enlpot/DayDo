@@ -73,23 +73,23 @@ class MainActivity : FragmentActivity() {
             ) {
                 var showContent by remember { mutableStateOf(false) }
 
-                LaunchedEffect(state.isAppUnlocked, state.isBiometricLockOn) {
-                    state.isBiometricLockOn?.let {
-                        when {
-                            !it || state.isAppUnlocked -> showContent = true
-                            else -> {
-                                showBiometricPrompt(
-                                    onSuccess = {
-                                        mainViewModel.setAppUnlocked(true)
+                LaunchedEffect(state.isAppUnlocked, state.isBiometricLockOn, state.isLoaded) {
+                    // 关键设置流就绪前不展示：避免生物识别锁/起始页流迟到时永久 InitialLoading（P2-16）
+                    if (!state.isLoaded) return@LaunchedEffect
+                    when {
+                        state.isBiometricLockOn != true || state.isAppUnlocked -> showContent = true
+                        else -> {
+                            showBiometricPrompt(
+                                onSuccess = {
+                                    mainViewModel.setAppUnlocked(true)
+                                    showContent = true
+                                },
+                                onError = { errorCode, errString ->
+                                    handleBiometricError(errorCode, errString) {
                                         showContent = true
-                                    },
-                                    onError = { errorCode, errString ->
-                                        handleBiometricError(errorCode, errString) {
-                                            showContent = true
-                                        }
-                                    },
-                                )
-                            }
+                                    }
+                                },
+                            )
                         }
                     }
                 }

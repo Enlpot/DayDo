@@ -56,7 +56,7 @@ fun HabitsList(
     state: HabitState,
     lazyListState: LazyListState,
     onAction: (HabitsAction) -> Unit,
-    onNavigateToAnalytics: () -> Unit,
+    onNavigateToAnalytics: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = LocalWindowSizeClass.current

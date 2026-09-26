@@ -76,7 +76,9 @@ private fun Recurrence.Weekly.nextWeekly(from: LocalDate, base: LocalDate): Loca
     var candidateDays = from.toEpochDays() + 1
     while (true) {
         val weeksDiff = candidateDays - baseDays
-        val weekOffset = ((weeksDiff / 7) % interval + interval) % interval
+        // floor 除法：from<base 时负周差按向下取整，避免截断除法导致 base 周误判命中（P3）
+        val floorWeeks = if (weeksDiff < 0 && weeksDiff % 7 != 0L) weeksDiff / 7 - 1 else weeksDiff / 7
+        val weekOffset = (floorWeeks % interval + interval) % interval
         val dayIso = LocalDate.fromEpochDays(candidateDays).dayOfWeek.toIso()
         if (dayIso in weekDays && weekOffset == 0L) return LocalDate.fromEpochDays(candidateDays)
         candidateDays++
@@ -105,12 +107,14 @@ private fun Recurrence.Monthly.nextMonthly(from: LocalDate, base: LocalDate): Lo
     var guard = 0
     while (true) {
         if (guard++ > 2000) {
-            // 防御：连续 2000 个月无候选视为配置异常，回退到下一月 base 日后避免死循环
+            // 防御：连续 2000 个月无候选视为配置异常，回退到下一月 base 日后避免死循环；
+            // 兜底结果必须严格晚于 from（P3），否则顺延一天保证单调性
             val n = year * 12 + (month - 1) + 1
             val ny = n / 12
             val nm = n % 12 + 1
             val nd = base.dayOfMonth.coerceAtMost(LocalDate(ny, nm, 1).daysInMonth())
-            return LocalDate(ny, nm, nd)
+            val fallback = LocalDate(ny, nm, nd)
+            return if (fallback > from) fallback else from.plusDaysSafe(1)
         }
         val monthOffset = (year * 12 + month) - (base.year * 12 + base.month.ordinal + 1)
         if (monthOffset >= 0 && monthOffset % interval == 0) {
@@ -149,7 +153,20 @@ private fun Recurrence.Yearly.nextYearly(from: LocalDate, base: LocalDate): Loca
         val remainder = ((yearOffset % interval) + interval) % interval
         year = base.year + yearOffset + (interval - remainder)
     }
+    var guard = 0
     while (true) {
+        if (guard++ > 2000) {
+            // 防御：interval 超大（Int 溢出）或配置异常时回退到 from 之后，避免死循环（P3）
+            // Long 运算避免 interval 极大时 Int 溢出；LocalDate 上限 9999 再截断
+            val fallbackYear =
+                (from.year.toLong() + interval).coerceIn(1L, 9999L)
+            val m = months.sorted().first()
+            val nd = base.dayOfMonth.coerceAtMost(
+                LocalDate(fallbackYear.toInt(), m, 1).daysInMonth()
+            )
+            val fallback = LocalDate(fallbackYear.toInt(), m, nd)
+            return if (fallback > from) fallback else from.plusDaysSafe(1)
+        }
         val yearDiff = year - base.year
         if (yearDiff >= 0 && yearDiff % interval == 0) {
             val candidate =

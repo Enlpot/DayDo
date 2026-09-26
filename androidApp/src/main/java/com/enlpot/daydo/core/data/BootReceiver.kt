@@ -37,7 +37,12 @@ class BootReceiver : BroadcastReceiver(), KoinComponent {
     private val receiverScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onReceive(context: Context, intent: Intent?) {
-        if (intent?.action == Intent.ACTION_BOOT_COMPLETED) {
+        val action = intent?.action
+        // 开机/时区变化/手动改时间后，所有提醒按当前时刻重排（P3）
+        if (action == Intent.ACTION_BOOT_COMPLETED ||
+            action == Intent.ACTION_TIMEZONE_CHANGED ||
+            action == "android.intent.action.TIME_SET"
+        ) {
             val scheduler = get<AlarmScheduler>()
             val habitRepo = get<HabitRepo>()
             val taskRepo = get<TaskRepo>()

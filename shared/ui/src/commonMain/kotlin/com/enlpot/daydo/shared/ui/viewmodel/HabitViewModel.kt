@@ -37,6 +37,8 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.KoinViewModel
 import org.koin.core.annotation.Provided
@@ -65,9 +67,13 @@ class HabitViewModel(
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitState())
 
+    /** 串行化动作处理：快速连点/拖动后 index 变化时避免状态竞争（P2-15） */
+    private val actionMutex = Mutex()
+
     // handles actions from habit page
     fun onAction(action: HabitsAction) {
         viewModelScope.launch {
+            actionMutex.withLock {
             when (action) {
                 is AddHabit -> {
                     analytics.trackEvent(
@@ -176,6 +182,7 @@ class HabitViewModel(
                     )
                 }
             }
+            }
         }
     }
 
@@ -242,7 +249,8 @@ class HabitViewModel(
     private suspend fun insertHabitStatus(habit: Habit, date: LocalDate) {
         val isHabitCompleted =
             _state.value.habitsWithAnalytics
-                .find { it.habit == habit }
+                // 按 id 匹配：习惯编辑/重排后全字段 equals 会失败（P2-15）
+                .find { it.habit.id == habit.id }
                 ?.statuses
                 ?.any { it.date == date } ?: false
 

@@ -33,9 +33,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Companion.Compact
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,9 +80,25 @@ fun MainApp(state: MainAppState) {
             },
         )
 
+    // 起始页后置纠正：冷启动首帧 DataStore 未就绪时 initialKey 是默认页，
+    // isLoaded 就绪瞬间（用户尚未导航）切到用户设置的起始页（P2-16）
+    LaunchedEffect(state.isLoaded) {
+        if (!state.isLoaded) return@LaunchedEffect
+        val target =
+            when (state.startingSection) {
+                Home -> AppSections.HomePages
+                Tasks -> AppSections.TaskPages
+                Habits -> AppSections.HabitPages
+            }
+        if (appBackStack.size == 1 && appBackStack.lastOrNull() != target) {
+            appBackStack.removeAll { true }
+            appBackStack.add(target)
+        }
+    }
+
     var subPage by remember { mutableStateOf(false) }
-    var taskStatsSeriesId by remember { mutableStateOf<Long?>(null) }
-    var habitAnalyticsHabitId by remember { mutableStateOf<Long?>(null) }
+    var taskStatsSeriesId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var habitAnalyticsHabitId by rememberSaveable { mutableStateOf<Long?>(null) }
     CompositionLocalProvider(
         LocalCardCornerRadius provides state.cornerRadius,
     ) {

@@ -242,7 +242,13 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
                     onAction(TaskAction.OnTaskCategorySheetDismissed)
                     showCategoryAddSheet = false
                 },
-                category = Category(name = "", color = CategoryColors.GRAY.color),
+                // 新分类 index 取当前最大+1：分类重排过之后新建不再恒为 0 插最前（P3）
+                category =
+                    Category(
+                        name = "",
+                        color = CategoryColors.GRAY.color,
+                        index = (state.tasks.keys.maxOfOrNull { it.index } ?: -1) + 1,
+                    ),
                 onUpsertCategory = {
                     onAction(TaskAction.AddCategory(it))
                     onAction(TaskAction.OnTaskCategorySheetDismissed)
@@ -411,7 +417,8 @@ private fun CategorySelector(
             ToggleButton(
                 checked =
                     state.currentView is TaskView.Regular &&
-                        (state.currentView as TaskView.Regular).category == category,
+                        // 按 id 比较：分类重命名后当前 chip 不失选（P3）
+                        (state.currentView as TaskView.Regular).category.id == category.id,
                 onCheckedChange = {
                     onAction(TaskAction.ChangeCategory(category))
                 },

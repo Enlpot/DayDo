@@ -76,7 +76,7 @@ import org.jetbrains.compose.resources.stringResource
 private sealed interface HabitRoutes : NavKey {
     @Serializable data object HabitList : HabitRoutes
 
-    @Serializable data object HabitAnalytics : HabitRoutes
+    @Serializable data class HabitAnalytics(val habitId: Long) : HabitRoutes
 
     @Serializable data object OverallAnalytics : HabitRoutes
 
@@ -120,8 +120,8 @@ fun HabitsGraph(
             val habitId = initialAnalyticsHabitId ?: return@LaunchedEffect
             val target = state.habitsWithAnalytics.firstOrNull { it.habit.id == habitId }
             if (target != null) {
-                if (HabitRoutes.HabitAnalytics !in backstack) {
-                    backstack.add(HabitRoutes.HabitAnalytics)
+                if (HabitRoutes.HabitAnalytics(habitId) !in backstack) {
+                    backstack.add(HabitRoutes.HabitAnalytics(habitId))
                 }
                 onAction(HabitsAction.PrepareAnalytics(target.habit))
                 onInitialAnalyticsHandled()
@@ -156,8 +156,8 @@ fun HabitsGraph(
                                     state = state,
                                     onAction = onAction,
                                     lazyListState = lazyListState,
-                                    onNavigateToAnalytics = {
-                                        backstack.add(HabitRoutes.HabitAnalytics)
+                                    onNavigateToAnalytics = { habitId ->
+                                        backstack.add(HabitRoutes.HabitAnalytics(habitId))
                                     },
                                     modifier =
                                         Modifier.fillMaxHeight()
@@ -272,7 +272,7 @@ private fun ExpandedScreen(
                 HabitsList(
                     state = state,
                     onAction = onAction,
-                    onNavigateToAnalytics = {},
+                    onNavigateToAnalytics = { _ -> },
                     lazyListState = lazyListState,
                     modifier =
                         Modifier.fillMaxHeight()
@@ -295,13 +295,13 @@ private fun ExpandedScreen(
                 shape = RoundedCornerShape(topStart = 28.dp),
                 modifier = Modifier.weight(1f),
             ) {
-                val backstack = rememberNavBackStack(config, HabitRoutes.HabitAnalytics)
+                val backstack = rememberNavBackStack(config, HabitRoutes.OverallAnalytics)
 
                 // 目标页已在栈中（任意位置）时弹到它：只去重栈顶会导致"分析↔总览"交替切换时返回栈无限增长
                 LaunchedEffect(state.analyticsHabitId) {
                     val target =
                         if (state.analyticsHabitId != null) {
-                            HabitRoutes.HabitAnalytics
+                            HabitRoutes.HabitAnalytics(state.analyticsHabitId)
                         } else {
                             HabitRoutes.OverallAnalytics
                         }

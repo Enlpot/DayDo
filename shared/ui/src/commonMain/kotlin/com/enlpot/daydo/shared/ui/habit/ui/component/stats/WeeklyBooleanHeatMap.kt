@@ -184,7 +184,7 @@ fun WeeklyBooleanHeatMap(
                                 Modifier.padding(horizontal = 1.dp)
                                     .size(35.dp)
                                     .clip(shape)
-                                    .clickable(enabled = validDay) { onDateClick(day.date) },
+                                    .clickable(enabled = done || validDay) { onDateClick(day.date) },
                             contentAlignment = Alignment.Center,
                         ) {
                             if (done) {
