@@ -104,6 +104,7 @@ fun HabitsList(
                         editState = state.editState,
                         onNavigateToAnalytics = onNavigateToAnalytics,
                         is24Hr = state.is24Hr,
+                        hapticFeedback = state.hapticFeedback,
                         reorderHandle = {
                             Icon(
                                 imageVector = vectorResource(Res.drawable.drag_indicator),

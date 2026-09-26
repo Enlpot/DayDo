@@ -56,4 +56,5 @@ data class HabitState(
     val compactHabitView: Boolean = false,
     val is24Hr: Boolean = true,
     val startingDay: DayOfWeek = DayOfWeek.MONDAY,
+    val hapticFeedback: Boolean = true,
 )

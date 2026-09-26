@@ -237,6 +237,11 @@ class HabitViewModel(
                     .getIs24Hr()
                     .onEach { pref -> _state.update { it.copy(is24Hr = pref) } }
                     .launchIn(this)
+
+                datastore
+                    .getHapticFeedbackPref()
+                    .onEach { pref -> _state.update { it.copy(hapticFeedback = pref) } }
+                    .launchIn(this)
             }
     }
 

@@ -33,6 +33,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -55,6 +57,8 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.habits.HabitWithAnalytics
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
+import com.enlpot.daydo.shared.ui.HapticKind
+import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import com.enlpot.daydo.shared.ui.habit.habitIcon
@@ -85,9 +89,11 @@ fun HabitCard(
     startingDay: DayOfWeek,
     reorderHandle: @Composable () -> Unit,
     is24Hr: Boolean,
+    hapticFeedback: Boolean = true,
     shape: Shape,
     modifier: Modifier = Modifier,
 ) {
+    val haptic = LocalHapticPerformer.current
     val today = LocalDate.now()
     val canCompleteToday = today.dayOfWeek in habitWithAnalytics.habit.days
 
@@ -157,12 +163,21 @@ fun HabitCard(
                         Modifier.size(40.dp)
                             .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
                             .clickable(enabled = canCompleteToday) {
+                                if (!completed && hapticFeedback) {
+                                    haptic(HapticKind.COMPLETE)
+                                }
                                 action(HabitsAction.InsertStatus(habitWithAnalytics.habit, today))
                             },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = habitIcon(habitWithAnalytics.habit.icon),
+                        // 打卡完成后图标切换为对勾
+                        imageVector =
+                            if (completed) {
+                                Icons.Filled.Check
+                            } else {
+                                habitIcon(habitWithAnalytics.habit.icon)
+                            },
                         contentDescription = null,
                         modifier = Modifier.size(24.dp),
                     )
@@ -295,6 +310,9 @@ fun HabitCard(
                                     role = Role.Button,
                                     enabled = done || validDay,
                                     onClick = {
+                                        if (!done && hapticFeedback) {
+                                            haptic(HapticKind.COMPLETE)
+                                        }
                                         action(
                                             HabitsAction.InsertStatus(
                                                 habit = habitWithAnalytics.habit,

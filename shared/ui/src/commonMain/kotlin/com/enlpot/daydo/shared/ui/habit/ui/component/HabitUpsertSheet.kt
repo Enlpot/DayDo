@@ -356,84 +356,81 @@ fun HabitUpsertSheetContent(
                 }
             }
         }
+    }
 
-        if (timePickerDialog) {
-            val timePickerState =
-                rememberTimePickerState(
-                    initialHour = newHabit.time.hour,
-                    initialMinute = newHabit.time.minute,
-                    is24Hour = is24Hr,
-                )
-
-            GritTimePicker(
-                onDismissRequest = { timePickerDialog = false },
-                state = timePickerState,
-                onConfirm = {
-                    updateHabit(
-                        newHabit.copy(
-                            time =
-                                LocalDateTime(
-                                    date = newHabit.time.date,
-                                    time =
-                                        LocalTime(
-                                            minute = timePickerState.minute,
-                                            hour = timePickerState.hour,
-                                        ),
-                                )
-                        )
-                    )
-                    timePickerDialog = false
-                },
+    if (timePickerDialog) {
+        val timePickerState =
+            rememberTimePickerState(
+                initialHour = newHabit.time.hour,
+                initialMinute = newHabit.time.minute,
+                is24Hour = is24Hr,
             )
-        }
 
-        if (iconPickerDialog) {
-            GritBottomSheet(
-                onDismissRequest = { iconPickerDialog = false },
-                padding = 0.dp,
-                modifier = Modifier.height(460.dp),
-            ) {
-                Text(
-                    text = stringResource(Res.string.select_icon),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        GritTimePicker(
+            onDismissRequest = { timePickerDialog = false },
+            state = timePickerState,
+            onConfirm = {
+                updateHabit(
+                    newHabit.copy(
+                        time =
+                            LocalDateTime(
+                                date = newHabit.time.date,
+                                time =
+                                    LocalTime(
+                                        minute = timePickerState.minute,
+                                        hour = timePickerState.hour,
+                                    ),
+                            )
+                    )
                 )
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(6),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    items(HABIT_ICONS, key = { it }) { iconName ->
-                        val selected = newHabit.icon == iconName
-                        Surface(
-                            modifier =
-                                Modifier.size(48.dp).clip(MaterialTheme.shapes.medium).clickable {
-                                    updateHabit(newHabit.copy(icon = iconName))
-                                    iconPickerDialog = false
-                                },
-                            color =
-                                if (selected) {
-                                    MaterialTheme.colorScheme.primaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceContainerHigh
-                                },
-                            shape = MaterialTheme.shapes.medium,
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = habitIcon(iconName),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
-                                    tint =
-                                        if (selected) {
-                                            MaterialTheme.colorScheme.onPrimaryContainer
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                )
-                            }
+                timePickerDialog = false
+            },
+        )
+    }
+
+    if (iconPickerDialog) {
+        GritBottomSheet(onDismissRequest = { iconPickerDialog = false }, padding = 0.dp) {
+            Text(
+                text = stringResource(Res.string.select_icon),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(6),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                // 高度约束在内容上：挂在 ModalBottomSheet 根 modifier 会把弹窗窗口撑高，内容跑到屏幕顶部
+                modifier = Modifier.fillMaxWidth().height(460.dp),
+            ) {
+                items(HABIT_ICONS, key = { it }) { iconName ->
+                    val selected = newHabit.icon == iconName
+                    Surface(
+                        modifier =
+                            Modifier.size(48.dp).clip(MaterialTheme.shapes.medium).clickable {
+                                updateHabit(newHabit.copy(icon = iconName))
+                                iconPickerDialog = false
+                            },
+                        color =
+                            if (selected) {
+                                MaterialTheme.colorScheme.primaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            },
+                        shape = MaterialTheme.shapes.medium,
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = habitIcon(iconName),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                                tint =
+                                    if (selected) {
+                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                            )
                         }
                     }
                 }
