@@ -164,10 +164,10 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
     override fun getWebDavPassword(): Flow<String> =
         datastore.data.map { prefs ->
             val stored = prefs[webDavPasswordKey] ?: ""
-            // 形如 "Base64(iv):Base64(密文)" 的密文才尝试解密；解密失败保留原值。
-            // 旧明文密码（即使含冒号）不会被误判为密文而静默清空。
+            // 形如 "Base64(iv):Base64(密文)" 的密文才尝试解密；解密失败返回空串，
+            // 不把密文当凭据发送/显示（P3）。旧明文密码（即使含冒号）不会被误判为密文而静默清空。
             if (looksLikeEncrypted(stored)) {
-                WebDavCipher.decrypt(stored) ?: stored
+                WebDavCipher.decrypt(stored) ?: ""
             } else {
                 stored
             }

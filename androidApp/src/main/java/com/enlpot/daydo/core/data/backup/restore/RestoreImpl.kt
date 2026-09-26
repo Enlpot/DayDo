@@ -157,10 +157,9 @@ class RestoreImpl(
                             alarmScheduler.schedule(task)
                         }
                     }
+                // withContext 块值即函数返回值：预校验失败经 return@withContext 返回 Failure（P1-1）
+                RestoreResult.Success
             }
-
-            // withContext 块值即函数返回值：预校验失败经 return@withContext 返回 Failure（P1-1）
-            RestoreResult.Success
         } catch (e: kotlinx.coroutines.CancellationException) {
             // 协程取消必须向上传播，不能误报"恢复失败"（P3）
             throw e

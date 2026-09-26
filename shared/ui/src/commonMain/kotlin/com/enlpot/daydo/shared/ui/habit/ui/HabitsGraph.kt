@@ -123,9 +123,11 @@ fun HabitsGraph(
                     backstack.add(HabitRoutes.HabitAnalytics(habitId))
                 }
                 onAction(HabitsAction.PrepareAnalytics(target.habit))
+            } else if (state.habitsWithAnalytics.isNotEmpty()) {
+                // 数据已加载但目标不存在（已删除）：无效深链标记已处理，结束空跑（P2-5）
+                onInitialAnalyticsHandled()
             }
-            // 无效深链 id 也标记已处理：结束 LaunchedEffect 空跑（P2-5）
-            onInitialAnalyticsHandled()
+            // 空列表 = 数据尚未加载：保留标记，等待数据到达后随 effect 重跑入栈（P1-2）
         }
 
         NavDisplay(
@@ -236,9 +238,11 @@ fun HabitsGraph(
             val target = state.habitsWithAnalytics.firstOrNull { it.habit.id == habitId }
             if (target != null) {
                 onAction(HabitsAction.PrepareAnalytics(target.habit))
+            } else if (state.habitsWithAnalytics.isNotEmpty()) {
+                // 数据已加载但目标不存在（已删除）：无效深链标记已处理，结束空跑（P2-5）
+                onInitialAnalyticsHandled()
             }
-            // 无效深链 id 也标记已处理：结束 LaunchedEffect 空跑（P2-5）
-            onInitialAnalyticsHandled()
+            // 空列表 = 数据尚未加载：保留标记，等待数据到达后随 effect 重跑派发（P1-2）
         }
 
         ExpandedScreen(

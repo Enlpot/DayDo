@@ -371,7 +371,7 @@ private fun TaskListTopBar(
                 ) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.delete),
-                        contentDescription = null,
+                        contentDescription = stringResource(Res.string.delete),
                     )
                 }
             }
@@ -421,10 +421,16 @@ private fun CategorySelector(
         item {
             Spacer(modifier = Modifier.width(4.dp))
             FilledTonalIconButton(onClick = onAddCategoryClick) {
-                Icon(imageVector = vectorResource(Res.drawable.add), contentDescription = null)
+                Icon(
+                    imageVector = vectorResource(Res.drawable.add),
+                    contentDescription = stringResource(Res.string.add),
+                )
             }
             FilledTonalIconButton(onClick = onEditCategoriesClick) {
-                Icon(imageVector = vectorResource(Res.drawable.edit), contentDescription = null)
+                Icon(
+                    imageVector = vectorResource(Res.drawable.edit),
+                    contentDescription = stringResource(Res.string.edit),
+                )
             }
         }
     }
@@ -522,7 +528,7 @@ private fun TaskItemsSection(
                             reorderIcon = {
                                 Icon(
                                     imageVector = vectorResource(Res.drawable.drag_indicator),
-                                    contentDescription = null,
+                                    contentDescription = stringResource(Res.string.drag),
                                     modifier =
                                         Modifier.draggableHandle(
                                             onDragStarted = {
@@ -616,7 +622,7 @@ private fun DeletedTaskCard(
                 FilledTonalIconButton(onClick = onPurge) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.delete),
-                        contentDescription = null,
+                        contentDescription = stringResource(Res.string.delete),
                     )
                 }
             }
@@ -639,7 +645,7 @@ private fun DeleteTasksDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
             ) {
                 Icon(
                     imageVector = vectorResource(Res.drawable.warning),
-                    contentDescription = null,
+                    contentDescription = stringResource(Res.string.warning),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
             }

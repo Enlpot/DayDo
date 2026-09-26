@@ -28,6 +28,7 @@ import com.enlpot.daydo.core.now
 import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -151,6 +152,7 @@ class HabitViewModel(
                     is FetchCompletedHabitsForDate -> {
                         completedHabitsFetchJob?.cancel()
                         completedHabitsFetchJob = launch {
+                            ensureActive() // 弹窗快速切换日期时及时取消旧查询（P3）
                             if (action.date == null) {
                                 _state.update { it.copy(selectedDayCompletedHabits = null) }
                                 return@launch

@@ -55,7 +55,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.daysUntil
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import org.koin.core.annotation.Single
@@ -125,8 +124,9 @@ class HabitRepository(
             .combine(habitStatuses) { habitsFlow, habitStatusesFlow ->
                 habitsFlow to habitStatusesFlow
             }
-            .combine(dateTicker()) { pair, today ->
-                val (habitsFlow, habitStatusesFlow) = pair
+            .combine(dateTicker()) { pair, today -> Triple(pair.first, pair.second, today) }
+            .combine(firstDayOfWeek) { triple, weekStart ->
+                val (habitsFlow, habitStatusesFlow, today) = triple
                 // 按 habitId 分组一次，避免每个 habit 全量过滤全部打卡记录（O(N×M) → O(N+M)）
                 val statusesByHabit = habitStatusesFlow.groupBy { it.habitId }
                 habitsFlow.map { habit ->
@@ -141,12 +141,11 @@ class HabitRepository(
                         bestStreak = countBestStreak(dates = dates, eligibleWeekdays = habit.days),
                         weeklyComparisonData =
                             prepareLineChartData(
-                                firstDay = firstDayOfWeek.value,
+                                firstDay = weekStart,
                                 habitStatuses = habitStatusesForHabit,
                             ),
                         weekDayFrequencyData = prepareWeekDayFrequencyData(dates = dates),
-                        // today 由 dateTicker 驱动：跨午夜自动重算（startedDaysAgo/consistency 依赖今天）
-                        startedDaysAgo = habit.time.date.daysUntil(today).toLong(),
+                        // today 由 dateTicker 驱动：跨午夜自动重算（consistency 依赖今天）
                         consistency = calculateConsistency(dates, habit.days, habit.time.date),
                     )
                 }
@@ -168,11 +167,12 @@ class HabitRepository(
     private fun dateTicker(): Flow<LocalDate> =
         flow {
                 while (true) {
-                    emit(LocalDate.now())
+                    val today = LocalDate.now() // 单次快照，避免跨午夜瞬间跳一天（P4）
+                    emit(today)
                     val tz = TimeZone.currentSystemDefault()
                     val nowMs = LocalDateTime.now().toInstant(tz).toEpochMilliseconds()
                     val nextMidnight =
-                        LocalDateTime(LocalDate.now().plus(1, DateTimeUnit.DAY), LocalTime(0, 0))
+                        LocalDateTime(today.plus(1, DateTimeUnit.DAY), LocalTime(0, 0))
                     val nextMs = nextMidnight.toInstant(tz).toEpochMilliseconds()
                     // 兜底至少等 1 秒，避免极端情况下 sleep 0 导致忙循环
                     delay((nextMs - nowMs).coerceAtLeast(1_000L))

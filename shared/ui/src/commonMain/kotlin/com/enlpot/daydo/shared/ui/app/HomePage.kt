@@ -202,13 +202,13 @@ fun HomePage(
                     ) {
                         Icon(
                             imageVector = vectorResource(Res.drawable.delete),
-                            contentDescription = null,
+                            contentDescription = stringResource(Res.string.delete),
                         )
                     }
                     IconButton(onClick = ::exitMultiSelect) {
                         Icon(
                             imageVector = vectorResource(Res.drawable.close),
-                            contentDescription = null,
+                            contentDescription = stringResource(Res.string.close),
                         )
                     }
                 }
@@ -311,7 +311,7 @@ fun HomePage(
     ) {
         Icon(
             imageVector = vectorResource(Res.drawable.add),
-            contentDescription = null,
+            contentDescription = stringResource(Res.string.add),
             modifier = Modifier.size(24.dp),
         )
     }
@@ -401,7 +401,7 @@ private fun TodayTasksSection(
                     reorderIcon = {
                         Icon(
                             imageVector = vectorResource(Res.drawable.drag_indicator),
-                            contentDescription = null,
+                            contentDescription = stringResource(Res.string.drag),
                             modifier =
                                 Modifier.draggableHandle(
                                     onDragStarted = {

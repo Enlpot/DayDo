@@ -17,7 +17,6 @@
 package com.enlpot.daydo.shared.ui.task
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.SmartCategory
@@ -34,7 +33,6 @@ sealed interface TaskView {
 }
 
 @Stable
-@Immutable
 data class TaskState(
     val tasks: Map<Category, List<Task>> = emptyMap(),
     val allTasks: List<Task> = emptyList(),

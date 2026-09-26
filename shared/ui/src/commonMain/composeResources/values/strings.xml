@@ -171,6 +171,8 @@
     <string name="next">Next</string>
     <string name="expand">Expand</string>
     <string name="close">Close</string>
+    <string name="drag">Drag</string>
+    <string name="warning">Warning</string>
     <string name="retry">Retry</string>
     <string name="no_completion_record">No completion records</string>
 

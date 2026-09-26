@@ -172,6 +172,8 @@
     <string name="next">下一个</string>
     <string name="expand">展开</string>
     <string name="close">关闭</string>
+    <string name="drag">拖动</string>
+    <string name="warning">警告</string>
     <string name="retry">重试</string>
     <string name="no_completion_record">暂无完成记录</string>
 

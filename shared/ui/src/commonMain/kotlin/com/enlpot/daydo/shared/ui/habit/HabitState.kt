@@ -16,7 +16,6 @@
  */
 package com.enlpot.daydo.shared.ui.habit
 
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.enlpot.daydo.core.habits.HabitWithAnalytics
 import com.enlpot.daydo.core.habits.OverallAnalytics
@@ -43,7 +42,6 @@ import kotlinx.datetime.LocalDate
  *   start on.
  */
 @Stable
-@Immutable
 data class HabitState(
     val habitsWithAnalytics: List<HabitWithAnalytics> = emptyList(),
     val completedHabitIds: List<Long> = emptyList(),

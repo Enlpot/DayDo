@@ -16,7 +16,6 @@
  */
 package com.enlpot.daydo.shared.ui.setting
 
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
@@ -28,7 +27,6 @@ import com.enlpot.daydo.core.theme.Theme
 import kotlinx.datetime.DayOfWeek
 
 @Stable
-@Immutable
 data class SettingsState(
     val backupState: BackupState = BackupState(),
     val appVersion: String = "1.0.0",
@@ -56,7 +54,6 @@ data class SettingsState(
 )
 
 @Stable
-@Immutable
 data class BackupState(
     val exportState: ExportState = ExportState.IDLE,
     val exportMessage: String = "",

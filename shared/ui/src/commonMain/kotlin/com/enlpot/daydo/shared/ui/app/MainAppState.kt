@@ -16,14 +16,12 @@
  */
 package com.enlpot.daydo.shared.ui.app
 
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.theme.Theme
 
 @Stable
-@Immutable
 data class MainAppState(
     val isAppUnlocked: Boolean = false,
     val isBiometricLockOn: Boolean? = null,
