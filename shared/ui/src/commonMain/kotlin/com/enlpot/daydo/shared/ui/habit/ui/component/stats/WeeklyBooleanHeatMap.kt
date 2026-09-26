@@ -122,7 +122,7 @@ fun WeeklyBooleanHeatMap(
                                 )
                     ) {
                         Text(
-                            text = weekdayShortLabels()[index],
+                            text = weekdayShortLabels()[dayOfWeek.ordinal],
                             style =
                                 MaterialTheme.typography.labelSmall.copy(
                                     color = MaterialTheme.colorScheme.onSurface

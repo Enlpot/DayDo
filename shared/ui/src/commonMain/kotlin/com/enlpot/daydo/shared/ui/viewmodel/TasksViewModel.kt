@@ -34,6 +34,7 @@ import com.enlpot.daydo.core.tasks.sortCompletedTasks
 import com.enlpot.daydo.core.tasks.sortOverdueTasks
 import com.enlpot.daydo.core.tasks.taskOccursOn
 import com.enlpot.daydo.core.tasks.typicalCompletionMinuteOfSeries
+import com.enlpot.daydo.core.tasks.REPOS_POS_BASE
 import com.enlpot.daydo.core.tasks.taskSortKeyOrCreated
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
@@ -125,27 +126,9 @@ class TasksViewModel(
 
                 DeleteTasks -> deleteCompletedTasks()
 
-                is ChangeCategory -> {
-                    _state.update { it.copy(currentView = TaskView.Regular(action.category)) }
-                }
+                is ChangeCategory -> switchView(TaskView.Regular(action.category))
 
-                is ChangeView -> {
-                    val s = _state.value
-                    val today = LocalDate.now()
-                    val typicalBySeries =
-                        s.allTasks
-                            .groupBy { it.seriesId }
-                            .mapValues { (_, seriesTasks) -> typicalCompletionMinuteOfSeries(seriesTasks) }
-                    val (display, displayCompleted) =
-                        displayTasksFor(action.view, s.allTasks, s.deletedTasks, today, typicalBySeries)
-                    _state.update {
-                        it.copy(
-                            currentView = action.view,
-                            displayTasks = display,
-                            displayCompletedTasks = displayCompleted,
-                        )
-                    }
-                }
+                is ChangeView -> switchView(action.view)
 
                 is AddCategory -> {
                     if (action.category.id == 0L) {
@@ -167,7 +150,49 @@ class TasksViewModel(
                     // 已完成任务固定按完成时间倒序，不接受拖动
                     val moved = _state.value.allTasks.firstOrNull { it.id == action.taskId }
                     if (moved != null && !moved.status) {
-                        val all = _state.value.allTasks
+                        if (moved.recurrence != null) {
+                            // 重复任务：按当前显示链索引精确落位（拖到哪停哪）。
+                            // sortKey 量纲 = 链位置 × REPOS_POS_BASE；当天拖过在排序器中按
+                            // sortKey 插入未拖过（典型完成时间排序）的链中，次日自动回归频率排序。
+                            val chain = _state.value.displayTasks.filter { it.recurrence != null }
+                            val idxOf: (Long?) -> Int? = { id ->
+                                id?.let { i -> chain.indexOfFirst { t -> t.id == i } }
+                                    ?.takeIf { it >= 0 }
+                            }
+                            val upperIdx = idxOf(action.aboveId)
+                            val lowerIdx = idxOf(action.belowId)
+                            var newKey =
+                                when {
+                                    upperIdx != null && lowerIdx != null && lowerIdx - upperIdx > 1 ->
+                                        (upperIdx * REPOS_POS_BASE + lowerIdx * REPOS_POS_BASE) / 2
+                                    upperIdx != null && lowerIdx == null -> upperIdx * REPOS_POS_BASE + 1
+                                    lowerIdx != null -> lowerIdx * REPOS_POS_BASE - 1
+                                    else -> moved.sortKey ?: 0L
+                                }
+                            // 相邻索引无空隙：整段按当前链顺序重编号（步长 REPOS_POS_BASE）腾出空间，
+                            // 被拖任务再取目标插值（未拖过的重编号不动 sortKeyDate，次日仍回归频率排序）
+                            if (upperIdx != null && lowerIdx != null && lowerIdx - upperIdx <= 1) {
+                                chain.forEachIndexed { i, t ->
+                                    repo.updateTaskSortKeyById(t.id, i * REPOS_POS_BASE)
+                                }
+                                val newUpper = idxOf(action.aboveId)
+                                val newLower = idxOf(action.belowId)
+                                newKey =
+                                    when {
+                                        newUpper != null && newLower != null ->
+                                            (newUpper * REPOS_POS_BASE + newLower * REPOS_POS_BASE) / 2
+                                        newUpper != null -> newUpper * REPOS_POS_BASE + 1
+                                        newLower != null -> newLower * REPOS_POS_BASE - 1
+                                        else -> newKey
+                                    }
+                            }
+                            repo.updateTaskSortKeyAndDateById(
+                                action.taskId,
+                                newKey,
+                                LocalDate.now().toEpochDays(),
+                            )
+                        } else {
+                            val all = _state.value.allTasks
                         // 已完成任务固定按完成时间倒序，不作为活动任务排序键的邻居参与中点计算
                         val aboveKey =
                             action.aboveId?.let { id -> all.firstOrNull { it.id == id } }
@@ -217,6 +242,7 @@ class TasksViewModel(
                             newKey,
                             LocalDate.now().toEpochDays(),
                         )
+                        }
                     }
                 }
 
@@ -454,6 +480,25 @@ class TasksViewModel(
         val view = _state.value.currentView
         if (view is TaskView.Smart && view.category == category && category in newHidden) {
             switchToAllSmartView()
+        }
+    }
+
+    /** 切换视图并重算列表：ChangeCategory 与 ChangeView 共用，避免切分类后列表 stale */
+    private fun switchView(view: TaskView) {
+        val s = _state.value
+        val today = LocalDate.now()
+        val typicalBySeries =
+            s.allTasks
+                .groupBy { it.seriesId }
+                .mapValues { (_, seriesTasks) -> typicalCompletionMinuteOfSeries(seriesTasks) }
+        val (display, displayCompleted) =
+            displayTasksFor(view, s.allTasks, s.deletedTasks, today, typicalBySeries)
+        _state.update {
+            it.copy(
+                currentView = view,
+                displayTasks = display,
+                displayCompletedTasks = displayCompleted,
+            )
         }
     }
 

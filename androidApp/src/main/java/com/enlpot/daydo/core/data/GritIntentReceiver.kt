@@ -138,7 +138,8 @@ class GritIntentReceiver : BroadcastReceiver(), KoinComponent {
             return
         }
 
-        if (!task.status && task.reminder != null) {
+        // 软删（回收站）任务不弹通知：与 BootReceiver 的 deletedAt IS NULL 语义一致
+        if (!task.status && task.deletedAt == null && task.reminder != null) {
             Log.d(TAG, "sending Task notification")
             get<GritNotificationManager>().taskNotification(task)
         }

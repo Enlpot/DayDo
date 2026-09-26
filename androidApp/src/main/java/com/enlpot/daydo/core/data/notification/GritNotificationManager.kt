@@ -17,6 +17,7 @@
 package com.enlpot.daydo.core.data.notification
 
 import android.Manifest
+import android.os.Build
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -83,10 +84,7 @@ class GritNotificationManager(private val context: Context) {
                 .setAutoCancel(true)
                 .addAction(R.drawable.notif_icon, context.getString(R.string.notif_mark_done), pendingBroadcast)
 
-        if (
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-        ) {
+        if (canPost()) {
             notificationManager.notify(habit.id.toInt() + HABIT_NOTIF_ID_OFFSET, builder.build())
         } else {
             Log.e(TAG, "Notification permission denied!")
@@ -115,10 +113,7 @@ class GritNotificationManager(private val context: Context) {
                 .setAutoCancel(true)
                 .addAction(R.drawable.notif_icon, context.getString(R.string.notif_mark_done), pendingBroadcast)
 
-        if (
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-        ) {
+        if (canPost()) {
             notificationManager.notify(task.id.toInt() + TASK_NOTIF_ID_OFFSET, builder.build())
         } else {
             Log.e(TAG, "Notification permission denied!")
@@ -132,4 +127,12 @@ class GritNotificationManager(private val context: Context) {
     fun cancelNotification(task: Task) {
         notificationManager.cancel(task.id.toInt() + TASK_NOTIF_ID_OFFSET)
     }
+
+    /**
+     * 通知投递判定：API 33 前无需 POST_NOTIFICATIONS 运行时权限（系统总开关/渠道开关即可），
+     * API 33+ 才检查权限；用 areNotificationsEnabled 顺带覆盖"通知被关闭/渠道被关"场景。
+     */
+    private fun canPost(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            NotificationManagerCompat.from(context).areNotificationsEnabled()
 }

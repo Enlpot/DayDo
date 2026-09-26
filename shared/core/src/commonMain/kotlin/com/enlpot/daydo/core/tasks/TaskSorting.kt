@@ -43,21 +43,43 @@ fun sortActiveTasks(tasks: List<Task>, typicalBySeries: Map<Long?, Int?>): List<
     // 普通任务：被拖过的按相对排序键（越大越上），未拖过的按创建时间倒序（新在顶）
     val normalSorted = normal.sortedByDescending { taskSortKeyOrCreated(it, tz) }
 
-    // 重复任务：当天拖过的按拖位（sortKey 越大越上），其余按典型完成时间升序；
-    // 未拖/非当天拖的次日自动回归"频率排序"（典型完成时间），无稳定模式的按创建时间倒序
+    // 重复任务：当天拖过的按 sortKey 精确落位（拖到哪停哪，sortKey 量纲 = 链位置×1000），
+    // 其余按典型完成时间升序；未拖/非当天拖的次日自动回归"频率排序"（典型完成时间），
+    // 无稳定模式的按创建时间倒序。
+    // 合并逻辑：未拖过任务链的第 i 项"位置"= i*POS_BASE，拖过任务的 sortKey 即拖动瞬间的
+    // 位置值（如插在链[2]与链[3]之间则约为 2.5*POS_BASE），遍历未拖过链时按 < 当前 i*POS_BASE
+    // 把拖过任务插入，从而精确落在用户拖动的位置。
     val todayEpoch = LocalDate.now().toEpochDays()
-    val recSorted =
-        recurring.sortedWith(
+    val dragged =
+        recurring.filter { it.sortKeyDate?.toEpochDays() == todayEpoch && it.sortKey != null }
+    val untouched =
+        recurring.filterNot { d -> dragged.any { it.id == d.id } }
+    val untouchedSorted =
+        untouched.sortedWith(
             compareBy(
-                // 1. 当天拖过的排最前
-                { !(it.sortKeyDate?.toEpochDays() == todayEpoch && it.sortKey != null) },
-                // 2. 当天拖过的按 sortKey 降序（与普通任务一致：越大越上）
-                { if (it.sortKeyDate?.toEpochDays() == todayEpoch) -(it.sortKey ?: 0L) else Long.MIN_VALUE },
-                // 3. 其余：有典型按典型时间升序，无典型按创建时间倒序（新的在顶）
                 { typicalBySeries[it.seriesId] ?: Int.MAX_VALUE },
                 { -createdAtKey(it, tz) },
             )
         )
+    val recSorted =
+        buildList {
+            val draggedSorted = dragged.sortedBy { it.sortKey ?: Long.MAX_VALUE }
+            var di = 0
+            untouchedSorted.forEachIndexed { i, t ->
+                val pos = i * REPOS_POS_BASE
+                while (di < draggedSorted.size &&
+                    (draggedSorted[di].sortKey ?: Long.MAX_VALUE) < pos
+                ) {
+                    add(draggedSorted[di])
+                    di++
+                }
+                add(t)
+            }
+            while (di < draggedSorted.size) {
+                add(draggedSorted[di])
+                di++
+            }
+        }
 
     return normalSorted + recSorted
 }
@@ -109,6 +131,9 @@ fun typicalCompletionMinuteOfSeries(seriesTasks: List<Task>): Int? {
 }
 
 private const val MINUTES_PER_DAY = 24 * 60
+
+/** 重复任务拖动位置量纲：sortKey = 链位置索引 × 该常量（与典型时间/创建时间量纲隔离） */
+const val REPOS_POS_BASE = 1000L
 
 /** 排序键：手动拖过用 sortKey，未拖过用创建时间（越大越上）；tz 由调用方预取一次 */
 fun taskSortKeyOrCreated(task: Task, tz: TimeZone = TimeZone.currentSystemDefault()): Long =

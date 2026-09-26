@@ -106,7 +106,8 @@ class RestoreImpl(
                 // 重建提醒调度：习惯全部调度；任务仅未完成且提醒时间未过的补调度
                 habits.forEach { alarmScheduler.schedule(it) }
                 tasks
-                    .filter { !it.status }
+                    // 软删（回收站）任务不重建闹钟：避免已删任务到点弹幽灵通知
+                    .filter { !it.status && it.deletedAt == null }
                     .forEach { task ->
                         val reminder = task.reminder
                         if (reminder != null && reminder >= LocalDateTime.now()) {
