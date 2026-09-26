@@ -39,6 +39,12 @@ sealed interface RestoreFailedException {
     data object InvalidFile : RestoreFailedException
 
     data object OldSchema : RestoreFailedException
+
+    /** 引用完整性预校验失败（分类/习惯 ID 悬空），恢复未写入任何库 */
+    data object InconsistentData : RestoreFailedException
+
+    /** 写库中途异常，可能发生部分更新 */
+    data object PartialRestore : RestoreFailedException
 }
 
 class SchemaMismatchException : Exception()

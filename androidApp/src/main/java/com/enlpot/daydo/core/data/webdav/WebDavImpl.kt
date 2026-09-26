@@ -173,6 +173,10 @@ class WebDavImpl(
                                     "备份文件版本过旧，无法恢复"
                                 is com.enlpot.daydo.core.settings.backup.RestoreFailedException.InvalidFile ->
                                     "备份文件无效"
+                                is com.enlpot.daydo.core.settings.backup.RestoreFailedException.InconsistentData ->
+                                    "备份数据不完整（分类/习惯引用缺失），已取消恢复"
+                                is com.enlpot.daydo.core.settings.backup.RestoreFailedException.PartialRestore ->
+                                    "恢复中途失败，数据可能部分更新，请重新下载恢复"
                             }
                         )
                 }

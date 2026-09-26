@@ -16,6 +16,8 @@
  */
 package com.enlpot.daydo.core.data.datastore
 
+import android.util.Base64
+
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -161,14 +163,25 @@ private val webDavPasswordKey = stringPreferencesKey("webdav_password")
     override fun getWebDavPassword(): Flow<String> =
         datastore.data.map { prefs ->
             val stored = prefs[webDavPasswordKey] ?: ""
-            // 旧明文（无冒号分隔的 iv:密文 格式）原样返回，保存时自动迁移为密文；
-            // 密文解密失败（如密钥丢失）返回空串，不把密文当密码发给服务器（便于排查）
-            if (stored.contains(":")) {
-                WebDavCipher.decrypt(stored) ?: ""
+            // 形如 "Base64(iv):Base64(密文)" 的密文才尝试解密；解密失败保留原值。
+            // 旧明文密码（即使含冒号）不会被误判为密文而静默清空。
+            if (looksLikeEncrypted(stored)) {
+                WebDavCipher.decrypt(stored) ?: stored
             } else {
                 stored
             }
         }
+
+    /** 恰好一个冒号分隔，且两段均 Base64 合法才视为密文 */
+    private fun looksLikeEncrypted(stored: String): Boolean {
+        if (stored.isEmpty() || stored.startsWith(":") || stored.endsWith(":")) return false
+        val parts = stored.split(":")
+        if (parts.size != 2) return false
+        return parts.all { p ->
+            p.isNotEmpty() && p.length % 4 == 0 &&
+                runCatching { Base64.decode(p, Base64.NO_WRAP) }.isSuccess
+        }
+    }
 
     override suspend fun setWebDavPassword(password: String) {
         val encrypted =

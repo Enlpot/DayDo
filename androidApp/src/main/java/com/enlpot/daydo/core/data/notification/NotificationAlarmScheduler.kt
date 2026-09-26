@@ -187,7 +187,9 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
     }
 
     override fun cancelAll() {
-        // 低版本无 AlarmManager.cancelAll()：用注册集合逐个取消；高版本同样精确到本应用闹钟
+        // 系统级 cancelAll：进程被杀后注册集合丢失，仅遍历集合清不干净旧闹钟；
+        // 再逐个 cancel 集合中的 PendingIntent 兜底（minSdk 29 >= API 24，直接可用）
+        alarmManager.cancelAll()
         synchronized(scheduledIntents) {
             scheduledIntents.forEach { alarmManager.cancel(it) }
             scheduledIntents.clear()

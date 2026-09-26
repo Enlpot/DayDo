@@ -89,6 +89,17 @@ class RestoreImpl(
                 val categories = jsonDeserialized.categories.map { it.toCategory() }
                 val tasks = jsonDeserialized.tasks.map { it.toTask() }
 
+                // 引用完整性预校验：分类/习惯 ID 悬空则拒绝恢复（不写任何库），
+                // 避免两库先后提交导致"新习惯 + 旧任务"的半恢复状态
+                val categoryIds = categories.map { it.id }.toSet()
+                val habitIds = habits.map { it.id }.toSet()
+                if (
+                    tasks.any { it.categoryId != null && it.categoryId !in categoryIds } ||
+                    statuses.any { it.habitId !in habitIds }
+                ) {
+                    return@withContext RestoreResult.Failure(RestoreFailedException.InconsistentData)
+                }
+
                 // 恢复 = 回到备份状态：清空本地旧数据 + 写入备份内容，
                 // 各自库内 @Transaction 完成（中途失败自动回滚，不会"清空后崩溃丢数据"）
                 habitDatabase.replaceAll(
@@ -123,6 +134,10 @@ class RestoreImpl(
         } catch (e: SerializationException) {
             Log.e("RestoreRepo", "Failed to deserialize, invalid file: ", e)
             RestoreResult.Failure(RestoreFailedException.InvalidFile)
+        } catch (e: Exception) {
+            // 两库各自事务已提交的无法回滚：提示可能部分更新（数据安全优先，不吞异常）
+            Log.e("RestoreRepo", "Restore failed mid-way, data may be partially updated: ", e)
+            RestoreResult.Failure(RestoreFailedException.PartialRestore)
         }
     }
 }
