@@ -21,6 +21,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 
 class TaskSortingTest {
 
@@ -39,6 +41,16 @@ class TaskSortingTest {
             createdAt = createdAt,
             sortKey = sortKey,
             sortKeyDate = sortKeyDate,
+        )
+
+    private fun normalTask(id: Long, createdAt: LocalDateTime, sortKey: Long? = null) =
+        Task(
+            id = id,
+            title = "t$id",
+            recurrence = null,
+            seriesId = null,
+            createdAt = createdAt,
+            sortKey = sortKey,
         )
 
     // ---------- 重复任务拖动：当天拖过按 sortKey 精确落位（拖到哪停哪） ----------
@@ -121,6 +133,70 @@ class TaskSortingTest {
         // 把 c 拖到链[0]（b）与链[1]（a）之间 → 约 0.5×1000
         val draggedC = c.copy(sortKey = 500L, sortKeyDate = LocalDate.now())
         val sorted = sortActiveTasks(listOf(a, b, draggedC), typical)
+        assertEquals(listOf(b.id, c.id, a.id), sorted.map { it.id })
+    }
+
+    // ---------- 普通任务：默认创建时间倒序（新的在顶） ----------
+    @Test
+    fun normalTasksSortedByCreatedDesc() {
+        val a = normalTask(1, LocalDateTime(2026, 9, 26, 10, 0))
+        val b = normalTask(2, LocalDateTime(2026, 9, 25, 10, 0))
+        val c = normalTask(3, LocalDateTime(2026, 9, 24, 10, 0))
+        val sorted = sortActiveTasks(listOf(a, b, c), emptyMap())
+        assertEquals(listOf(a.id, b.id, c.id), sorted.map { it.id })
+    }
+
+    // ---------- 普通任务：拖过按 sortKey 固定位置（量纲继承邻居 epoch，永久生效） ----------
+    @Test
+    fun normalTaskDraggedToBottom() {
+        // 拖到底：上方邻居 c 的 epoch - 1 → 沉底（小于所有未拖 epoch）
+        val a = normalTask(1, LocalDateTime(2026, 9, 26, 10, 0))
+        val b = normalTask(2, LocalDateTime(2026, 9, 25, 10, 0))
+        val c = normalTask(3, LocalDateTime(2026, 9, 24, 10, 0))
+        val tz = TimeZone.currentSystemDefault()
+        val cKey = c.createdAt!!.toInstant(tz).epochSeconds
+        val draggedA = a.copy(sortKey = cKey - 1)
+        val sorted = sortActiveTasks(listOf(draggedA, b, c), emptyMap())
+        assertEquals(listOf(b.id, c.id, a.id), sorted.map { it.id })
+    }
+
+    @Test
+    fun normalTaskDraggedToTop() {
+        // 拖到顶：下方邻居 b 的 epoch + 1 → 居顶（大于所有未拖 epoch）
+        val a = normalTask(1, LocalDateTime(2026, 9, 26, 10, 0))
+        val b = normalTask(2, LocalDateTime(2026, 9, 25, 10, 0))
+        val c = normalTask(3, LocalDateTime(2026, 9, 24, 10, 0))
+        val tz = TimeZone.currentSystemDefault()
+        val bKey = b.createdAt!!.toInstant(tz).epochSeconds
+        val draggedA = a.copy(sortKey = bKey + 1)
+        val sorted = sortActiveTasks(listOf(draggedA, b, c), emptyMap())
+        assertEquals(listOf(a.id, b.id, c.id), sorted.map { it.id })
+    }
+
+    // ---------- 重复任务：多个拖过 + 未拖混合插入 ----------
+    @Test
+    fun recurringMultipleDraggedInterleaveWithUntouched() {
+        // 未拖链 [a]（位置 0）；b 拖到 0.5（500）、c 拖到 1.5（1500）
+        val a = recurringTask(1, LocalDateTime(2026, 9, 26, 10, 0), seriesId = 1)
+        val b = recurringTask(2, LocalDateTime(2026, 9, 25, 10, 0), seriesId = 2)
+        val c = recurringTask(3, LocalDateTime(2026, 9, 24, 10, 0), seriesId = 3)
+        val draggedB = b.copy(sortKey = REPOS_POS_BASE / 2, sortKeyDate = LocalDate.now())
+        val draggedC =
+            c.copy(sortKey = REPOS_POS_BASE + REPOS_POS_BASE / 2, sortKeyDate = LocalDate.now())
+        val sorted = sortActiveTasks(listOf(a, draggedB, draggedC), emptyMap())
+        assertEquals(listOf(a.id, b.id, c.id), sorted.map { it.id })
+    }
+
+    // ---------- 重复任务：全部拖过（无未拖链）→ 直接按 sortKey 升序 ----------
+    @Test
+    fun recurringAllDraggedSortedBySortKey() {
+        val a = recurringTask(1, LocalDateTime(2026, 9, 26, 10, 0), seriesId = 1)
+        val b = recurringTask(2, LocalDateTime(2026, 9, 25, 10, 0), seriesId = 2)
+        val c = recurringTask(3, LocalDateTime(2026, 9, 24, 10, 0), seriesId = 3)
+        val draggedA = a.copy(sortKey = 1500L, sortKeyDate = LocalDate.now())
+        val draggedB = b.copy(sortKey = 500L, sortKeyDate = LocalDate.now())
+        val draggedC = c.copy(sortKey = 1000L, sortKeyDate = LocalDate.now())
+        val sorted = sortActiveTasks(listOf(draggedA, draggedB, draggedC), emptyMap())
         assertEquals(listOf(b.id, c.id, a.id), sorted.map { it.id })
     }
 }

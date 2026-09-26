@@ -102,9 +102,15 @@ fun TaskCard(
 
     Card(
         modifier =
-            modifier.animateContentSize(
-                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
-            ),
+            modifier
+                // 整卡响应点击/长按多选：覆盖标题列、副标题行与卡片空白区（P3 收敛）
+                // 注：复选框为独立 clickable（点击=勾选），长按进多选从卡片其他区域触发
+                .combinedClickable(
+                    enabled = !dragState || selectionMode,
+                    onClick = { onClick() },
+                    onLongClick = onLongClick,
+                )
+                .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()),
         colors = cardColors,
         shape = shape,
     ) {
@@ -128,14 +134,7 @@ fun TaskCard(
 
             Column(
                 modifier =
-                    Modifier.weight(1f)
-                        .clip(shape)
-                        .combinedClickable(
-                            enabled = !dragState || selectionMode,
-                            onClick = { onClick() },
-                            onLongClick = onLongClick,
-                        )
-                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                    Modifier.weight(1f).clip(shape).padding(horizontal = 8.dp, vertical = 6.dp)
             ) {
                 Text(
                     text = task.title,
