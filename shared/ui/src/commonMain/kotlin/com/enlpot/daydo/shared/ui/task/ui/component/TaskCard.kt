@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.enlpot.daydo.core.now
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.shared.ui.HapticKind
 import com.enlpot.daydo.shared.ui.LocalHapticPerformer
@@ -179,6 +180,9 @@ fun TaskCard(
                     }
 
                     task.reminder != null -> {
+                        // 提醒时间已过：图标与文字标红（逾期提醒）
+                        val reminderExpired = task.reminder!! < LocalDateTime.now()
+                        val expiredColor = MaterialTheme.colorScheme.error
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -187,6 +191,7 @@ fun TaskCard(
                                 imageVector = vectorResource(Res.drawable.alarm),
                                 contentDescription = null,
                                 modifier = Modifier.size(12.dp),
+                                tint = if (reminderExpired) expiredColor else Color.Unspecified,
                             )
 
                             Text(
@@ -196,6 +201,7 @@ fun TaskCard(
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Light,
                                     ),
+                                color = if (reminderExpired) expiredColor else Color.Unspecified,
                             )
                         }
                     }

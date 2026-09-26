@@ -57,6 +57,8 @@ interface AnalyticsWrapper {
                 val LOOK_AND_FEEL_UPDATED = AnalyticsEvent("look_and_feel_updated")
                 val BACKUP_CREATED = AnalyticsEvent("backup_created")
                 val BACKUP_RESTORED = AnalyticsEvent("backup_restored")
+                val WEBDAV_UPLOADED = AnalyticsEvent("webdav_uploaded")
+                val WEBDAV_DOWNLOADED = AnalyticsEvent("webdav_downloaded")
             }
         }
     }

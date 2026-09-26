@@ -166,6 +166,11 @@
     <string name="hour_distribution">Completion time distribution</string>
     <string name="habit_not_found">Habit not found or deleted</string>
     <string name="back">Back</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="expand">Expand</string>
+    <string name="close">Close</string>
+    <string name="retry">Retry</string>
     <string name="no_completion_record">No completion records</string>
 
     <!-- 任务编辑 -->

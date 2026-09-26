@@ -25,6 +25,7 @@ import com.enlpot.daydo.core.interfaces.BiometricUtils
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.interfaces.ThemeDatastore
 import com.enlpot.daydo.core.settings.backup.ExportRepo
+import com.enlpot.daydo.core.settings.backup.ExportResult
 import com.enlpot.daydo.core.settings.backup.RestoreRepo
 import com.enlpot.daydo.core.settings.webdav.WebDavRepo
 import com.enlpot.daydo.core.settings.webdav.WebDavResult
@@ -192,6 +193,10 @@ class SettingsViewModel(
                                 else (result as WebDavResult.Failure).message,
                         )
                     }
+                    analytics.trackEvent(
+                        AnalyticsWrapper.Companion.AnalyticsEvent.WEBDAV_UPLOADED.name,
+                        mapOf("success" to (result is WebDavResult.Success)),
+                    )
                 }
 
                 WebDavDownload -> {
@@ -222,6 +227,10 @@ class SettingsViewModel(
                                 else (result as WebDavResult.Failure).message,
                         )
                     }
+                    analytics.trackEvent(
+                        AnalyticsWrapper.Companion.AnalyticsEvent.WEBDAV_DOWNLOADED.name,
+                        mapOf("success" to (result is WebDavResult.Success)),
+                    )
                 }
 
                 OnExport -> {
@@ -230,25 +239,50 @@ class SettingsViewModel(
                     }
 
                     try {
-                        val exported = exportRepo.exportToJson()
-                        if (exported) {
-                            analytics.trackEvent(
-                                AnalyticsWrapper.Companion.AnalyticsEvent.BACKUP_CREATED.name,
-                                mapOf("status" to "success"),
-                            )
-                            _state.update {
-                                it.copy(backupState = it.backupState.copy(exportState = EXPORTED))
+                        when (val result = exportRepo.exportToJson()) {
+                            ExportResult.Success -> {
+                                analytics.trackEvent(
+                                    AnalyticsWrapper.Companion.AnalyticsEvent.BACKUP_CREATED.name,
+                                    mapOf("status" to "success"),
+                                )
+                                _state.update {
+                                    it.copy(backupState = it.backupState.copy(exportState = EXPORTED))
+                                }
                             }
-                        } else {
-                            // 用户取消了保存对话框：回到空闲，不报成功
-                            _state.update {
-                                it.copy(backupState = it.backupState.copy(exportState = IDLE))
+
+                            ExportResult.Cancelled -> {
+                                // 用户取消了保存对话框：回到空闲，不报成功也不报失败
+                                _state.update {
+                                    it.copy(backupState = it.backupState.copy(exportState = IDLE))
+                                }
+                            }
+
+                            is ExportResult.Failure -> {
+                                analytics.trackEvent(
+                                    AnalyticsWrapper.Companion.AnalyticsEvent.BACKUP_CREATED.name,
+                                    mapOf("status" to "failure"),
+                                )
+                                _state.update {
+                                    it.copy(
+                                        backupState =
+                                            it.backupState.copy(
+                                                exportState = FAILURE,
+                                                exportMessage = result.message,
+                                            )
+                                    )
+                                }
                             }
                         }
                     } catch (t: Throwable) {
-                        // 导出失败：回到空闲，避免永久卡在"导出中"导致按钮不可用
+                        // 兜底：导出失败显式标记 FAILURE，避免永久卡在"导出中"且不静默
                         _state.update {
-                            it.copy(backupState = it.backupState.copy(exportState = IDLE))
+                            it.copy(
+                                backupState =
+                                    it.backupState.copy(
+                                        exportState = FAILURE,
+                                        exportMessage = t.message ?: "导出失败",
+                                    )
+                            )
                         }
                     }
                 }

@@ -545,6 +545,7 @@ fun TaskUpsertSheetContent(
         ReminderPickerSheet(
             initialOffset = newTask.reminderOffsetMinutes(),
             due = newTask.dueDateTime,
+            is24Hr = is24Hr,
             onDismissRequest = { showReminderPicker = false },
             onConfirm = { offset ->
                 newTask = newTask.copy(reminder = reminderFor(newTask.dueDateTime, offset))
@@ -586,6 +587,7 @@ private fun Task.dueDateTimeText(is24Hr: Boolean): String {
 }
 
 private val reminderPresets = listOf(0, 5, 15, 30, 60, 1440)
+private const val MAX_CUSTOM_REMINDER_MINUTES = 7 * 24 * 60 // 最多提前 7 天
 
 @Composable
 private fun reminderPresetLabel(offsetMinutes: Int): String {
@@ -602,6 +604,7 @@ private fun reminderPresetLabel(offsetMinutes: Int): String {
 private fun ReminderPickerSheet(
     initialOffset: Int?,
     due: LocalDateTime?,
+    is24Hr: Boolean,
     onDismissRequest: () -> Unit,
     onConfirm: (Int) -> Unit,
     onRemove: () -> Unit,
@@ -612,7 +615,8 @@ private fun ReminderPickerSheet(
                 initialOffset?.takeIf { it !in reminderPresets }?.toString().orEmpty()
             )
         }
-    val customValue = customOffset.toIntOrNull()?.coerceAtLeast(0)
+    // 自定义提前量上限 7 天（10080 分钟），防止误输超大值导致闹钟远未来
+    val customValue = customOffset.toIntOrNull()?.coerceIn(0, MAX_CUSTOM_REMINDER_MINUTES)
 
     GritBottomSheet(onDismissRequest = onDismissRequest, padding = 0.dp) {
         Column(
@@ -640,7 +644,7 @@ private fun ReminderPickerSheet(
                 style = MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
             )
             Text(
-                text = due?.toFormattedString(is24Hr = false) ?: "",
+                text = due?.toFormattedString(is24Hr = is24Hr) ?: "",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

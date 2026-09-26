@@ -107,7 +107,7 @@ fun prepareLineChartData(
     val today = LocalDate.now()
     val totalWeeks = 52
 
-    // Find the start date of the 15-week period
+    // Find the start date of the 52-week period
     val startDateOfTodayWeek =
         today.minus(
             (today.dayOfWeek.isoDayNumber - firstDay.isoDayNumber + 7) % 7,

@@ -44,6 +44,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -236,8 +237,12 @@ fun HabitCard(
         )
 
         if (!compactView) {
-            // 打卡日期 Set 化：每个可见日历格只 O(1) 判定，避免对全量 statuses 重复线性扫描
-            val doneDates = habitWithAnalytics.statuses.map { it.date }.toSet()
+            // 打卡日期 Set 化：每个可见日历格只 O(1) 判定，避免对全量 statuses 重复线性扫描；
+            // remember 缓存：statuses 未变化时重组不重建 Set
+            val doneDates =
+                remember(habitWithAnalytics.statuses) {
+                    habitWithAnalytics.statuses.map { it.date }.toSet()
+                }
             WeekCalendar(
                 contentPadding = PaddingValues(8.dp),
                 state = weekState,

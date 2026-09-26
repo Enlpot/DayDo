@@ -208,7 +208,7 @@ fun TaskList(state: TaskState, onAction: (TaskAction) -> Unit, onEditCategories:
         ) {
             Icon(
                 imageVector = vectorResource(Res.drawable.add),
-                contentDescription = null,
+                contentDescription = stringResource(Res.string.add_task),
                 modifier = Modifier.size(24.dp),
             )
         }
@@ -341,13 +341,13 @@ private fun TaskListTopBar(
                 IconButton(onClick = onDeleteSelected) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.delete),
-                        contentDescription = null,
+                        contentDescription = stringResource(Res.string.delete),
                     )
                 }
                 IconButton(onClick = onExitMultiSelect) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.close),
-                        contentDescription = null,
+                        contentDescription = stringResource(Res.string.close),
                     )
                 }
                 return@LargeFlexibleTopAppBar
@@ -461,10 +461,22 @@ private fun TaskItemsSection(
         ) { view ->
             val lazyListState = rememberLazyListState()
             var draggedTaskId by remember { mutableStateOf<Long?>(null) }
-            var reorderableTasks by
-                remember(state.displayTasks, state.displayCompletedTasks, view) {
-                    mutableStateOf(state.displayTasks + state.displayCompletedTasks)
+            // 只初始化一次：拖动排序时 DB 回流不再重置列表（避免打断拖动）；
+            // 仅内容变化（增删/完成状态/分类视图切换）时同步，否则本地列表 stale
+            var reorderableTasks by remember(view) {
+                mutableStateOf(state.displayTasks + state.displayCompletedTasks)
+            }
+            LaunchedEffect(
+                state.displayTasks.map { it.id to it.status },
+                state.displayCompletedTasks.map { it.id to it.status },
+            ) {
+                val dbContent = state.displayTasks + state.displayCompletedTasks
+                val localContent = reorderableTasks.map { it.id to it.status }.toSet()
+                val dbNow = dbContent.map { it.id to it.status }.toSet()
+                if (localContent != dbNow) {
+                    reorderableTasks = dbContent
                 }
+            }
             val activeCount = state.displayTasks.size
             val reorderableListState =
                 rememberReorderableLazyListState(lazyListState) { from, to ->

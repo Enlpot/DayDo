@@ -133,10 +133,10 @@ fun HabitsGraph(
     if (windowSizeClass.widthSizeClass != WindowWidthSizeClass.Expanded) {
         val backstack = rememberNavBackStack(config, HabitRoutes.HabitList)
 
-        // 首页跳转：打开对应习惯的统计页（已打开则不重复入栈），完成后清除初始标记
+        // 首页跳转：打开对应习惯的统计页（栈内已有统计页则不重复入栈，含 [List,Analytics,Calendar] 场景），完成后清除初始标记
         LaunchedEffect(initialAnalyticsHabitId) {
             if (initialAnalyticsHabitId != null) {
-                if (backstack.lastOrNull() != HabitRoutes.HabitAnalytics) {
+                if (HabitRoutes.HabitAnalytics !in backstack) {
                     backstack.add(HabitRoutes.HabitAnalytics)
                 }
                 onInitialAnalyticsHandled()
@@ -470,7 +470,7 @@ private fun HabitsTopAppBar(
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.reorder),
-                            contentDescription = null,
+                            contentDescription = stringResource(Res.string.edit),
                         )
                     }
                 }

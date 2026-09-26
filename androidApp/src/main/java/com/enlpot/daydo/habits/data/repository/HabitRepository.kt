@@ -232,6 +232,9 @@ class HabitRepository(
 
     override suspend fun getCompletedHabitsForDate(date: LocalDate): List<Habit> {
         val completedStatuses = habitStatusDao.getCompletedStatuses(date)
-        return completedStatuses.mapNotNull { habitDao.getHabitById(it.habitId)?.toHabit() }
+        if (completedStatuses.isEmpty()) return emptyList()
+        // 一次 IN 查询替代逐条 getHabitById（N+1 → 1）
+        val byId = habitDao.getHabitsByIds(completedStatuses.map { it.habitId }).associateBy { it.id }
+        return completedStatuses.mapNotNull { byId[it.habitId]?.toHabit() }
     }
 }

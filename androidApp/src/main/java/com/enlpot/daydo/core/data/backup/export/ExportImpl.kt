@@ -27,6 +27,7 @@ import com.enlpot.daydo.core.data.backup.toTaskSchema
 import com.enlpot.daydo.core.habits.HabitRepo
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.settings.backup.ExportRepo
+import com.enlpot.daydo.core.settings.backup.ExportResult
 import com.enlpot.daydo.core.tasks.TaskRepo
 import com.enlpot.daydo.habits.data.database.HabitDatabase
 import com.enlpot.daydo.habits.data.database.HabitStatusDao
@@ -58,7 +59,7 @@ class ExportImpl(
     }
 
     @OptIn(ExperimentalTime::class)
-    override suspend fun exportToJson(): Boolean {
+    override suspend fun exportToJson(): ExportResult {
         val time = LocalDateTime.now().toString().replace(":", "").replace(" ", "")
         val file =
             FileKit.openFileSaver(
@@ -66,12 +67,17 @@ class ExportImpl(
                 defaultExtension = "json",
             )
 
-        // 用户取消保存对话框 -> file 为 null，返回 false（不视为导出成功）
-        if (file == null) return false
+        // 用户取消保存对话框 -> 不视为导出成功，也不报失败
+        if (file == null) return ExportResult.Cancelled
 
-        val content = withContext(Dispatchers.IO) { buildExportJson() }
-        file.writeString(content)
-        return true
+        return try {
+            val content = withContext(Dispatchers.IO) { buildExportJson() }
+            file.writeString(content)
+            ExportResult.Success
+        } catch (e: Exception) {
+            // 序列化/IO 失败：明确返回失败态，供 UI 提示与埋点（不再静默吞掉）
+            ExportResult.Failure(e.message ?: "导出失败")
+        }
     }
 
     private suspend fun buildExportJson(): String = buildString {

@@ -127,12 +127,21 @@ fun BackupPage(
                             },
                             colors = listItemColors(),
                             supportingContent = {
-                                Text(text = stringResource(Res.string.export_desc))
+                                if (state.backupState.exportMessage.isNotEmpty()) {
+                                    Text(
+                                        text = state.backupState.exportMessage,
+                                        color = MaterialTheme.colorScheme.error,
+                                    )
+                                } else {
+                                    Text(text = stringResource(Res.string.export_desc))
+                                }
                             },
                             trailingContent = {
                                 Button(
                                     onClick = { onAction(SettingsAction.OnExport) },
-                                    enabled = state.backupState.exportState == ExportState.IDLE,
+                                    enabled =
+                                        state.backupState.exportState == ExportState.IDLE ||
+                                            state.backupState.exportState == ExportState.FAILURE,
                                 ) {
                                     when (state.backupState.exportState) {
                                         IDLE ->
@@ -148,6 +157,12 @@ fun BackupPage(
                                             Icon(
                                                 imageVector = vectorResource(Res.drawable.check_circle),
                                                 contentDescription = stringResource(Res.string.done),
+                                            )
+
+                                        FAILURE ->
+                                            Icon(
+                                                imageVector = vectorResource(Res.drawable.warning),
+                                                contentDescription = stringResource(Res.string.retry),
                                             )
                                     }
                                 }

@@ -57,5 +57,6 @@ val webdavMessage: String = "",
 @Immutable
 data class BackupState(
     val exportState: ExportState = ExportState.IDLE,
+    val exportMessage: String = "",
     val restoreState: RestoreState = RestoreState.IDLE,
 )

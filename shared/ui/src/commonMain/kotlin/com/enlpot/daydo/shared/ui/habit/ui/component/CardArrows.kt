@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CardArrows(
@@ -41,7 +42,7 @@ fun CardArrows(
         IconButton(onClick = onBackAction, enabled = backEnabled) {
             Icon(
                 painter = painterResource(Res.drawable.arrow_back),
-                contentDescription = null,
+                contentDescription = stringResource(Res.string.previous),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -49,7 +50,7 @@ fun CardArrows(
         IconButton(onClick = onForwardAction, enabled = forwardEnabled) {
             Icon(
                 painter = painterResource(Res.drawable.arrow_forward),
-                contentDescription = null,
+                contentDescription = stringResource(Res.string.next),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
@@ -62,7 +63,7 @@ fun CardArrows(
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.expand),
-                    contentDescription = null,
+                    contentDescription = stringResource(Res.string.expand),
                     tint = MaterialTheme.colorScheme.onSurface,
                 )
             }

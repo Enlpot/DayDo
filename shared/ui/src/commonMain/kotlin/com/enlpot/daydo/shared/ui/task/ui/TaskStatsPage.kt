@@ -93,7 +93,7 @@ fun TaskStatsPage(
             navigationIcon = {
                 Icon(
                     imageVector = vectorResource(Res.drawable.nav_arrow_back),
-                    contentDescription = null,
+                    contentDescription = stringResource(Res.string.back),
                     modifier =
                         Modifier.padding(6.dp)
                             .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))

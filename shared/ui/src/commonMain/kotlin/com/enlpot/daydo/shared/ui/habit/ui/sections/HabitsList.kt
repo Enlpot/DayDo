@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.habits.Habit
@@ -59,6 +60,8 @@ fun HabitsList(
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
+    // 今日已完成习惯 ID 转 Set：contains O(1)，避免列表每项对全量 List 线性扫描
+    val completedIds = remember(state.completedHabitIds) { state.completedHabitIds.toSet() }
     val reorderableListState =
         rememberReorderableLazyListState(lazyListState) { from, to ->
             onAction(HabitsAction.OnTransientHabitReorder(from.index, to.index))
@@ -76,7 +79,7 @@ fun HabitsList(
                 index,
                 habitWithAnalytics ->
                 ReorderableItem(reorderableListState, key = habitWithAnalytics.habit.id) {
-                    val completed = state.completedHabitIds.contains(habitWithAnalytics.habit.id)
+                    val completed = habitWithAnalytics.habit.id in completedIds
                     val shape =
                         when {
                             state.habitsWithAnalytics.size == 1 || !completed ->
