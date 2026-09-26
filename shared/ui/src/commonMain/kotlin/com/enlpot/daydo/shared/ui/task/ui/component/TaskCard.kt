@@ -86,7 +86,7 @@ fun TaskCard(
                 when {
                     selectionMode && selected -> MaterialTheme.colorScheme.onPrimaryContainer
                     task.status -> MaterialTheme.colorScheme.onSurface
-                    else -> MaterialTheme.colorScheme.onSecondaryContainer
+                    else -> MaterialTheme.colorScheme.onSurface
                 },
             animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
             label = "cardContent",
@@ -97,7 +97,7 @@ fun TaskCard(
             targetValue =
                 when {
                     selectionMode && selected -> MaterialTheme.colorScheme.primaryContainer
-                    else -> MaterialTheme.colorScheme.secondaryContainer
+                    else -> MaterialTheme.colorScheme.surfaceContainer
                 },
             animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
             label = "cardContainer",
