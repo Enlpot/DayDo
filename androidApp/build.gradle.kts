@@ -25,8 +25,8 @@ plugins {
 }
 
 val appName = "DayDo"
-val appVersionCode = 58
-val appVersionName = "1.6.1"
+val appVersionCode = 59
+val appVersionName = "1.6.2"
 
 val gitHash =
     try {

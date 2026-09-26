@@ -49,6 +49,7 @@ import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
+import com.enlpot.daydo.shared.ui.components.LocalSheetExpanded
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
@@ -506,7 +507,11 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (showHapticsDialog) {
-            GritBottomSheet(onDismissRequest = { showHapticsDialog = false }, padding = 0.dp) {
+            GritBottomSheet(
+                onDismissRequest = { showHapticsDialog = false },
+                padding = 0.dp,
+                expandable = true,
+            ) {
                 Text(
                     text = stringResource(Res.string.haptics),
                     style = MaterialTheme.typography.headlineSmall,
@@ -515,7 +520,15 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
                 HapticsContent(
                     state = state,
                     onAction = onAction,
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .then(
+                                if (LocalSheetExpanded.current) {
+                                    Modifier.weight(1f)
+                                } else {
+                                    Modifier.heightIn(max = 480.dp)
+                                }
+                            ),
                     contentPadding =
                         PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
                 )
@@ -523,7 +536,11 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (showLookAndFeelDialog) {
-            GritBottomSheet(onDismissRequest = { showLookAndFeelDialog = false }, padding = 0.dp) {
+            GritBottomSheet(
+                onDismissRequest = { showLookAndFeelDialog = false },
+                padding = 0.dp,
+                expandable = true,
+            ) {
                 Text(
                     text = stringResource(Res.string.look_and_feel),
                     style = MaterialTheme.typography.headlineSmall,
@@ -532,7 +549,15 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
                 LookAndFeelContent(
                     state = state,
                     onAction = onAction,
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .then(
+                                if (LocalSheetExpanded.current) {
+                                    Modifier.weight(1f)
+                                } else {
+                                    Modifier.heightIn(max = 480.dp)
+                                }
+                            ),
                     contentPadding =
                         PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
                 )
@@ -540,7 +565,11 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (showBackupDialog) {
-            GritBottomSheet(onDismissRequest = { showBackupDialog = false }, padding = 0.dp) {
+            GritBottomSheet(
+                onDismissRequest = { showBackupDialog = false },
+                padding = 0.dp,
+                expandable = true,
+            ) {
                 Text(
                     text = stringResource(Res.string.backup_and_sync),
                     style = MaterialTheme.typography.headlineSmall,
@@ -549,7 +578,15 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
                 BackupContent(
                     state = state,
                     onAction = onAction,
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .then(
+                                if (LocalSheetExpanded.current) {
+                                    Modifier.weight(1f)
+                                } else {
+                                    Modifier.heightIn(max = 480.dp)
+                                }
+                            ),
                     contentPadding =
                         PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
                 )

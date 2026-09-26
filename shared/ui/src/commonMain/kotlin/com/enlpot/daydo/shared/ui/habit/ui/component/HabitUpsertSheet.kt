@@ -76,8 +76,10 @@ import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.ExpressiveSwitch
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.GritTimePicker
+import com.enlpot.daydo.shared.ui.components.LocalSheetExpanded
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.endItemShape
+import com.enlpot.daydo.shared.ui.components.expandFill
 import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.middleItemShape
@@ -141,6 +143,7 @@ fun HabitUpsertSheetContent(
         onDismissRequest = onDismissRequest,
         padding = 0.dp,
         modifier = modifier.imePadding(),
+        expandable = true,
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -177,7 +180,7 @@ fun HabitUpsertSheetContent(
         }
 
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large),
+            modifier = Modifier.fillMaxWidth().then(expandFill()).clip(MaterialTheme.shapes.large),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             contentPadding = PaddingValues(16.dp),
@@ -389,7 +392,11 @@ fun HabitUpsertSheetContent(
     }
 
     if (iconPickerDialog) {
-        GritBottomSheet(onDismissRequest = { iconPickerDialog = false }, padding = 0.dp) {
+        GritBottomSheet(
+            onDismissRequest = { iconPickerDialog = false },
+            padding = 0.dp,
+            expandable = true,
+        ) {
             Text(
                 text = stringResource(Res.string.select_icon),
                 style = MaterialTheme.typography.titleMedium,
@@ -400,8 +407,17 @@ fun HabitUpsertSheetContent(
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                // 高度约束在内容上：挂在 ModalBottomSheet 根 modifier 会把弹窗窗口撑高，内容跑到屏幕顶部
-                modifier = Modifier.fillMaxWidth().height(460.dp),
+                // 普通态固定 460dp（高度约束在内容上：挂在 ModalBottomSheet 根 modifier 会把弹窗
+                // 窗口撑高，内容跑到屏幕顶部）；全屏展开态改为 weight 占满剩余高度
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .then(
+                            if (LocalSheetExpanded.current) {
+                                Modifier.weight(1f)
+                            } else {
+                                Modifier.height(460.dp)
+                            }
+                        ),
             ) {
                 items(HABIT_ICONS, key = { it }) { iconName ->
                     val selected = newHabit.icon == iconName

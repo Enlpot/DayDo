@@ -126,8 +126,6 @@ class TasksViewModel(
                     ClearTaskStats ->
                         _state.update { it.copy(statsSeriesId = null, seriesTasks = emptyList()) }
 
-                    DeleteTasks -> deleteCompletedTasks()
-
                     is ChangeCategory -> switchView(TaskView.Regular(action.category))
 
                     is ChangeView -> switchView(action.view)
@@ -414,17 +412,6 @@ class TasksViewModel(
             val newId = repo.upsertTask(baseTask)
 
             scheduler.schedule(baseTask.copy(id = newId))
-        }
-    }
-
-    private suspend fun deleteCompletedTasks() {
-        // 只清当前视图可见的已完成任务（避免"清空"范围超出用户所见）
-        for (task in _state.value.displayCompletedTasks) {
-            analytics.trackEvent(
-                AnalyticsWrapper.Companion.AnalyticsEvent.TASK_DELETED.name,
-                mapOf("has_reminder" to (task.reminder != null)),
-            )
-            repo.softDeleteTask(task)
         }
     }
 

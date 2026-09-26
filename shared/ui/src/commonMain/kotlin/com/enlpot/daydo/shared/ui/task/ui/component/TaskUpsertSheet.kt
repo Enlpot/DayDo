@@ -80,6 +80,7 @@ import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.GritTimePicker
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
+import com.enlpot.daydo.shared.ui.components.expandFill
 import com.enlpot.daydo.shared.ui.components.genericSaver
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
@@ -184,6 +185,7 @@ fun TaskUpsertSheetContent(
         modifier = modifier.imePadding(),
         padding = 0.dp,
         onDismissRequest = onDismissRequest,
+        expandable = true,
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -224,7 +226,7 @@ fun TaskUpsertSheetContent(
         }
 
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large),
+            modifier = Modifier.fillMaxWidth().then(expandFill()).clip(MaterialTheme.shapes.large),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
         ) {

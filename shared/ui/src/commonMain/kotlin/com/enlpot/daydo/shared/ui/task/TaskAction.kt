@@ -29,8 +29,6 @@ sealed interface TaskAction {
 
     data class DeleteCategory(val category: Category) : TaskAction
 
-    data object DeleteTasks : TaskAction
-
     /** Soft-delete a task (move to the "Deleted" view) */
     data class SoftDeleteTask(val task: Task) : TaskAction
 

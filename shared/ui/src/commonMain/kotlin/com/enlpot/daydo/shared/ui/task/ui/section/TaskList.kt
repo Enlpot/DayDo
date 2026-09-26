@@ -17,7 +17,6 @@
 package com.enlpot.daydo.shared.ui.task.ui.section
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -40,19 +39,16 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonShapes
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
@@ -114,7 +110,6 @@ fun TaskList(
 
     var showTaskAddSheet by rememberSaveable { mutableStateOf(false) }
     var showCategoryAddSheet by rememberSaveable { mutableStateOf(false) }
-    var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
     var editTask by
         rememberSaveable(stateSaver = genericSaver<Task?>()) { mutableStateOf<Task?>(null) }
@@ -143,7 +138,6 @@ fun TaskList(
         TaskListTopBar(
             state = state,
             scrollBehavior = scrollBehavior,
-            onDeleteClick = { showDeleteDialog = true },
             isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded,
             multiSelect = multiSelect,
             selectedCount = selectedTaskIds.size,
@@ -205,16 +199,6 @@ fun TaskList(
             imageVector = vectorResource(Res.drawable.add),
             contentDescription = stringResource(Res.string.add_task),
             modifier = Modifier.size(24.dp),
-        )
-    }
-
-    if (showDeleteDialog) {
-        DeleteTasksDialog(
-            onDismiss = { showDeleteDialog = false },
-            onConfirm = {
-                onAction(TaskAction.DeleteTasks)
-                showDeleteDialog = false
-            },
         )
     }
 
@@ -312,7 +296,6 @@ fun TaskList(
 private fun TaskListTopBar(
     state: TaskState,
     scrollBehavior: TopAppBarScrollBehavior,
-    onDeleteClick: () -> Unit,
     isExpanded: Boolean,
     multiSelect: Boolean,
     selectedCount: Int,
@@ -354,26 +337,6 @@ private fun TaskListTopBar(
                     )
                 }
                 return@LargeFlexibleTopAppBar
-            }
-            val motionScheme = MaterialTheme.motionScheme
-            AnimatedVisibility(
-                visible = state.displayCompletedTasks.isNotEmpty() && !isExpanded,
-                enter = fadeIn(motionScheme.fastEffectsSpec()),
-                exit = fadeOut(motionScheme.fastEffectsSpec()),
-            ) {
-                OutlinedIconButton(
-                    onClick = onDeleteClick,
-                    shapes =
-                        IconButtonShapes(
-                            shape = CircleShape,
-                            pressedShape = MaterialTheme.shapes.small,
-                        ),
-                ) {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.delete),
-                        contentDescription = stringResource(Res.string.delete),
-                    )
-                }
             }
         },
     )

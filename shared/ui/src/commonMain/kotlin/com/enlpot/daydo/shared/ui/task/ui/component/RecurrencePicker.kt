@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.tasks.Recurrence
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
+import com.enlpot.daydo.shared.ui.components.expandFill
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -95,7 +96,7 @@ fun RecurrencePickerSheet(
 
     val intervalText = interval
 
-    GritBottomSheet(onDismissRequest = onDismissRequest, padding = 0.dp) {
+    GritBottomSheet(onDismissRequest = onDismissRequest, padding = 0.dp, expandable = true) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -110,6 +111,7 @@ fun RecurrencePickerSheet(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier =
                 Modifier.fillMaxWidth()
+                    .then(expandFill())
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp)
                     .padding(bottom = 16.dp),
