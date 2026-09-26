@@ -33,12 +33,8 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.PageFill
-import com.enlpot.daydo.shared.ui.navigation.horizontalTransitionMetadata
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
-import com.enlpot.daydo.shared.ui.setting.ui.section.BackupPage
-import com.enlpot.daydo.shared.ui.setting.ui.section.HapticsPage
-import com.enlpot.daydo.shared.ui.setting.ui.section.LookAndFeelPage
 import com.enlpot.daydo.shared.ui.setting.ui.section.RootPage
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
@@ -47,21 +43,12 @@ import kotlinx.serialization.modules.polymorphic
 @Serializable
 private sealed interface SettingsRoutes : NavKey {
     @Serializable data object Root : SettingsRoutes
-
-    @Serializable data object LookAndFeel : SettingsRoutes
-
-    @Serializable data object Backup : SettingsRoutes
-
-    @Serializable data object Haptics : SettingsRoutes
 }
 
 private val configuration = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {
             subclass(SettingsRoutes.Root::class, SettingsRoutes.Root.serializer())
-            subclass(SettingsRoutes.LookAndFeel::class, SettingsRoutes.LookAndFeel.serializer())
-            subclass(SettingsRoutes.Backup::class, SettingsRoutes.Backup.serializer())
-            subclass(SettingsRoutes.Haptics::class, SettingsRoutes.Haptics.serializer())
         }
     }
 }
@@ -85,45 +72,7 @@ fun SettingsGraph(
             backStack = backStack,
             entryProvider =
                 entryProvider {
-                    entry<SettingsRoutes.Root> {
-                        RootPage(
-                            state = state,
-                            onAction = onAction,
-                            onNavigateToLookAndFeel = { backStack.add(SettingsRoutes.LookAndFeel) },
-                            onNavigateToBackup = { backStack.add(SettingsRoutes.Backup) },
-                            onNavigateToHaptics = { backStack.add(SettingsRoutes.Haptics) },
-                        )
-                    }
-
-                    entry<SettingsRoutes.LookAndFeel>(metadata = horizontalTransitionMetadata()) {
-                        LookAndFeelPage(
-                            state = state,
-                            onAction = onAction,
-                            onNavigateBack = {
-                                if (backStack.size != 1) backStack.removeLastOrNull()
-                            },
-                        )
-                    }
-
-                    entry<SettingsRoutes.Haptics>(metadata = horizontalTransitionMetadata()) {
-                        HapticsPage(
-                            state = state,
-                            onAction = onAction,
-                            onNavigateBack = {
-                                if (backStack.size != 1) backStack.removeLastOrNull()
-                            },
-                        )
-                    }
-
-                    entry<SettingsRoutes.Backup>(metadata = horizontalTransitionMetadata()) {
-                        BackupPage(
-                            state = state,
-                            onAction = onAction,
-                            onNavigateBack = {
-                                if (backStack.size != 1) backStack.removeLastOrNull()
-                            },
-                        )
-                    }
+                    entry<SettingsRoutes.Root> { RootPage(state = state, onAction = onAction) }
                 },
         )
     }

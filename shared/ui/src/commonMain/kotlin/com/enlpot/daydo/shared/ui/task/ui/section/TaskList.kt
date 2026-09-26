@@ -189,7 +189,7 @@ fun TaskList(
         modifier =
             Modifier.align(Alignment.BottomEnd)
                 .padding(16.dp)
-                .size(45.dp)
+                .size(48.dp)
                 .then(
                     if (windowSizeClass.widthSizeClass != WindowWidthSizeClass.Expanded) Modifier
                     else Modifier.navigationBarsPadding()

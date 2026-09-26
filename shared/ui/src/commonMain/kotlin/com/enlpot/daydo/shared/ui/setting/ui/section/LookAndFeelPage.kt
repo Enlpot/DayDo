@@ -82,11 +82,6 @@ fun LookAndFeelPage(
     onAction: (SettingsAction) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
-    var colorPickerDialog by remember { mutableStateOf(false) }
-    var showMaterialYouDialog by rememberSaveable { mutableStateOf(false) }
-    var showAppThemeDialog by rememberSaveable { mutableStateOf(false) }
-    var showAmoledDialog by rememberSaveable { mutableStateOf(false) }
-
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(
         modifier =
@@ -112,141 +107,175 @@ fun LookAndFeelPage(
             },
         )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 60.dp),
-        ) {
-            item {
-                // appTheme picker
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        LookAndFeelContent(state = state, onAction = onAction, modifier = Modifier.fillMaxSize())
+    }
+}
+
+/** 外观与风格内容（设置首页弹窗与独立页共用，改一处全局同步） */
+@Composable
+fun LookAndFeelContent(
+    state: SettingsState,
+    onAction: (SettingsAction) -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues =
+        PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 60.dp),
+) {
+    var colorPickerDialog by remember { mutableStateOf(false) }
+    var showMaterialYouDialog by rememberSaveable { mutableStateOf(false) }
+    var showAppThemeDialog by rememberSaveable { mutableStateOf(false) }
+    var showAmoledDialog by rememberSaveable { mutableStateOf(false) }
+
+    LazyColumn(modifier = modifier, contentPadding = contentPadding) {
+        item {
+            // appTheme picker
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(
+                    modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    // corner radius picker
+                    var sliderValue by
+                        remember(state.cornerRadius) {
+                            mutableFloatStateOf(state.cornerRadius.toFloat())
+                        }
                     Column(
                         modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
                     ) {
-                        // corner radius picker
-                        var sliderValue by
-                            remember(state.cornerRadius) {
-                                mutableFloatStateOf(state.cornerRadius.toFloat())
-                            }
-                        Column(
+                        ListItem(
+                            headlineContent = {
+                                Text(text = stringResource(Res.string.corner_radius))
+                            },
+                            supportingContent = {
+                                Text(text = stringResource(Res.string.corner_radius_desc))
+                            },
+                            colors = listItemColors(),
+                        )
+                        Box(
                             modifier =
-                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                Modifier.fillParentMaxWidth()
+                                    .background(listItemColors().containerColor)
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
                         ) {
-                            ListItem(
-                                headlineContent = {
-                                    Text(text = stringResource(Res.string.corner_radius))
-                                },
-                                supportingContent = {
-                                    Text(text = stringResource(Res.string.corner_radius_desc))
-                                },
-                                colors = listItemColors(),
-                            )
                             Box(
                                 modifier =
-                                    Modifier.fillParentMaxWidth()
-                                        .background(listItemColors().containerColor)
-                                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                                    Modifier.fillMaxWidth()
+                                        .height(64.dp)
+                                        .clip(RoundedCornerShape(sliderValue.roundToInt().dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer)
+                                        .padding(16.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
-                                Box(
-                                    modifier =
-                                        Modifier.fillMaxWidth()
-                                            .height(64.dp)
-                                            .clip(RoundedCornerShape(sliderValue.roundToInt().dp))
-                                            .background(MaterialTheme.colorScheme.primaryContainer)
-                                            .padding(16.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text =
-                                            stringResource(
-                                                Res.string.radius_preview,
-                                                sliderValue.roundToInt(),
-                                            ),
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    )
-                                }
-                            }
-                            Row(
-                                modifier =
-                                    Modifier.fillParentMaxWidth()
-                                        .background(listItemColors().containerColor)
-                                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Slider(
-                                    value = sliderValue,
-                                    onValueChange = { sliderValue = it },
-                                    valueRange = 0f..40f,
-                                    onValueChangeFinished = {
-                                        onAction(
-                                            SettingsAction.ChangeCornerRadius(
-                                                sliderValue.roundToInt()
-                                            )
-                                        )
-                                    },
-                                    colors =
-                                        SliderDefaults.colors(
-                                            thumbColor = MaterialTheme.colorScheme.primary,
-                                            activeTrackColor = MaterialTheme.colorScheme.primary,
-                                            inactiveTrackColor =
-                                                MaterialTheme.colorScheme.surfaceVariant,
+                                Text(
+                                    text =
+                                        stringResource(
+                                            Res.string.radius_preview,
+                                            sliderValue.roundToInt(),
                                         ),
-                                    thumb = {
-                                        Box(
-                                            modifier =
-                                                Modifier.size(20.dp)
-                                                    .clip(CircleShape)
-                                                    .background(MaterialTheme.colorScheme.primary)
-                                        )
-                                    },
-                                    modifier = Modifier.weight(1f),
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 )
                             }
                         }
-
-                        ListItem(
-                            leadingContent = {
-                                Icon(
-                                    imageVector =
-                                        vectorResource(
-                                            when (state.theme.appTheme) {
-                                                SYSTEM -> {
-                                                    if (isSystemInDarkTheme())
-                                                        Res.drawable.dark_mode
-                                                    else Res.drawable.light_mode
-                                                }
-
-                                                DARK -> Res.drawable.dark_mode
-                                                LIGHT -> Res.drawable.light_mode
-                                            }
-                                        ),
-                                    contentDescription = null,
-                                )
-                            },
-                            headlineContent = { Text(text = stringResource(Res.string.app_theme)) },
-                            supportingContent = {
-                                Text(text = stringResource(state.theme.appTheme.toDisplayString()))
-                            },
-                            trailingContent = {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.arrow_forward),
-                                    contentDescription = null,
-                                )
-                            },
-                            colors = listItemColors(),
+                        Row(
                             modifier =
-                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                    .clickable { showAppThemeDialog = true },
-                        )
+                                Modifier.fillParentMaxWidth()
+                                    .background(listItemColors().containerColor)
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Slider(
+                                value = sliderValue,
+                                onValueChange = { sliderValue = it },
+                                valueRange = 0f..40f,
+                                onValueChangeFinished = {
+                                    onAction(
+                                        SettingsAction.ChangeCornerRadius(sliderValue.roundToInt())
+                                    )
+                                },
+                                colors =
+                                    SliderDefaults.colors(
+                                        thumbColor = MaterialTheme.colorScheme.primary,
+                                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                                        inactiveTrackColor =
+                                            MaterialTheme.colorScheme.surfaceVariant,
+                                    ),
+                                thumb = {
+                                    Box(
+                                        modifier =
+                                            Modifier.size(20.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primary)
+                                    )
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
 
                     ListItem(
-                        headlineContent = { Text(text = stringResource(Res.string.material_you)) },
+                        leadingContent = {
+                            Icon(
+                                imageVector =
+                                    vectorResource(
+                                        when (state.theme.appTheme) {
+                                            SYSTEM -> {
+                                                if (isSystemInDarkTheme()) Res.drawable.dark_mode
+                                                else Res.drawable.light_mode
+                                            }
+
+                                            DARK -> Res.drawable.dark_mode
+                                            LIGHT -> Res.drawable.light_mode
+                                        }
+                                    ),
+                                contentDescription = null,
+                            )
+                        },
+                        headlineContent = { Text(text = stringResource(Res.string.app_theme)) },
+                        supportingContent = {
+                            Text(text = stringResource(state.theme.appTheme.toDisplayString()))
+                        },
+                        trailingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.arrow_forward),
+                                contentDescription = null,
+                            )
+                        },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                .clickable { showAppThemeDialog = true },
+                    )
+                }
+
+                ListItem(
+                    headlineContent = { Text(text = stringResource(Res.string.material_you)) },
+                    supportingContent = {
+                        Text(
+                            text =
+                                if (state.theme.isMaterialYou) stringResource(Res.string.on)
+                                else stringResource(Res.string.off)
+                        )
+                    },
+                    trailingContent = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.arrow_forward),
+                            contentDescription = null,
+                        )
+                    },
+                    colors = listItemColors(),
+                    modifier =
+                        Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                            .clickable { showMaterialYouDialog = true },
+                )
+
+                if (!state.theme.isMaterialYou) {
+                    // amoled toggle
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(Res.string.amoled)) },
                         supportingContent = {
                             Text(
                                 text =
-                                    if (state.theme.isMaterialYou) stringResource(Res.string.on)
+                                    if (state.theme.isAmoled) stringResource(Res.string.on)
                                     else stringResource(Res.string.off)
                             )
                         },
@@ -259,71 +288,44 @@ fun LookAndFeelPage(
                         colors = listItemColors(),
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable { showMaterialYouDialog = true },
+                                .clickable { showAmoledDialog = true },
                     )
 
-                    if (!state.theme.isMaterialYou) {
-                        // amoled toggle
-                        ListItem(
-                            headlineContent = { Text(text = stringResource(Res.string.amoled)) },
-                            supportingContent = {
-                                Text(
-                                    text =
-                                        if (state.theme.isAmoled) stringResource(Res.string.on)
-                                        else stringResource(Res.string.off)
-                                )
-                            },
-                            trailingContent = {
+                    // seed color picker
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(Res.string.select_seed)) },
+                        supportingContent = {
+                            Text(text = stringResource(Res.string.select_seed_desc))
+                        },
+                        trailingContent = {
+                            IconButton(
+                                onClick = { colorPickerDialog = true },
+                                colors =
+                                    IconButtonDefaults.iconButtonColors(
+                                        containerColor = Color(state.theme.seedColor),
+                                        contentColor = contentColorFor(Color(state.theme.seedColor)),
+                                    ),
+                            ) {
                                 Icon(
-                                    imageVector = vectorResource(Res.drawable.arrow_forward),
-                                    contentDescription = null,
+                                    imageVector = vectorResource(Res.drawable.edit),
+                                    contentDescription = stringResource(Res.string.select_seed),
                                 )
-                            },
-                            colors = listItemColors(),
-                            modifier =
-                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                    .clickable { showAmoledDialog = true },
-                        )
+                            }
+                        },
+                        colors = listItemColors(),
+                        modifier =
+                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
+                    )
 
-                        // seed color picker
-                        ListItem(
-                            headlineContent = {
-                                Text(text = stringResource(Res.string.select_seed))
-                            },
-                            supportingContent = {
-                                Text(text = stringResource(Res.string.select_seed_desc))
-                            },
-                            trailingContent = {
-                                IconButton(
-                                    onClick = { colorPickerDialog = true },
-                                    colors =
-                                        IconButtonDefaults.iconButtonColors(
-                                            containerColor = Color(state.theme.seedColor),
-                                            contentColor =
-                                                contentColorFor(Color(state.theme.seedColor)),
-                                        ),
-                                ) {
-                                    Icon(
-                                        imageVector = vectorResource(Res.drawable.edit),
-                                        contentDescription = stringResource(Res.string.select_seed),
-                                    )
-                                }
-                            },
-                            colors = listItemColors(),
-                            modifier =
-                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp)),
-                        )
-
-                        // palette style picker
-                        PaletteStylePicker(
-                            paletteStyle = state.theme.paletteStyle,
-                            isMaterialYou = state.theme.isMaterialYou,
-                            seedColor = Color(state.theme.seedColor),
-                            appTheme = state.theme.appTheme,
-                            isAmoled = state.theme.isAmoled,
-                            onClick = { onAction(SettingsAction.ChangePaletteStyle(it)) },
-                        )
-                    }
+                    // palette style picker
+                    PaletteStylePicker(
+                        paletteStyle = state.theme.paletteStyle,
+                        isMaterialYou = state.theme.isMaterialYou,
+                        seedColor = Color(state.theme.seedColor),
+                        appTheme = state.theme.appTheme,
+                        isAmoled = state.theme.isAmoled,
+                        onClick = { onAction(SettingsAction.ChangePaletteStyle(it)) },
+                    )
                 }
             }
         }

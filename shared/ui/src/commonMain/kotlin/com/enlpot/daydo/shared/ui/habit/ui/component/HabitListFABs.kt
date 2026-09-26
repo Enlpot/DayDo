@@ -91,7 +91,7 @@ fun BoxScope.HabitListFABs(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 modifier =
-                    Modifier.size(45.dp)
+                    Modifier.size(48.dp)
                         .animateFloatingActionButton(
                             visible = fabVisible,
                             alignment = Alignment.BottomEnd,
@@ -109,7 +109,7 @@ fun BoxScope.HabitListFABs(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 modifier =
-                    Modifier.size(45.dp)
+                    Modifier.size(48.dp)
                         .animateFloatingActionButton(
                             visible = fabVisible,
                             alignment = Alignment.BottomEnd,

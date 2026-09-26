@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,14 +62,11 @@ import org.jetbrains.compose.resources.vectorResource
 
 /** Root settings page all roads start from here */
 @Composable
-fun RootPage(
-    state: SettingsState,
-    onAction: (SettingsAction) -> Unit,
-    onNavigateToLookAndFeel: () -> Unit,
-    onNavigateToHaptics: () -> Unit,
-    onNavigateToBackup: () -> Unit,
-) {
+fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
     var showSmartViewsDialog by rememberSaveable { mutableStateOf(false) }
+    var showLookAndFeelDialog by rememberSaveable { mutableStateOf(false) }
+    var showBackupDialog by rememberSaveable { mutableStateOf(false) }
+    var showHapticsDialog by rememberSaveable { mutableStateOf(false) }
     var showStartingPageDialog by rememberSaveable { mutableStateOf(false) }
     var showStartOfWeekDialog by rememberSaveable { mutableStateOf(false) }
     var show24HrDialog by rememberSaveable { mutableStateOf(false) }
@@ -181,7 +179,7 @@ fun RootPage(
                         colors = listItemColors(),
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable { onNavigateToHaptics() },
+                                .clickable { showHapticsDialog = true },
                     )
 
                     if (state.isBiometricLockAvailable) {
@@ -239,7 +237,7 @@ fun RootPage(
                     ListItem(
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable { onNavigateToLookAndFeel() },
+                                .clickable { showLookAndFeelDialog = true },
                         headlineContent = { Text(text = stringResource(Res.string.look_and_feel)) },
                         supportingContent = {
                             Text(text = stringResource(Res.string.look_and_feel_desc))
@@ -256,7 +254,7 @@ fun RootPage(
                     ListItem(
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable { onNavigateToBackup() },
+                                .clickable { showBackupDialog = true },
                         colors = listItemColors(),
                         headlineContent = {
                             Text(text = stringResource(Res.string.backup_and_sync))
@@ -503,6 +501,54 @@ fun RootPage(
         if (showLicenseDialog) {
             LicenseBottomSheet(onDismissRequest = { showLicenseDialog = false })
         }
+
+        if (showHapticsDialog) {
+            GritBottomSheet(onDismissRequest = { showHapticsDialog = false }) {
+                Text(
+                    text = stringResource(Res.string.haptics),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                HapticsContent(
+                    state = state,
+                    onAction = onAction,
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp),
+                    contentPadding =
+                        PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
+                )
+            }
+        }
+
+        if (showLookAndFeelDialog) {
+            GritBottomSheet(onDismissRequest = { showLookAndFeelDialog = false }) {
+                Text(
+                    text = stringResource(Res.string.look_and_feel),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                LookAndFeelContent(
+                    state = state,
+                    onAction = onAction,
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp),
+                    contentPadding =
+                        PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
+                )
+            }
+        }
+
+        if (showBackupDialog) {
+            GritBottomSheet(onDismissRequest = { showBackupDialog = false }) {
+                Text(
+                    text = stringResource(Res.string.backup_and_sync),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                BackupContent(
+                    state = state,
+                    onAction = onAction,
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 480.dp),
+                    contentPadding =
+                        PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
+                )
+            }
+        }
     }
 }
 
@@ -510,11 +556,5 @@ fun RootPage(
 @PreviewLightDark
 @Composable
 private fun Preview() {
-    RootPage(
-        state = SettingsState(),
-        onAction = {},
-        onNavigateToLookAndFeel = {},
-        onNavigateToHaptics = {},
-        onNavigateToBackup = {},
-    )
+    RootPage(state = SettingsState(), onAction = {})
 }

@@ -74,9 +74,6 @@ fun HapticsPage(
     onAction: (SettingsAction) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
-    var showFeedbackDialog by rememberSaveable { mutableStateOf(false) }
-    var showSoundDialog by rememberSaveable { mutableStateOf(false) }
-
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(
         modifier =
@@ -104,96 +101,104 @@ fun HapticsPage(
             },
         )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 60.dp),
-        ) {
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    // 触感反馈总开关
-                    ListItem(
-                        headlineContent = { Text(text = stringResource(Res.string.haptics)) },
-                        supportingContent = {
-                            Text(
-                                text =
-                                    if (state.hapticFeedback) stringResource(Res.string.on)
-                                    else stringResource(Res.string.off)
-                            )
-                        },
-                        trailingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = null,
-                            )
-                        },
-                        colors = listItemColors(),
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable { showFeedbackDialog = true },
-                    )
+        HapticsContent(state = state, onAction = onAction, modifier = Modifier.fillMaxSize())
+    }
+}
 
-                    // 震动强度（内嵌滑块）
-                    var sliderValue by
-                        remember(state.hapticStrength) {
-                            mutableFloatStateOf(state.hapticStrength.toFloat())
-                        }
-                    Column(
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                    ) {
-                        ListItem(
-                            headlineContent = {
-                                Text(text = stringResource(Res.string.vibration_strength))
-                            },
-                            supportingContent = { Text(text = "${sliderValue.roundToInt()}%") },
-                            colors = listItemColors(),
+/** 触感反馈内容（设置首页弹窗与独立页共用，改一处全局同步） */
+@Composable
+fun HapticsContent(
+    state: SettingsState,
+    onAction: (SettingsAction) -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues =
+        PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 60.dp),
+) {
+    var showFeedbackDialog by rememberSaveable { mutableStateOf(false) }
+    var showSoundDialog by rememberSaveable { mutableStateOf(false) }
+
+    LazyColumn(modifier = modifier, contentPadding = contentPadding) {
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                // 触感反馈总开关
+                ListItem(
+                    headlineContent = { Text(text = stringResource(Res.string.haptics)) },
+                    supportingContent = {
+                        Text(
+                            text =
+                                if (state.hapticFeedback) stringResource(Res.string.on)
+                                else stringResource(Res.string.off)
                         )
-                        Row(
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .background(listItemColors().containerColor)
-                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Slider(
-                                value = sliderValue,
-                                onValueChange = { sliderValue = it },
-                                valueRange = 0f..100f,
-                                onValueChangeFinished = {
-                                    onAction(
-                                        SettingsAction.ChangeHapticStrength(
-                                            sliderValue.roundToInt()
-                                        )
-                                    )
-                                },
-                                colors =
-                                    SliderDefaults.colors(
-                                        thumbColor = MaterialTheme.colorScheme.primary,
-                                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                                        inactiveTrackColor =
-                                            MaterialTheme.colorScheme.surfaceVariant,
-                                    ),
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                    }
+                    },
+                    trailingContent = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.arrow_forward),
+                            contentDescription = null,
+                        )
+                    },
+                    colors = listItemColors(),
+                    modifier =
+                        Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                            .clickable { showFeedbackDialog = true },
+                )
 
-                    // 提示音
+                // 震动强度（内嵌滑块）
+                var sliderValue by
+                    remember(state.hapticStrength) {
+                        mutableFloatStateOf(state.hapticStrength.toFloat())
+                    }
+                Column(
+                    modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                ) {
                     ListItem(
-                        headlineContent = { Text(text = stringResource(Res.string.sound)) },
-                        supportingContent = { Text(text = state.hapticSound.labelText()) },
-                        trailingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.arrow_forward),
-                                contentDescription = null,
-                            )
+                        headlineContent = {
+                            Text(text = stringResource(Res.string.vibration_strength))
                         },
+                        supportingContent = { Text(text = "${sliderValue.roundToInt()}%") },
                         colors = listItemColors(),
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                                .clickable { showSoundDialog = true },
                     )
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .background(listItemColors().containerColor)
+                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Slider(
+                            value = sliderValue,
+                            onValueChange = { sliderValue = it },
+                            valueRange = 0f..100f,
+                            onValueChangeFinished = {
+                                onAction(
+                                    SettingsAction.ChangeHapticStrength(sliderValue.roundToInt())
+                                )
+                            },
+                            colors =
+                                SliderDefaults.colors(
+                                    thumbColor = MaterialTheme.colorScheme.primary,
+                                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                ),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
+
+                // 提示音
+                ListItem(
+                    headlineContent = { Text(text = stringResource(Res.string.sound)) },
+                    supportingContent = { Text(text = state.hapticSound.labelText()) },
+                    trailingContent = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.arrow_forward),
+                            contentDescription = null,
+                        )
+                    },
+                    colors = listItemColors(),
+                    modifier =
+                        Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                            .clickable { showSoundDialog = true },
+                )
             }
         }
     }

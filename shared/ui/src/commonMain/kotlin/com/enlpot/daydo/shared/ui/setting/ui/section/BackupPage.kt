@@ -72,19 +72,6 @@ fun BackupPage(
     onAction: (SettingsAction) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
-    LaunchedEffect(Unit) { onAction(SettingsAction.OnResetBackupState) }
-
-    var server by remember { mutableStateOf(state.webdavServer) }
-    var username by remember { mutableStateOf(state.webdavUsername) }
-    var password by remember { mutableStateOf(state.webdavPassword) }
-    var showDownloadConfirm by remember { mutableStateOf(false) }
-    var showRestoreConfirm by remember { mutableStateOf(false) }
-
-    // flow 异步发射前输入框为空：仅在用户未输入时回填已存配置，避免覆盖用户输入
-    LaunchedEffect(state.webdavServer) { if (server.isEmpty()) server = state.webdavServer }
-    LaunchedEffect(state.webdavUsername) { if (username.isEmpty()) username = state.webdavUsername }
-    LaunchedEffect(state.webdavPassword) { if (password.isEmpty()) password = state.webdavPassword }
-
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(
         modifier =
@@ -110,358 +97,363 @@ fun BackupPage(
             },
         )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 60.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            // 本地导出/恢复
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Column(
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                    ) {
-                        ListItem(
-                            headlineContent = { Text(text = stringResource(Res.string.export)) },
-                            leadingContent = {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.drive_folder_upload),
-                                    contentDescription = null,
-                                )
-                            },
-                            colors = listItemColors(),
-                            supportingContent = {
-                                if (state.backupState.exportMessage.isNotEmpty()) {
-                                    Text(
-                                        text = state.backupState.exportMessage,
-                                        color = MaterialTheme.colorScheme.error,
-                                    )
-                                } else {
-                                    Text(text = stringResource(Res.string.export_desc))
-                                }
-                            },
-                            trailingContent = {
-                                Button(
-                                    onClick = { onAction(SettingsAction.OnExport) },
-                                    // 导出完成后可再次导出（EXPORTED 不锁定按钮，C5）
-                                    enabled = state.backupState.exportState != ExportState.EXPORTING,
-                                ) {
-                                    when (state.backupState.exportState) {
-                                        IDLE ->
-                                            Icon(
-                                                painter = painterResource(Res.drawable.play_arrow),
-                                                contentDescription =
-                                                    stringResource(Res.string.start),
-                                            )
+        BackupContent(state = state, onAction = onAction, modifier = Modifier.fillMaxSize())
+    }
+}
 
-                                        EXPORTING ->
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(24.dp)
-                                            )
+/** 备份与同步内容（设置首页弹窗与独立页共用，改一处全局同步） */
+@Composable
+fun BackupContent(
+    state: SettingsState,
+    onAction: (SettingsAction) -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues =
+        PaddingValues(start = 12.dp, end = 12.dp, top = 16.dp, bottom = 60.dp),
+) {
+    LaunchedEffect(Unit) { onAction(SettingsAction.OnResetBackupState) }
 
-                                        EXPORTED ->
-                                            Icon(
-                                                imageVector =
-                                                    vectorResource(Res.drawable.check_circle),
-                                                contentDescription = stringResource(Res.string.done),
-                                            )
+    var server by remember { mutableStateOf(state.webdavServer) }
+    var username by remember { mutableStateOf(state.webdavUsername) }
+    var password by remember { mutableStateOf(state.webdavPassword) }
+    var showDownloadConfirm by remember { mutableStateOf(false) }
+    var showRestoreConfirm by remember { mutableStateOf(false) }
 
-                                        FAILURE ->
-                                            Icon(
-                                                imageVector = vectorResource(Res.drawable.warning),
-                                                contentDescription =
-                                                    stringResource(Res.string.retry),
-                                            )
-                                    }
-                                }
-                            },
-                        )
-                    }
+    // flow 异步发射前输入框为空：仅在用户未输入时回填已存配置，避免覆盖用户输入
+    LaunchedEffect(state.webdavServer) { if (server.isEmpty()) server = state.webdavServer }
+    LaunchedEffect(state.webdavUsername) { if (username.isEmpty()) username = state.webdavUsername }
+    LaunchedEffect(state.webdavPassword) { if (password.isEmpty()) password = state.webdavPassword }
 
-                    Column(
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                    ) {
-                        ListItem(
-                            colors = listItemColors(),
-                            leadingContent = {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.download),
-                                    contentDescription = null,
-                                )
-                            },
-                            headlineContent = { Text(text = stringResource(Res.string.restore)) },
-                            supportingContent = {
-                                Text(text = stringResource(Res.string.restore_desc))
-                            },
-                            trailingContent = {
-                                Button(
-                                    onClick = { showRestoreConfirm = true },
-                                    // 恢复完成后可再次恢复（RESTORED 不锁定按钮，C5）
-                                    enabled =
-                                        state.backupState.restoreState != RestoreState.RESTORING,
-                                ) {
-                                    when (state.backupState.restoreState) {
-                                        IDLE ->
-                                            Icon(
-                                                painter = painterResource(Res.drawable.play_arrow),
-                                                contentDescription =
-                                                    stringResource(Res.string.start),
-                                            )
-
-                                        RESTORING ->
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(24.dp)
-                                            )
-
-                                        RESTORED ->
-                                            Icon(
-                                                imageVector =
-                                                    vectorResource(Res.drawable.check_circle),
-                                                contentDescription = stringResource(Res.string.done),
-                                            )
-
-                                        FAILURE ->
-                                            Icon(
-                                                imageVector = vectorResource(Res.drawable.warning),
-                                                contentDescription = stringResource(Res.string.fail),
-                                            )
-                                    }
-                                }
-                            },
-                        )
-                    }
-                }
-            }
-
-            // WebDAV 配置
-            item {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        // 本地导出/恢复
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Column(
-                    modifier =
-                        Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                            .background(listItemColors().containerColor),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                ) {
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(Res.string.export)) },
+                        leadingContent = {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.drive_folder_upload),
+                                contentDescription = null,
+                            )
+                        },
+                        colors = listItemColors(),
+                        supportingContent = {
+                            if (state.backupState.exportMessage.isNotEmpty()) {
+                                Text(
+                                    text = state.backupState.exportMessage,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                            } else {
+                                Text(text = stringResource(Res.string.export_desc))
+                            }
+                        },
+                        trailingContent = {
+                            Button(
+                                onClick = { onAction(SettingsAction.OnExport) },
+                                // 导出完成后可再次导出（EXPORTED 不锁定按钮，C5）
+                                enabled = state.backupState.exportState != ExportState.EXPORTING,
+                            ) {
+                                when (state.backupState.exportState) {
+                                    IDLE ->
+                                        Icon(
+                                            painter = painterResource(Res.drawable.play_arrow),
+                                            contentDescription = stringResource(Res.string.start),
+                                        )
+
+                                    EXPORTING ->
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+
+                                    EXPORTED ->
+                                        Icon(
+                                            imageVector = vectorResource(Res.drawable.check_circle),
+                                            contentDescription = stringResource(Res.string.done),
+                                        )
+
+                                    FAILURE ->
+                                        Icon(
+                                            imageVector = vectorResource(Res.drawable.warning),
+                                            contentDescription = stringResource(Res.string.retry),
+                                        )
+                                }
+                            }
+                        },
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
                 ) {
                     ListItem(
                         colors = listItemColors(),
                         leadingContent = {
                             Icon(
-                                imageVector = vectorResource(Res.drawable.cloud_upload),
+                                imageVector = vectorResource(Res.drawable.download),
                                 contentDescription = null,
                             )
                         },
-                        headlineContent = { Text(text = stringResource(Res.string.webdav_server)) },
+                        headlineContent = { Text(text = stringResource(Res.string.restore)) },
                         supportingContent = {
-                            Text(text = stringResource(Res.string.webdav_server_desc))
+                            Text(text = stringResource(Res.string.restore_desc))
+                        },
+                        trailingContent = {
+                            Button(
+                                onClick = { showRestoreConfirm = true },
+                                // 恢复完成后可再次恢复（RESTORED 不锁定按钮，C5）
+                                enabled = state.backupState.restoreState != RestoreState.RESTORING,
+                            ) {
+                                when (state.backupState.restoreState) {
+                                    IDLE ->
+                                        Icon(
+                                            painter = painterResource(Res.drawable.play_arrow),
+                                            contentDescription = stringResource(Res.string.start),
+                                        )
+
+                                    RESTORING ->
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+
+                                    RESTORED ->
+                                        Icon(
+                                            imageVector = vectorResource(Res.drawable.check_circle),
+                                            contentDescription = stringResource(Res.string.done),
+                                        )
+
+                                    FAILURE ->
+                                        Icon(
+                                            imageVector = vectorResource(Res.drawable.warning),
+                                            contentDescription = stringResource(Res.string.fail),
+                                        )
+                                }
+                            }
+                        },
+                    )
+                }
+            }
+        }
+
+        // WebDAV 配置
+        item {
+            Column(
+                modifier =
+                    Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                        .background(listItemColors().containerColor),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                ListItem(
+                    colors = listItemColors(),
+                    leadingContent = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.cloud_upload),
+                            contentDescription = null,
+                        )
+                    },
+                    headlineContent = { Text(text = stringResource(Res.string.webdav_server)) },
+                    supportingContent = {
+                        Text(text = stringResource(Res.string.webdav_server_desc))
+                    },
+                    trailingContent = {
+                        Button(
+                            onClick = {
+                                onAction(
+                                    SettingsAction.SetWebDavConfig(
+                                        server = server,
+                                        username = username,
+                                        password = password,
+                                    )
+                                )
+                            }
+                        ) {
+                            Text(text = stringResource(Res.string.save_config))
+                        }
+                    },
+                )
+                OutlinedTextField(
+                    value = server,
+                    onValueChange = { server = it },
+                    placeholder = { Text(text = "https://dav.example.com/dav/") },
+                    label = { Text(text = stringResource(Res.string.server_address)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                )
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    placeholder = { Text(text = stringResource(Res.string.username)) },
+                    label = { Text(text = stringResource(Res.string.username)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    placeholder = { Text(text = stringResource(Res.string.app_password)) },
+                    label = { Text(text = stringResource(Res.string.password)) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                )
+                Text(
+                    text = stringResource(Res.string.https_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 20.dp, top = 2.dp),
+                )
+
+                // 保存配置结果消息：成功/失败都展示（C8，此前只写不读静默失败）
+                if (state.webdavConfigMessage.isNotEmpty()) {
+                    Text(
+                        text = state.webdavConfigMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(start = 20.dp, top = 4.dp),
+                    )
+                }
+            }
+        }
+
+        // WebDAV 上传/下载
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(
+                    modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                ) {
+                    ListItem(
+                        colors = listItemColors(),
+                        headlineContent = { Text(text = stringResource(Res.string.upload_backup)) },
+                        supportingContent = {
+                            Text(
+                                text =
+                                    when (state.webdavUploadState) {
+                                        WebDavState.DONE ->
+                                            stringResource(
+                                                Res.string.uploaded_to,
+                                                // 用本次填写的地址而非已保存配置（C9）
+                                                server.ifBlank {
+                                                    stringResource(Res.string.webdav_server)
+                                                },
+                                            )
+                                        WebDavState.FAILURE -> state.webdavUploadMessage
+                                        else -> stringResource(Res.string.upload_all_to_webdav)
+                                    }
+                            )
                         },
                         trailingContent = {
                             Button(
                                 onClick = {
                                     onAction(
-                                        SettingsAction.SetWebDavConfig(
-                                            server = server,
-                                            username = username,
-                                            password = password,
-                                        )
+                                        SettingsAction.WebDavUpload(server, username, password)
                                     )
-                                }
+                                },
+                                enabled = state.webdavUploadState != WebDavState.WORKING,
                             ) {
-                                Text(text = stringResource(Res.string.save_config))
+                                if (state.webdavUploadState == WebDavState.WORKING) {
+                                    CircularProgressIndicator(modifier = Modifier.size(22.dp))
+                                } else {
+                                    Text(text = stringResource(Res.string.upload))
+                                }
                             }
                         },
                     )
-                    OutlinedTextField(
-                        value = server,
-                        onValueChange = { server = it },
-                        placeholder = { Text(text = "https://dav.example.com/dav/") },
-                        label = { Text(text = stringResource(Res.string.server_address)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    )
-                    OutlinedTextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        placeholder = { Text(text = stringResource(Res.string.username)) },
-                        label = { Text(text = stringResource(Res.string.username)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    )
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        placeholder = { Text(text = stringResource(Res.string.app_password)) },
-                        label = { Text(text = stringResource(Res.string.password)) },
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    )
-                    Text(
-                        text = stringResource(Res.string.https_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 20.dp, top = 2.dp),
-                    )
-
-                    // 保存配置结果消息：成功/失败都展示（C8，此前只写不读静默失败）
-                    if (state.webdavConfigMessage.isNotEmpty()) {
-                        Text(
-                            text = state.webdavConfigMessage,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(start = 20.dp, top = 4.dp),
-                        )
-                    }
                 }
-            }
 
-            // WebDAV 上传/下载
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Column(
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                    ) {
-                        ListItem(
-                            colors = listItemColors(),
-                            headlineContent = {
-                                Text(text = stringResource(Res.string.upload_backup))
-                            },
-                            supportingContent = {
-                                Text(
-                                    text =
-                                        when (state.webdavUploadState) {
-                                            WebDavState.DONE ->
-                                                stringResource(
-                                                    Res.string.uploaded_to,
-                                                    // 用本次填写的地址而非已保存配置（C9）
-                                                    server.ifBlank {
-                                                        stringResource(Res.string.webdav_server)
-                                                    },
-                                                )
-                                            WebDavState.FAILURE -> state.webdavUploadMessage
-                                            else -> stringResource(Res.string.upload_all_to_webdav)
-                                        }
-                                )
-                            },
-                            trailingContent = {
-                                Button(
-                                    onClick = {
-                                        onAction(
-                                            SettingsAction.WebDavUpload(server, username, password)
-                                        )
-                                    },
-                                    enabled = state.webdavUploadState != WebDavState.WORKING,
-                                ) {
-                                    if (state.webdavUploadState == WebDavState.WORKING) {
-                                        CircularProgressIndicator(modifier = Modifier.size(22.dp))
-                                    } else {
-                                        Text(text = stringResource(Res.string.upload))
-                                    }
-                                }
-                            },
-                        )
-                    }
-
-                    Column(
-                        modifier =
-                            Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
-                    ) {
-                        ListItem(
-                            colors = listItemColors(),
-                            headlineContent = {
-                                Text(text = stringResource(Res.string.download_restore))
-                            },
-                            supportingContent = {
-                                Text(
-                                    text =
-                                        when (state.webdavDownloadState) {
-                                            WebDavState.DONE -> stringResource(Res.string.restored)
-                                            WebDavState.FAILURE -> state.webdavDownloadMessage
-                                            else -> stringResource(Res.string.download_from_webdav)
-                                        }
-                                )
-                            },
-                            trailingContent = {
-                                OutlinedButton(
-                                    onClick = { showDownloadConfirm = true },
-                                    enabled = state.webdavDownloadState != WebDavState.WORKING,
-                                ) {
-                                    if (state.webdavDownloadState == WebDavState.WORKING) {
-                                        CircularProgressIndicator(modifier = Modifier.size(22.dp))
-                                    } else {
-                                        Text(text = stringResource(Res.string.download))
-                                    }
-                                }
-                            },
-                        )
-                    }
-
-                    // 本地恢复二次确认：将覆盖本地全部数据（与 WebDAV 下载口径一致）
-                    if (showRestoreConfirm) {
-                        GritDialog(onDismissRequest = { showRestoreConfirm = false }) {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.warning),
-                                contentDescription = null,
-                            )
+                Column(
+                    modifier = Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                ) {
+                    ListItem(
+                        colors = listItemColors(),
+                        headlineContent = {
+                            Text(text = stringResource(Res.string.download_restore))
+                        },
+                        supportingContent = {
                             Text(
-                                text = stringResource(Res.string.restore),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(text = stringResource(Res.string.restore_confirm))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                            ) {
-                                TextButton(onClick = { showRestoreConfirm = false }) {
-                                    Text(text = stringResource(Res.string.cancel))
-                                }
-                                TextButton(
-                                    onClick = {
-                                        showRestoreConfirm = false
-                                        onAction(SettingsAction.OnRestore)
+                                text =
+                                    when (state.webdavDownloadState) {
+                                        WebDavState.DONE -> stringResource(Res.string.restored)
+                                        WebDavState.FAILURE -> state.webdavDownloadMessage
+                                        else -> stringResource(Res.string.download_from_webdav)
                                     }
-                                ) {
-                                    Text(text = stringResource(Res.string.confirm))
+                            )
+                        },
+                        trailingContent = {
+                            OutlinedButton(
+                                onClick = { showDownloadConfirm = true },
+                                enabled = state.webdavDownloadState != WebDavState.WORKING,
+                            ) {
+                                if (state.webdavDownloadState == WebDavState.WORKING) {
+                                    CircularProgressIndicator(modifier = Modifier.size(22.dp))
+                                } else {
+                                    Text(text = stringResource(Res.string.download))
                                 }
+                            }
+                        },
+                    )
+                }
+
+                // 本地恢复二次确认：将覆盖本地全部数据（与 WebDAV 下载口径一致）
+                if (showRestoreConfirm) {
+                    GritDialog(onDismissRequest = { showRestoreConfirm = false }) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.warning),
+                            contentDescription = null,
+                        )
+                        Text(
+                            text = stringResource(Res.string.restore),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(text = stringResource(Res.string.restore_confirm))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                        ) {
+                            TextButton(onClick = { showRestoreConfirm = false }) {
+                                Text(text = stringResource(Res.string.cancel))
+                            }
+                            TextButton(
+                                onClick = {
+                                    showRestoreConfirm = false
+                                    onAction(SettingsAction.OnRestore)
+                                }
+                            ) {
+                                Text(text = stringResource(Res.string.confirm))
                             }
                         }
                     }
+                }
 
-                    // 下载恢复二次确认：将覆盖本地全部数据
-                    if (showDownloadConfirm) {
-                        GritDialog(onDismissRequest = { showDownloadConfirm = false }) {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.warning),
-                                contentDescription = null,
-                            )
-                            Text(
-                                text = stringResource(Res.string.download_restore),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(text = stringResource(Res.string.download_confirm))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
+                // 下载恢复二次确认：将覆盖本地全部数据
+                if (showDownloadConfirm) {
+                    GritDialog(onDismissRequest = { showDownloadConfirm = false }) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.warning),
+                            contentDescription = null,
+                        )
+                        Text(
+                            text = stringResource(Res.string.download_restore),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(text = stringResource(Res.string.download_confirm))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                        ) {
+                            TextButton(onClick = { showDownloadConfirm = false }) {
+                                Text(text = stringResource(Res.string.cancel))
+                            }
+                            TextButton(
+                                onClick = {
+                                    showDownloadConfirm = false
+                                    onAction(
+                                        SettingsAction.WebDavDownload(server, username, password)
+                                    )
+                                }
                             ) {
-                                TextButton(onClick = { showDownloadConfirm = false }) {
-                                    Text(text = stringResource(Res.string.cancel))
-                                }
-                                TextButton(
-                                    onClick = {
-                                        showDownloadConfirm = false
-                                        onAction(
-                                            SettingsAction.WebDavDownload(
-                                                server,
-                                                username,
-                                                password,
-                                            )
-                                        )
-                                    }
-                                ) {
-                                    Text(text = stringResource(Res.string.confirm))
-                                }
+                                Text(text = stringResource(Res.string.confirm))
                             }
                         }
                     }
