@@ -230,4 +230,6 @@
 
     <!-- 习惯统计 -->
     <string name="weekly_completions_avg">Completions per week (Avg)</string>
+    <string name="exact_alarm">Exact reminders</string>
+    <string name="exact_alarm_denied">Not allowed — reminders may be late. Tap to grant</string>
 </resources>

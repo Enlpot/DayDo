@@ -28,6 +28,7 @@ import com.enlpot.daydo.core.interfaces.IntentActions
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.TaskRepo
+import com.enlpot.daydo.core.tasks.completeTask
 import com.enlpot.daydo.habits.data.database.HabitsDao
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
@@ -36,7 +37,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 
@@ -95,10 +95,10 @@ class GritIntentReceiver : BroadcastReceiver(), KoinComponent {
             return
         }
 
-        // 与 UI 完成路径一致：记录完成时间（通知栏完成不设 completedAt 会污染统计口径）
-        taskRepo.upsertTask(
-            task.copy(status = true, reminder = null, completedAt = LocalDateTime.now())
-        )
+        // 与 UI 完成路径共用 core 的同一实现（见 tasks/TaskCompletion.kt）：
+        // 补 seriesId、记录 completedAt、回填错过的周期、生成下一次实例并调度闹钟。
+        // 此前只落库 status=true，会让重复任务链静默终止、并污染统计口径
+        completeTask(repo = taskRepo, scheduler = get<AlarmScheduler>(), task = task)
 
         Log.d(TAG, "Task marked as complete successfully")
 

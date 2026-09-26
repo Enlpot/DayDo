@@ -16,23 +16,12 @@
  */
 package com.enlpot.daydo.core.interfaces
 
-import com.enlpot.daydo.core.habits.Habit
-import com.enlpot.daydo.core.tasks.Task
-
-interface AlarmScheduler {
-    fun schedule(habit: Habit)
-
-    fun schedule(task: Task)
-
-    fun cancel(habit: Habit)
-
-    fun cancel(task: Task)
-
-    fun cancelAll()
-
-    /**
-     * 系统是否允许调度"精确闹钟"。Android 13+ 起 `SCHEDULE_EXACT_ALARM` 默认不授予， 未授权时提醒会退化为 ±10 分钟窗口（见 Android
-     * 实现）。设置页据此提示并引导用户开启。
-     */
-    fun canScheduleExactAlarms(): Boolean
+/**
+ * 打开系统「闹钟与提醒」设置页（用于让用户授予精确闹钟权限）。
+ *
+ * 应用只申请了 `SCHEDULE_EXACT_ALARM`（可被用户撤销），Android 13+ 默认不授予； 未授权时提醒精度会静默降级，用户需要有感知的提示与一键补救入口。 非
+ * Android 平台实现为 no-op。
+ */
+interface ExactAlarmSettingsLauncher {
+    fun open()
 }

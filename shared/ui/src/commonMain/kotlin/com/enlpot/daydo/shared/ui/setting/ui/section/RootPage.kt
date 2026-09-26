@@ -182,6 +182,29 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
                                 .clickable { showHapticsDialog = true },
                     )
 
+                    // 精确提醒：Android 13+ 未授予精确闹钟权限时提醒会晚到 ±10 分钟，
+                    // 此前只静默降级、用户既无感知也无补救入口。仅在未允许时显示该项，避免噪音
+                    if (!state.canScheduleExactAlarms) {
+                        ListItem(
+                            headlineContent = {
+                                Text(text = stringResource(Res.string.exact_alarm))
+                            },
+                            supportingContent = {
+                                Text(text = stringResource(Res.string.exact_alarm_denied))
+                            },
+                            trailingContent = {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.arrow_forward),
+                                    contentDescription = null,
+                                )
+                            },
+                            colors = listItemColors(),
+                            modifier =
+                                Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                    .clickable { onAction(SettingsAction.OpenExactAlarmSettings) },
+                        )
+                    }
+
                     if (state.isBiometricLockAvailable) {
                         ListItem(
                             headlineContent = {

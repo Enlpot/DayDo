@@ -60,6 +60,9 @@ data class SettingsState(
     val hapticFeedback: Boolean = true,
     val hapticStrength: Int = 50,
     val hapticSound: HapticSound = HapticSound.DING,
+
+    /** 系统是否允许精确提醒（SCHEDULE_EXACT_ALARM）。false 时提醒会晚到 ±10 分钟，设置页据此提示 */
+    val canScheduleExactAlarms: Boolean = true,
 )
 
 @Stable

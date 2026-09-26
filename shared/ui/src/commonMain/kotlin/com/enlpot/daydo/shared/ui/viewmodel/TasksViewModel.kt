@@ -26,12 +26,10 @@ import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.tasks.TaskRepo
+import com.enlpot.daydo.core.tasks.completeTask
 import com.enlpot.daydo.core.tasks.isReorderSamePosition
-import com.enlpot.daydo.core.tasks.nextDateAfter
 import com.enlpot.daydo.core.tasks.normalReorderKey
 import com.enlpot.daydo.core.tasks.recurringReorderKey
-import com.enlpot.daydo.core.tasks.reminderFor
-import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
 import com.enlpot.daydo.core.tasks.sortActiveTasks
 import com.enlpot.daydo.core.tasks.sortCompletedTasks
 import com.enlpot.daydo.core.tasks.sortOverdueTasks
@@ -60,7 +58,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
 import org.koin.core.annotation.KoinViewModel
 import org.koin.core.annotation.Provided
 
@@ -321,82 +318,16 @@ class TasksViewModel(
 
     private suspend fun handleUpsertTask(task: Task) {
         if (task.status) {
+            // 完成重复任务需补 seriesId、回填错过的周期、生成下一次实例并调度闹钟—
+            // 与通知栏「标记完成」共用 core 的同一实现（tasks/TaskCompletion.kt），
+            // 避免两条路径行为不一致（通知栏曾绕过派生逻辑，导致重复链静默终止）
+            val outcome = completeTask(repo = repo, scheduler = scheduler, task = task)
             // 仅首次完成时记埋点；编辑已完成的存量任务不重复记
-            val isNewlyCompleted = task.completedAt == null
-            if (isNewlyCompleted) {
+            if (outcome.isNewlyCompleted) {
                 analytics.trackEvent(
                     AnalyticsWrapper.Companion.AnalyticsEvent.TASK_COMPLETED.name,
                     mapOf("has_reminder" to (task.reminder != null)),
                 )
-            }
-            // 老数据（无 seriesId）首次完成时初始化系列，后续周期继承；随机 seriesId 需查重避免撞号
-            val seriesTask =
-                if (task.recurrence != null && task.seriesId == null) {
-                    var newSeriesId = Random.nextLong()
-                    while (repo.getTasksBySeries(newSeriesId).isNotEmpty()) {
-                        newSeriesId = Random.nextLong()
-                    }
-                    task.copy(seriesId = newSeriesId)
-                } else {
-                    task
-                }
-            // 已完成任务编辑（改标题等）不刷新 completedAt：否则过期任务编辑后重新出现在首页已过期、统计被污染
-            repo.upsertTask(
-                seriesTask.copy(
-                    reminder = null,
-                    completedAt = if (isNewlyCompleted) LocalDateTime.now() else task.completedAt,
-                )
-            )
-
-            // Recurring task: backfill missed occurrences and schedule the next one
-            seriesTask.recurrence?.let { recurrence ->
-                val today = LocalDate.now()
-                val base = seriesTask.dueDate ?: today
-                val offset = seriesTask.reminderOffsetMinutes()
-
-                // 该系列已有实例的日期（查重，避免同一周期重复生成）——按 seriesId 查询，避免全表加载
-                val existingDueDates =
-                    seriesTask.seriesId
-                        ?.let { seriesId -> repo.getTasksBySeries(seriesId) }
-                        ?.mapNotNull { it.dueDate }
-                        ?.toSet() ?: emptySet()
-
-                val tasksToCreate = mutableListOf<Task>()
-                var cursor = recurrence.nextDateAfter(base, base)
-                var guard = 0
-                // 补做：base 之后到今天（含）之间错过的所有周期（已有实例的跳过）
-                while (cursor <= today && guard < 60) {
-                    if (cursor !in existingDueDates) {
-                        tasksToCreate +=
-                            seriesTask.copy(
-                                id = 0L,
-                                status = false,
-                                deletedAt = null,
-                                dueDate = cursor,
-                                reminder = null,
-                                createdAt = LocalDateTime.now(),
-                            )
-                    }
-                    cursor = recurrence.nextDateAfter(cursor, base)
-                    guard++
-                }
-                // 未来下一次：大于今天的第一周期（该日期已有实例则不再创建）
-                if (guard < 60 && cursor !in existingDueDates) {
-                    tasksToCreate +=
-                        seriesTask.copy(
-                            id = 0L,
-                            status = false,
-                            deletedAt = null,
-                            dueDate = cursor,
-                            reminder = reminderFor(seriesTask.dueDateTimeFor(cursor), offset),
-                            createdAt = LocalDateTime.now(),
-                        )
-                }
-
-                tasksToCreate.forEach { nextTask ->
-                    val newId = repo.upsertTask(nextTask)
-                    scheduler.schedule(nextTask.copy(id = newId))
-                }
             }
         } else {
             if (task.id == 0L) {
@@ -671,10 +602,6 @@ class TasksViewModel(
     private suspend fun upsertCategory(category: Category) {
         repo.upsertCategory(category)
     }
-}
-
-private fun Task.dueDateTimeFor(date: LocalDate): LocalDateTime? {
-    return LocalDateTime(date = date, time = dueTime ?: LocalTime(0, 0))
 }
 
 private fun LocalDate.plusDaysSafe(days: Long): LocalDate =

@@ -231,4 +231,6 @@
 
     <!-- 习惯统计 -->
     <string name="weekly_completions_avg">每周完成次数（平均）</string>
+    <string name="exact_alarm">精确提醒</string>
+    <string name="exact_alarm_denied">未允许，提醒可能晚到。点击去开启</string>
 </resources>

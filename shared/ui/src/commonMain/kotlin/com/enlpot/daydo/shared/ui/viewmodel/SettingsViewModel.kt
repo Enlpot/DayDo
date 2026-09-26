@@ -19,9 +19,11 @@ package com.enlpot.daydo.shared.ui.viewmodel
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.enlpot.daydo.core.interfaces.AlarmScheduler
 import com.enlpot.daydo.core.interfaces.AnalyticsWrapper
 import com.enlpot.daydo.core.interfaces.AppVersionProvider
 import com.enlpot.daydo.core.interfaces.BiometricUtils
+import com.enlpot.daydo.core.interfaces.ExactAlarmSettingsLauncher
 import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.interfaces.ThemeDatastore
 import com.enlpot.daydo.core.settings.backup.ExportRepo
@@ -57,6 +59,8 @@ class SettingsViewModel(
     @Provided private val biometricUtils: BiometricUtils,
     @Provided private val analytics: AnalyticsWrapper,
     @Provided private val appVersionProvider: AppVersionProvider,
+    @Provided private val alarmScheduler: AlarmScheduler,
+    @Provided private val exactAlarmLauncher: ExactAlarmSettingsLauncher,
 ) : ViewModel() {
     private var observeJob: Job? = null
 
@@ -72,6 +76,10 @@ class SettingsViewModel(
             .onStart {
                 observeJob()
                 getBiometricStatus()
+                // 精确闹钟权限可能被用户在系统设置里随时撤销，进入设置页时刷新一次
+                _state.update {
+                    it.copy(canScheduleExactAlarms = alarmScheduler.canScheduleExactAlarms())
+                }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsState())
 
@@ -383,7 +391,17 @@ class SettingsViewModel(
                         AnalyticsWrapper.Companion.AnalyticsEvent.SETTINGS_OPENED.name,
                         emptyMap(),
                     )
+                    _state.update {
+                        it.copy(canScheduleExactAlarms = alarmScheduler.canScheduleExactAlarms())
+                    }
                 }
+
+                RefreshExactAlarmStatus ->
+                    _state.update {
+                        it.copy(canScheduleExactAlarms = alarmScheduler.canScheduleExactAlarms())
+                    }
+
+                OpenExactAlarmSettings -> exactAlarmLauncher.open()
             }
         }
 

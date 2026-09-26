@@ -69,4 +69,10 @@ sealed interface SettingsAction {
     data class ToggleSmartViewVisibility(val category: SmartCategory) : SettingsAction
 
     data object OnSettingsOpened : SettingsAction
+
+    /** 刷新「精确提醒」权限状态（进入设置页时调用：用户可能刚从系统设置返回） */
+    data object RefreshExactAlarmStatus : SettingsAction
+
+    /** 打开系统「闹钟与提醒」设置页，引导用户授予精确闹钟权限 */
+    data object OpenExactAlarmSettings : SettingsAction
 }

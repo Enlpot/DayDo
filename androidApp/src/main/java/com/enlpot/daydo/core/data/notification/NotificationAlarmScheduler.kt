@@ -53,13 +53,15 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
     private val scheduledIntents = mutableSetOf<PendingIntent>()
 
     /**
-     * 精确闹钟权限（SCHEDULE_EXACT_ALARM）被撤销时降级为窗口闹钟（±10 分钟内触发）， 保证提醒不丢、不因 SecurityException
-     * 崩溃。权限正常时行为与原来完全一致。
+     * 精确闹钟权限（SCHEDULE_EXACT_ALARM）是否已授予。Android 13+ 默认不授予，未授予时提醒降级为 ±10
+     * 分钟窗口；设置页据此提示用户去系统设置开启（此前只降级、无任何提示与补救入口）。
      */
+    override fun canScheduleExactAlarms(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
+
+    /** 精确闹钟权限被撤销时降级为窗口闹钟（±10 分钟内触发）， 保证提醒不丢、不因 SecurityException 崩溃。权限正常时行为与原来完全一致。 */
     private fun setAlarm(triggerAtMs: Long, pendingIntent: PendingIntent) {
-        val canExact =
-            Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
-        if (canExact) {
+        if (canScheduleExactAlarms()) {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 triggerAtMs,
