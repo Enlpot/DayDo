@@ -96,11 +96,22 @@ private fun Recurrence.Monthly.nextMonthly(from: LocalDate, base: LocalDate): Lo
     var monthOffset = (year * 12 + month) - (base.year * 12 + base.month.ordinal + 1)
     if (monthOffset % interval != 0) {
         val remainder = ((monthOffset % interval) + interval) % interval
-        val total = base.year * 12 + base.month.ordinal + 1 + monthOffset + (interval - remainder)
+        // 注意：total 使用与推进分支一致的序号编码（1 月 = base.year*12 + 0），
+        // 若沿用 month 的 1..12 编码解码会差 1 个月，导致对齐后 monthOffset 奇偶错位而死循环。
+        val total = base.year * 12 + base.month.ordinal + monthOffset + (interval - remainder)
         year = total / 12
         month = total % 12 + 1
     }
+    var guard = 0
     while (true) {
+        if (guard++ > 2000) {
+            // 防御：连续 2000 个月无候选视为配置异常，回退到下一月 base 日后避免死循环
+            val n = year * 12 + (month - 1) + 1
+            val ny = n / 12
+            val nm = n % 12 + 1
+            val nd = base.dayOfMonth.coerceAtMost(LocalDate(ny, nm, 1).daysInMonth())
+            return LocalDate(ny, nm, nd)
+        }
         val monthOffset = (year * 12 + month) - (base.year * 12 + base.month.ordinal + 1)
         if (monthOffset >= 0 && monthOffset % interval == 0) {
             val monthEnd = LocalDate(year, month, 1).daysInMonth()

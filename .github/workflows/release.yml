@@ -38,6 +38,12 @@ jobs:
           fi
           echo "tag/versionName match: v${VN}"
 
+      - name: Run core unit tests
+        run: |
+          chmod +x gradlew
+          ./gradlew :shared:core:testAndroidHostTest --console=plain
+        timeout-minutes: 15
+
       - name: Validate keystore secrets
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
