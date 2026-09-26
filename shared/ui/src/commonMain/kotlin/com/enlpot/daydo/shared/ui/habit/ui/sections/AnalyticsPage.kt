@@ -133,15 +133,7 @@ fun AnalyticsPage(
                     fontFamily = flexFontEmphasis(),
                 )
             },
-            subtitle = {
-                if (currentHabit.habit.description.isNotEmpty()) {
-                    Text(
-                        text = currentHabit.habit.description,
-                        modifier = Modifier.basicMarquee(),
-                        fontFamily = flexFontEmphasis(),
-                    )
-                }
-            },
+            subtitle = {},
             windowInsets =
                 if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded) {
                     WindowInsets(0)

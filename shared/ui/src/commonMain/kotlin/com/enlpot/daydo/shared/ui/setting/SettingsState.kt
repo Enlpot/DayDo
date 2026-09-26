@@ -26,6 +26,15 @@ import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.theme.Theme
 import kotlinx.datetime.DayOfWeek
 
+/** 默认隐藏：除「今天 / 已过期 / 收集箱 / 已完成」外的智能分类 */
+val DEFAULT_HIDDEN_SMART_VIEWS: Set<SmartCategory> =
+    setOf(
+        SmartCategory.ALL,
+        SmartCategory.TOMORROW,
+        SmartCategory.NEXT_7_DAYS,
+        SmartCategory.DELETED,
+    )
+
 @Stable
 data class SettingsState(
     val backupState: BackupState = BackupState(),

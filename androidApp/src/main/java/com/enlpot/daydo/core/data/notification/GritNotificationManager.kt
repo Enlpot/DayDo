@@ -87,7 +87,6 @@ class GritNotificationManager(private val context: Context) {
             NotificationCompat.Builder(context, "1")
                 .setSmallIcon(R.drawable.notif_icon)
                 .setContentTitle(habit.title)
-                .setContentText(habit.description)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
                 .setContentIntent(contentIntent)

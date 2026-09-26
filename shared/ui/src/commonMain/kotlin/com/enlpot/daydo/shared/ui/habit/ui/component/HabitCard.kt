@@ -57,6 +57,7 @@ import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
+import com.enlpot.daydo.shared.ui.habit.habitIcon
 import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import com.kizitonwose.calendar.compose.WeekCalendar
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
@@ -160,9 +161,10 @@ fun HabitCard(
                             },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text = habitWithAnalytics.habit.emoji,
-                        style = MaterialTheme.typography.titleLarge,
+                    Icon(
+                        imageVector = habitIcon(habitWithAnalytics.habit.icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             },

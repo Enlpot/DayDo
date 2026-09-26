@@ -21,6 +21,7 @@ import androidx.compose.runtime.Stable
 import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.tasks.Task
+import com.enlpot.daydo.shared.ui.setting.DEFAULT_HIDDEN_SMART_VIEWS
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
 import org.jetbrains.compose.resources.stringResource
@@ -40,7 +41,7 @@ data class TaskState(
     val currentView: TaskView = TaskView.Smart(SmartCategory.ALL),
     val displayTasks: List<Task> = emptyList(),
     val displayCompletedTasks: List<Task> = emptyList(),
-    val hiddenSmartViews: Set<SmartCategory> = emptySet(),
+    val hiddenSmartViews: Set<SmartCategory> = DEFAULT_HIDDEN_SMART_VIEWS,
     val is24Hour: Boolean = false,
     val startOfWeek: DayOfWeek = DayOfWeek.MONDAY,
     val hapticFeedback: Boolean = true,

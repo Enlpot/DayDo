@@ -48,6 +48,12 @@ fun performAndroidHaptic(context: Context, kind: HapticKind, strength: Int, soun
                 vibrator?.vibrate(VibrationEffect.createOneShot(15, (amplitude * 0.6).roundToInt()))
             }
         }
+
+        HapticKind.DRAG_TICK -> {
+            if (strength > 0) {
+                vibrator?.vibrate(VibrationEffect.createOneShot(5, (amplitude * 0.4).roundToInt()))
+            }
+        }
     }
 }
 

@@ -48,6 +48,15 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val hapticStrengthKey = intPreferencesKey("haptic_strength")
         private val hapticSoundKey = stringPreferencesKey("haptic_sound")
         private val webDavServerKey = stringPreferencesKey("webdav_server")
+
+        /** 默认隐藏：除「今天 / 已过期 / 收集箱 / 已完成」外的智能分类 */
+        private val DEFAULT_HIDDEN_SMART_VIEWS: Set<SmartCategory> =
+            setOf(
+                SmartCategory.ALL,
+                SmartCategory.TOMORROW,
+                SmartCategory.NEXT_7_DAYS,
+                SmartCategory.DELETED,
+            )
         private val webDavUsernameKey = stringPreferencesKey("webdav_username")
         private val webDavPasswordKey = stringPreferencesKey("webdav_password")
     }
@@ -75,7 +84,7 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
     }
 
     override fun getIs24Hr(): Flow<Boolean> =
-        datastore.data.map { prefs -> prefs[is24HrKey] == true }
+        datastore.data.map { prefs -> prefs[is24HrKey] ?: true }
 
     override suspend fun setIs24Hr(pref: Boolean) {
         datastore.edit { prefs -> prefs[is24HrKey] = pref }
@@ -105,7 +114,7 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
     override fun getHiddenSmartViewsFlow(): Flow<Set<SmartCategory>> =
         datastore.data.map { prefs ->
             val raw = prefs[hiddenSmartViewsKey].orEmpty()
-            if (raw.isBlank()) emptySet()
+            if (raw.isBlank()) DEFAULT_HIDDEN_SMART_VIEWS
             else
                 raw.split(",")
                     .mapNotNull { runCatching { SmartCategory.valueOf(it) }.getOrNull() }

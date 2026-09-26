@@ -48,7 +48,7 @@ abstract class HabitDatabase : RoomDatabase() {
     }
 
     companion object {
-        const val SCHEMA_VERSION = 8
+        const val SCHEMA_VERSION = 9
         const val DB_NAME = "habit_database"
 
         val migrate_3_4 =
@@ -73,6 +73,29 @@ abstract class HabitDatabase : RoomDatabase() {
                         "CREATE UNIQUE INDEX IF NOT EXISTS index_habit_status_habitId_date " +
                             "ON habit_status (habitId, date)"
                     )
+                }
+            }
+
+        // v8→v9：删除 habit_index.description 列（表重建，兼容旧 SQLite 无 DROP COLUMN）
+        val migrate_8_9 =
+            object : Migration(8, 9) {
+                override suspend fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL(
+                        "CREATE TABLE IF NOT EXISTS habit_index_new (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                            "title TEXT NOT NULL, " +
+                            "`index` INTEGER NOT NULL, " +
+                            "days TEXT NOT NULL, " +
+                            "time INTEGER NOT NULL, " +
+                            "reminder INTEGER NOT NULL DEFAULT 1, " +
+                            "emoji TEXT NOT NULL DEFAULT '✨')"
+                    )
+                    connection.execSQL(
+                        "INSERT INTO habit_index_new (id, title, `index`, days, time, reminder, emoji) " +
+                            "SELECT id, title, `index`, days, time, reminder, emoji FROM habit_index"
+                    )
+                    connection.execSQL("DROP TABLE habit_index")
+                    connection.execSQL("ALTER TABLE habit_index_new RENAME TO habit_index")
                 }
             }
 

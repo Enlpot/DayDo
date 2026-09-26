@@ -521,7 +521,6 @@ private fun TodayHabitsSection(
             habit =
                 Habit(
                     title = "",
-                    description = "",
                     time = LocalDateTime.now(),
                     days = DayOfWeek.entries.toSet(),
                     index = state.habitsWithAnalytics.size,

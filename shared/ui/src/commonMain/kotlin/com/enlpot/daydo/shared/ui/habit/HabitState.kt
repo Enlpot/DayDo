@@ -54,6 +54,6 @@ data class HabitState(
 
     // datastore
     val compactHabitView: Boolean = false,
-    val is24Hr: Boolean = false,
+    val is24Hr: Boolean = true,
     val startingDay: DayOfWeek = DayOfWeek.MONDAY,
 )

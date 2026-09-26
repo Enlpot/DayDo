@@ -19,13 +19,16 @@ package com.enlpot.daydo.shared.ui.setting.ui.section
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -48,6 +51,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.settings.HapticSound
+import com.enlpot.daydo.shared.ui.HapticKind
+import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
@@ -116,6 +121,7 @@ fun HapticsContent(
 ) {
     var showFeedbackDialog by rememberSaveable { mutableStateOf(false) }
     var showSoundDialog by rememberSaveable { mutableStateOf(false) }
+    val haptic = LocalHapticPerformer.current
 
     LazyColumn(modifier = modifier, contentPadding = contentPadding) {
         item {
@@ -166,7 +172,10 @@ fun HapticsContent(
                     ) {
                         Slider(
                             value = sliderValue,
-                            onValueChange = { sliderValue = it },
+                            onValueChange = {
+                                sliderValue = it
+                                haptic(HapticKind.DRAG_TICK)
+                            },
                             valueRange = 0f..100f,
                             onValueChangeFinished = {
                                 onAction(
@@ -179,6 +188,14 @@ fun HapticsContent(
                                     activeTrackColor = MaterialTheme.colorScheme.primary,
                                     inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
                                 ),
+                            thumb = {
+                                Box(
+                                    modifier =
+                                        Modifier.size(20.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primary)
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -204,7 +221,7 @@ fun HapticsContent(
     }
 
     if (showFeedbackDialog) {
-        GritBottomSheet(onDismissRequest = { showFeedbackDialog = false }) {
+        GritBottomSheet(onDismissRequest = { showFeedbackDialog = false }, padding = 12.dp) {
             Text(
                 text = stringResource(Res.string.haptics),
                 style = MaterialTheme.typography.headlineSmall,
@@ -244,7 +261,7 @@ fun HapticsContent(
     }
 
     if (showSoundDialog) {
-        GritBottomSheet(onDismissRequest = { showSoundDialog = false }) {
+        GritBottomSheet(onDismissRequest = { showSoundDialog = false }, padding = 12.dp) {
             Text(
                 text = stringResource(Res.string.sound),
                 style = MaterialTheme.typography.headlineSmall,

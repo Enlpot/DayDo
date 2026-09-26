@@ -302,7 +302,7 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (showSmartViewsDialog) {
-            GritBottomSheet(onDismissRequest = { showSmartViewsDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showSmartViewsDialog = false }, padding = 12.dp) {
                 Text(
                     text = stringResource(Res.string.smart_category),
                     style = MaterialTheme.typography.headlineSmall,
@@ -338,7 +338,10 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (showStartingPageDialog) {
-            GritBottomSheet(onDismissRequest = { showStartingPageDialog = false }) {
+            GritBottomSheet(
+                onDismissRequest = { showStartingPageDialog = false },
+                padding = 12.dp,
+            ) {
                 Text(
                     text = stringResource(Res.string.default_start_page),
                     style = MaterialTheme.typography.headlineSmall,
@@ -379,7 +382,7 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
             }
         }
         if (showStartOfWeekDialog) {
-            GritBottomSheet(onDismissRequest = { showStartOfWeekDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showStartOfWeekDialog = false }, padding = 12.dp) {
                 Text(
                     text = stringResource(Res.string.start_week),
                     style = MaterialTheme.typography.headlineSmall,
@@ -419,7 +422,7 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (show24HrDialog) {
-            GritBottomSheet(onDismissRequest = { show24HrDialog = false }) {
+            GritBottomSheet(onDismissRequest = { show24HrDialog = false }, padding = 12.dp) {
                 Text(
                     text = stringResource(Res.string.time_format),
                     style = MaterialTheme.typography.headlineSmall,
@@ -459,7 +462,7 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (showBiometricDialog) {
-            GritBottomSheet(onDismissRequest = { showBiometricDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showBiometricDialog = false }, padding = 12.dp) {
                 Text(
                     text = stringResource(Res.string.biometric_lock),
                     style = MaterialTheme.typography.headlineSmall,
@@ -503,10 +506,11 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (showHapticsDialog) {
-            GritBottomSheet(onDismissRequest = { showHapticsDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showHapticsDialog = false }, padding = 0.dp) {
                 Text(
                     text = stringResource(Res.string.haptics),
                     style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(horizontal = 12.dp),
                 )
                 HapticsContent(
                     state = state,
@@ -519,10 +523,11 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (showLookAndFeelDialog) {
-            GritBottomSheet(onDismissRequest = { showLookAndFeelDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showLookAndFeelDialog = false }, padding = 0.dp) {
                 Text(
                     text = stringResource(Res.string.look_and_feel),
                     style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(horizontal = 12.dp),
                 )
                 LookAndFeelContent(
                     state = state,
@@ -535,10 +540,11 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
         }
 
         if (showBackupDialog) {
-            GritBottomSheet(onDismissRequest = { showBackupDialog = false }) {
+            GritBottomSheet(onDismissRequest = { showBackupDialog = false }, padding = 0.dp) {
                 Text(
                     text = stringResource(Res.string.backup_and_sync),
                     style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(horizontal = 12.dp),
                 )
                 BackupContent(
                     state = state,

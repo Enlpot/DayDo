@@ -24,10 +24,9 @@ import kotlinx.serialization.Serializable
 data class Habit(
     val id: Long = 0,
     val title: String,
-    val description: String,
     val time: LocalDateTime,
     val days: Set<DayOfWeek>,
     val index: Int,
     val reminder: Boolean,
-    val emoji: String = "✨",
+    val icon: String = "star",
 )

@@ -62,6 +62,8 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.theme.AppTheme
 import com.enlpot.daydo.core.theme.PaletteStyle
 import com.enlpot.daydo.core.theme.Theme
+import com.enlpot.daydo.shared.ui.HapticKind
+import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.components.ColorPickerDialog
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
@@ -138,6 +140,7 @@ fun LookAndFeelContent(
                         remember(state.cornerRadius) {
                             mutableFloatStateOf(state.cornerRadius.toFloat())
                         }
+                    val haptic = LocalHapticPerformer.current
                     Column(
                         modifier =
                             Modifier.clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
@@ -185,7 +188,10 @@ fun LookAndFeelContent(
                         ) {
                             Slider(
                                 value = sliderValue,
-                                onValueChange = { sliderValue = it },
+                                onValueChange = {
+                                    sliderValue = it
+                                    haptic(HapticKind.DRAG_TICK)
+                                },
                                 valueRange = 0f..40f,
                                 onValueChangeFinished = {
                                     onAction(
@@ -332,7 +338,7 @@ fun LookAndFeelContent(
     }
 
     if (showMaterialYouDialog) {
-        GritBottomSheet(onDismissRequest = { showMaterialYouDialog = false }) {
+        GritBottomSheet(onDismissRequest = { showMaterialYouDialog = false }, padding = 12.dp) {
             Text(
                 text = stringResource(Res.string.material_you),
                 style = MaterialTheme.typography.headlineSmall,
@@ -372,7 +378,7 @@ fun LookAndFeelContent(
     }
 
     if (showAmoledDialog) {
-        GritBottomSheet(onDismissRequest = { showAmoledDialog = false }) {
+        GritBottomSheet(onDismissRequest = { showAmoledDialog = false }, padding = 12.dp) {
             Text(
                 text = stringResource(Res.string.amoled),
                 style = MaterialTheme.typography.headlineSmall,
@@ -411,7 +417,7 @@ fun LookAndFeelContent(
         }
     }
     if (showAppThemeDialog) {
-        GritBottomSheet(onDismissRequest = { showAppThemeDialog = false }) {
+        GritBottomSheet(onDismissRequest = { showAppThemeDialog = false }, padding = 12.dp) {
             Text(
                 text = stringResource(Res.string.app_theme),
                 style = MaterialTheme.typography.headlineSmall,

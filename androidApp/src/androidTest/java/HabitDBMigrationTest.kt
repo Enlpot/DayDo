@@ -110,24 +110,20 @@ class HabitDBMigrationTest {
             assertThat(stmt.getLong(0)).isEqualTo(5L) // inserted 5 habits
         }
 
-        db.prepare(
-                "SELECT id, title, description, [index], days, time, reminder FROM habit_index ORDER BY id"
-            )
+        db.prepare("SELECT id, title, [index], days, time, reminder FROM habit_index ORDER BY id")
             .use { stmt ->
                 var count = 0
                 while (stmt.step()) {
                     count++
                     val id = stmt.getLong(0)
                     val title = stmt.getText(1)
-                    val description = stmt.getText(2)
-                    val index = stmt.getLong(3).toInt()
-                    val days = stmt.getText(4)
-                    val time = stmt.getLong(5)
-                    val reminder = stmt.getLong(6).toInt()
+                    val index = stmt.getLong(2).toInt()
+                    val days = stmt.getText(3)
+                    val time = stmt.getLong(4)
+                    val reminder = stmt.getLong(5).toInt()
 
-                    // Title & description patterns
+                    // Title pattern
                     assertThat(title).isEqualTo("Habit $id")
-                    assertThat(description).isEqualTo("Description for habit $id")
 
                     // Index matches habit number
                     assertThat(index).isEqualTo(id.toInt())

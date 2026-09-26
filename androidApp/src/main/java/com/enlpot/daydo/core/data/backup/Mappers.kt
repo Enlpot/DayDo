@@ -32,13 +32,12 @@ fun Habit.toHabitSchema(): HabitSchema {
     return HabitSchema(
         id = id,
         title = title,
-        description = description,
         index = index,
         // 与任务侧一致用 UTC 语义：习惯是"当地时间某时刻"，跨时区恢复保持本地时刻而非绝对时刻
         time = time.toInstant(TimeZone.UTC).toEpochMilliseconds(),
         days = Converters.dayOfWeekToString(days),
         reminder = reminder,
-        emoji = emoji,
+        icon = icon,
     )
 }
 
@@ -47,12 +46,11 @@ fun HabitSchema.toHabit(): Habit {
     return Habit(
         id = id,
         title = title,
-        description = description,
         index = index,
         time = Instant.fromEpochMilliseconds(time).toLocalDateTime(TimeZone.UTC),
         days = Converters.dayOfWeekFromString(days),
         reminder = reminder,
-        emoji = emoji,
+        icon = icon,
     )
 }
 

@@ -26,10 +26,9 @@ import kotlinx.datetime.LocalDateTime
 data class HabitEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
-    val description: String,
     val index: Int,
     val days: Set<DayOfWeek>,
     val time: LocalDateTime,
     @ColumnInfo(name = "reminder", defaultValue = "1") val reminder: Boolean,
-    @ColumnInfo(name = "emoji", defaultValue = "'✨'") val emoji: String = "✨",
+    @ColumnInfo(name = "emoji", defaultValue = "'✨'") val icon: String = "star",
 )

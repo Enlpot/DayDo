@@ -25,12 +25,11 @@ fun HabitEntity.toHabit(): Habit {
     return Habit(
         id = id,
         title = title,
-        description = description,
         time = time,
         days = days,
         index = index,
         reminder = reminder,
-        emoji = emoji,
+        icon = icon,
     )
 }
 
@@ -42,12 +41,11 @@ fun Habit.toHabitEntity(): HabitEntity {
     return HabitEntity(
         id = id,
         title = title,
-        description = description,
         time = time,
         index = index,
         days = days,
         reminder = reminder,
-        emoji = emoji,
+        icon = icon,
     )
 }
 

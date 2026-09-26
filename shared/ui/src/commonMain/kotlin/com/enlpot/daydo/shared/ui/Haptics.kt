@@ -25,6 +25,9 @@ enum class HapticKind {
 
     /** Drag (reorder) started */
     DRAG_START,
+
+    /** Slider drag tick: very light vibration */
+    DRAG_TICK,
 }
 
 /**

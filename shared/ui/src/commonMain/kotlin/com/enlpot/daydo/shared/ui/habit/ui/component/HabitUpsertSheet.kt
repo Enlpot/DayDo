@@ -22,7 +22,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,7 +30,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -78,6 +81,8 @@ import com.enlpot.daydo.shared.ui.components.endItemShape
 import com.enlpot.daydo.shared.ui.components.leadingItemShape
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.components.middleItemShape
+import com.enlpot.daydo.shared.ui.habit.HABIT_ICONS
+import com.enlpot.daydo.shared.ui.habit.habitIcon
 import com.enlpot.daydo.shared.ui.task.ui.weekdayShortLabels
 import com.enlpot.daydo.shared.ui.theme.GritTheme
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
@@ -91,32 +96,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
 private const val TITLE_STRING_LIMIT = 50
-private const val DESCRIPTION_STRING_LIMIT = 200
-
-/** 内置简约习惯图标集合（创建/编辑习惯时可选择） */
-private val HABIT_EMOJIS =
-    listOf(
-        "✨",
-        "💪",
-        "🏃",
-        "📖",
-        "🧘",
-        "💧",
-        "🥗",
-        "😴",
-        "🎯",
-        "🎸",
-        "✍️",
-        "🧹",
-        "💰",
-        "🚭",
-        "🌅",
-        "💊",
-        "🦷",
-        "📵",
-        "🤝",
-        "🌱",
-    )
 
 @Composable
 expect fun HabitUpsertSheet(
@@ -144,17 +123,12 @@ fun HabitUpsertSheetContent(
     val focusRequester = remember { FocusRequester() }
 
     var timePickerDialog by rememberSaveable { mutableStateOf(false) }
+    var iconPickerDialog by rememberSaveable { mutableStateOf(false) }
 
     val titleTextFieldState =
         rememberTextFieldState(
             initialText = newHabit.title,
             initialSelection = TextRange(newHabit.title.length),
-        )
-
-    val descTextFieldState =
-        rememberTextFieldState(
-            initialText = newHabit.description,
-            initialSelection = TextRange(newHabit.description.length),
         )
 
     LaunchedEffect(Unit) {
@@ -172,13 +146,34 @@ fun HabitUpsertSheetContent(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         ) {
-            Text(
-                text =
-                    stringResource(
-                        if (isEditSheet) Res.string.edit_habit else Res.string.add_habit
-                    ),
-                style = MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier =
+                        Modifier.size(44.dp).clip(MaterialTheme.shapes.medium).clickable {
+                            iconPickerDialog = true
+                        },
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = habitIcon(newHabit.icon),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text =
+                        stringResource(
+                            if (isEditSheet) Res.string.edit_habit else Res.string.add_habit
+                        ),
+                    style =
+                        MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
+                )
+            }
         }
 
         LazyColumn(
@@ -187,44 +182,6 @@ fun HabitUpsertSheetContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             contentPadding = PaddingValues(16.dp),
         ) {
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.select_icon),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        HABIT_EMOJIS.forEach { emoji ->
-                            val selected = newHabit.emoji == emoji
-                            Surface(
-                                modifier =
-                                    Modifier.size(44.dp)
-                                        .clip(MaterialTheme.shapes.medium)
-                                        .clickable { updateHabit(newHabit.copy(emoji = emoji)) },
-                                color =
-                                    if (selected) {
-                                        MaterialTheme.colorScheme.primaryContainer
-                                    } else {
-                                        MaterialTheme.colorScheme.surfaceContainerHigh
-                                    },
-                                shape = MaterialTheme.shapes.medium,
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(text = emoji, style = MaterialTheme.typography.titleLarge)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             item {
                 OutlinedTextField(
                     state = titleTextFieldState,
@@ -251,35 +208,6 @@ fun HabitUpsertSheetContent(
                     },
                     isError = titleTextFieldState.text.length > TITLE_STRING_LIMIT,
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-                )
-            }
-
-            item {
-                OutlinedTextField(
-                    state = descTextFieldState,
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    shape = MaterialTheme.shapes.medium,
-                    keyboardOptions =
-                        KeyboardOptions(
-                            capitalization = KeyboardCapitalization.Sentences,
-                            imeAction = ImeAction.Done,
-                        ),
-                    modifier = Modifier.fillMaxWidth(),
-                    label = {
-                        // 用输入框实时文本判断（C10）：newHabit.description 会滞后
-                        if (descTextFieldState.text.length <= DESCRIPTION_STRING_LIMIT) {
-                            Text(
-                                text =
-                                    stringResource(
-                                        if (isEditSheet) Res.string.update_description
-                                        else Res.string.description
-                                    )
-                            )
-                        } else {
-                            Text(text = stringResource(Res.string.too_long))
-                        }
-                    },
-                    isError = descTextFieldState.text.length > DESCRIPTION_STRING_LIMIT,
                 )
             }
 
@@ -407,18 +335,12 @@ fun HabitUpsertSheetContent(
             item {
                 Button(
                     onClick = {
-                        onUpsertHabit(
-                            newHabit.copy(
-                                title = titleTextFieldState.text.toString(),
-                                description = descTextFieldState.text.toString(),
-                            )
-                        )
+                        onUpsertHabit(newHabit.copy(title = titleTextFieldState.text.toString()))
                         onDismissRequest()
                     },
                     modifier = Modifier.padding(bottom = 32.dp).fillMaxWidth(),
                     enabled =
-                        descTextFieldState.text.length <= DESCRIPTION_STRING_LIMIT &&
-                            titleTextFieldState.text.length <= TITLE_STRING_LIMIT &&
+                        titleTextFieldState.text.length <= TITLE_STRING_LIMIT &&
                             titleTextFieldState.text.isNotBlank(),
                 ) {
                     Text(
@@ -464,6 +386,59 @@ fun HabitUpsertSheetContent(
                 },
             )
         }
+
+        if (iconPickerDialog) {
+            GritBottomSheet(
+                onDismissRequest = { iconPickerDialog = false },
+                padding = 0.dp,
+                modifier = Modifier.height(460.dp),
+            ) {
+                Text(
+                    text = stringResource(Res.string.select_icon),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(6),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    items(HABIT_ICONS, key = { it }) { iconName ->
+                        val selected = newHabit.icon == iconName
+                        Surface(
+                            modifier =
+                                Modifier.size(48.dp).clip(MaterialTheme.shapes.medium).clickable {
+                                    updateHabit(newHabit.copy(icon = iconName))
+                                    iconPickerDialog = false
+                                },
+                            color =
+                                if (selected) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                                },
+                            shape = MaterialTheme.shapes.medium,
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = habitIcon(iconName),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    tint =
+                                        if (selected) {
+                                            MaterialTheme.colorScheme.onPrimaryContainer
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -476,7 +451,6 @@ private fun Preview() {
                 Habit(
                     id = 1,
                     title = "New Habit",
-                    description = "A new Habit",
                     time = LocalDateTime.now(),
                     days = DayOfWeek.entries.toSet(),
                     index = 1,
