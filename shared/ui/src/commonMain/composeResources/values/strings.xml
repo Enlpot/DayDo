@@ -44,6 +44,7 @@
     <string name="items_completed">completed</string>
     <string name="items_overdue">overdue</string>
     <string name="completed">Completed Today</string>
+    <string name="completed_tasks">Completed</string>
     <string name="title">Title</string>
     <string name="description">Description</string>
     <string name="edit_habit">Edit Habit</string>

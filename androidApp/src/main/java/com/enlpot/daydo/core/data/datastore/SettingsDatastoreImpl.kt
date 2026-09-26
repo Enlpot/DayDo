@@ -20,6 +20,7 @@ import android.util.Base64
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -29,7 +30,9 @@ import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.tasks.SmartCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.enlpot.daydo.core.now
 import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 import org.koin.core.annotation.Single
 
 @Single(binds = [SettingsDatastore::class])
@@ -45,6 +48,8 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val hiddenSmartViewsKey = stringPreferencesKey("hidden_smart_views")
         private val cornerRadiusKey = intPreferencesKey("corner_radius")
         private val hapticFeedbackKey = booleanPreferencesKey("haptic_feedback")
+        private val homeCompletedCollapsedKey = booleanPreferencesKey("home_completed_collapsed")
+        private val homeCompletedCollapsedDayKey = longPreferencesKey("home_completed_collapsed_day")
         private val hapticStrengthKey = intPreferencesKey("haptic_strength")
         private val hapticSoundKey = stringPreferencesKey("haptic_sound")
         private val webDavServerKey = stringPreferencesKey("webdav_server")
@@ -102,6 +107,23 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override suspend fun setBiometricPref(pref: Boolean) {
         datastore.edit { prefs -> prefs[biometricLockKey] = pref }
+    }
+
+    override fun getHomeCompletedCollapsedPref(): Flow<Boolean> =
+        datastore.data.map { prefs ->
+            val savedDay = prefs[homeCompletedCollapsedDayKey] ?: -1L
+            if (savedDay != LocalDate.now().toEpochDays()) {
+                false
+            } else {
+                prefs[homeCompletedCollapsedKey] ?: false
+            }
+        }
+
+    override suspend fun setHomeCompletedCollapsed(collapsed: Boolean) {
+        datastore.edit { prefs ->
+            prefs[homeCompletedCollapsedKey] = collapsed
+            prefs[homeCompletedCollapsedDayKey] = LocalDate.now().toEpochDays()
+        }
     }
 
     override fun getCompactViewPref(): Flow<Boolean> =

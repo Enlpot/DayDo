@@ -16,16 +16,21 @@
  */
 package com.enlpot.daydo.shared.ui.app
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -46,16 +51,20 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.habits.Habit
 import com.enlpot.daydo.core.now
@@ -84,6 +93,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import sh.calvin.reorderable.ReorderableItem
@@ -131,6 +141,8 @@ fun HomePage(
 
     // 多选 / 编辑 / 新建状态（页面层持有，供标题与 FAB 联动）
     var multiSelect by rememberSaveable { mutableStateOf(false) }
+    // 刚勾选完成的任务：完成区新节点入场播 wipe，播完回调移除
+    val wipingTaskIds = remember { mutableStateListOf<Long>() }
     var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
     var editTask by remember { mutableStateOf<Task?>(null) }
     var showTaskAddSheet by rememberSaveable { mutableStateOf(false) }
@@ -142,6 +154,16 @@ fun HomePage(
     fun exitMultiSelect() {
         multiSelect = false
         selectedTaskIds = emptySet()
+    }
+
+    // 左右滑动切 tab 时退出任务/习惯多选态（定义在 exitMultiSelect 之后才能引用）
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }
+            .drop(1)
+            .collect {
+                exitMultiSelect()
+                onHabitAction(HabitsAction.OnToggleEditState(false))
+            }
     }
 
     // 左右滑动切 tab 时退出任务/习惯多选态
@@ -273,6 +295,12 @@ fun HomePage(
                         },
                         onExitMultiSelect = ::exitMultiSelect,
                         onEditTask = { editTask = it },
+                        wipingTaskIds = wipingTaskIds,
+                        onWipeDone = { wipingTaskIds.remove(it) },
+                        completedCollapsed = taskState.homeCompletedCollapsed,
+                        onToggleCompletedCollapsed = {
+                            onTaskAction(TaskAction.OnToggleHomeCompletedCollapsed)
+                        },
                     )
 
                 isTasksPage ->
@@ -291,6 +319,12 @@ fun HomePage(
                         },
                         onExitMultiSelect = ::exitMultiSelect,
                         onEditTask = { editTask = it },
+                        wipingTaskIds = wipingTaskIds,
+                        onWipeDone = { wipingTaskIds.remove(it) },
+                        completedCollapsed = taskState.homeCompletedCollapsed,
+                        onToggleCompletedCollapsed = {
+                            onTaskAction(TaskAction.OnToggleHomeCompletedCollapsed)
+                        },
                     )
 
                 else ->
@@ -376,6 +410,17 @@ fun HomePage(
 }
 
 @Composable
+private fun rememberEntranceWipe(key: Long, onDone: () -> Unit): Float {
+    val animatable = remember(key) { Animatable(0f) }
+    LaunchedEffect(key) {
+        animatable.snapTo(0f)
+        animatable.animateTo(1f, tween(durationMillis = 300))
+        onDone()
+    }
+    return animatable.value
+}
+
+@Composable
 private fun TodayTasksSection(
     state: TaskState,
     onAction: (TaskAction) -> Unit,
@@ -386,6 +431,10 @@ private fun TodayTasksSection(
     onToggleSelect: (Task) -> Unit,
     onExitMultiSelect: () -> Unit,
     onEditTask: (Task) -> Unit,
+    wipingTaskIds: SnapshotStateList<Long>,
+    onWipeDone: (Long) -> Unit,
+    completedCollapsed: Boolean,
+    onToggleCompletedCollapsed: () -> Unit,
 ) {
     val haptic = LocalHapticPerformer.current
 
@@ -450,8 +499,12 @@ private fun TodayTasksSection(
                         if (multiSelect) onExitMultiSelect() else onToggleSelect(task)
                     },
                     onCheck = {
-                        if (multiSelect) onToggleSelect(task)
-                        else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
+                        if (multiSelect) {
+                            onToggleSelect(task)
+                        } else {
+                            if (!task.status) wipingTaskIds.add(task.id)
+                            onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
+                        }
                     },
                     onClick = { if (multiSelect) onToggleSelect(task) else onEditTask(task) },
                 )
@@ -460,27 +513,72 @@ private fun TodayTasksSection(
 
         if (completedTasks.isNotEmpty()) {
             item { Spacer(modifier = Modifier.height(16.dp)) }
-            itemsIndexed(items = completedTasks, key = { _, it -> it.id }) { index, task ->
-                val cardShape = taskItemShape()
-                TaskCard(
-                    task = task,
-                    dragState = false,
-                    reorderIcon = {},
-                    is24Hr = state.is24Hour,
-                    shape = cardShape,
-                    modifier = Modifier.fillMaxWidth().clip(cardShape),
-                    selectionMode = multiSelect,
-                    selected = task.id in selectedTaskIds,
-                    hapticFeedback = state.hapticFeedback,
-                    onLongClick = {
-                        if (multiSelect) onExitMultiSelect() else onToggleSelect(task)
-                    },
-                    onCheck = {
-                        if (multiSelect) onToggleSelect(task)
-                        else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
-                    },
-                    onClick = { if (multiSelect) onToggleSelect(task) else onEditTask(task) },
-                )
+            item {
+                // 已完成任务折叠栏头（点击展开/收起）
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clip(taskItemShape())
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .clickable { onToggleCompletedCollapsed() }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(Res.string.completed_tasks),
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = completedTasks.size.toString(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        painter = painterResource(Res.drawable.expand),
+                        contentDescription = null,
+                        modifier =
+                            Modifier.size(20.dp).rotate(if (completedCollapsed) 0f else 180f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (!completedCollapsed) {
+                itemsIndexed(items = completedTasks, key = { _, it -> it.id }) { index, task ->
+                    val cardShape = taskItemShape()
+                    val wipeOverride =
+                        if (task.id in wipingTaskIds) {
+                            rememberEntranceWipe(task.id) { onWipeDone(task.id) }
+                        } else {
+                            null
+                        }
+                    TaskCard(
+                        task = task,
+                        dragState = false,
+                        reorderIcon = {},
+                        is24Hr = state.is24Hour,
+                        shape = cardShape,
+                        modifier = Modifier.fillMaxWidth().clip(cardShape),
+                        selectionMode = multiSelect,
+                        selected = task.id in selectedTaskIds,
+                        hapticFeedback = state.hapticFeedback,
+                        wipeProgressOverride = wipeOverride,
+                        onLongClick = {
+                            if (multiSelect) onExitMultiSelect() else onToggleSelect(task)
+                        },
+                        onCheck = {
+                            if (multiSelect) {
+                                onToggleSelect(task)
+                            } else {
+                                if (!task.status) wipingTaskIds.add(task.id)
+                                onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
+                            }
+                        },
+                        onClick = { if (multiSelect) onToggleSelect(task) else onEditTask(task) },
+                    )
+                }
             }
         }
 

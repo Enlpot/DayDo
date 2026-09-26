@@ -52,6 +52,11 @@ interface SettingsDatastore {
 
     suspend fun setHiddenSmartViews(views: Set<SmartCategory>)
 
+    /** 首页已完成任务折叠态（当天内记忆，跨天重置为展开） */
+    fun getHomeCompletedCollapsedPref(): Flow<Boolean>
+
+    suspend fun setHomeCompletedCollapsed(collapsed: Boolean)
+
     fun getCornerRadiusPref(): Flow<Int>
 
     suspend fun setCornerRadius(radius: Int)

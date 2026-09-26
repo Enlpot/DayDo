@@ -55,6 +55,9 @@ sealed interface TaskAction {
 
     data object OnTaskCategorySheetOpened : TaskAction
 
+    /** 首页已完成任务折叠栏：展开/收起切换（当天内记忆） */
+    data object OnToggleHomeCompletedCollapsed : TaskAction
+
     data object OnTaskCategorySheetDismissed : TaskAction
 
     /** 打开重复任务统计页 */

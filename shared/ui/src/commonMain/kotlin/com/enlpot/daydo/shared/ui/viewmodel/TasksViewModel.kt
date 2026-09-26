@@ -282,6 +282,12 @@ class TasksViewModel(
                         )
                     }
 
+                    OnToggleHomeCompletedCollapsed -> {
+                        val next = !_state.value.homeCompletedCollapsed
+                        _state.update { it.copy(homeCompletedCollapsed = next) }
+                        datastore.setHomeCompletedCollapsed(next)
+                    }
+
                     OnTaskCategorySheetOpened -> {
                         analytics.trackEvent(
                             AnalyticsWrapper.Companion.AnalyticsEvent.TASK_CATEGORY_SHEET_OPENED
@@ -482,13 +488,15 @@ class TasksViewModel(
                         datastore.getStartOfTheWeekPref(),
                         datastore.getHiddenSmartViewsFlow(),
                         datastore.getHapticFeedbackPref(),
-                    ) { is24Hr, startOfWeek, hidden, hapticFeedback ->
+                        datastore.getHomeCompletedCollapsedPref(),
+                    ) { is24Hr, startOfWeek, hidden, hapticFeedback, homeCompletedCollapsed ->
                         _state.update {
                             it.copy(
                                 is24Hour = is24Hr,
                                 startOfWeek = startOfWeek,
                                 hapticFeedback = hapticFeedback,
                                 hiddenSmartViews = hidden,
+                                homeCompletedCollapsed = homeCompletedCollapsed,
                             )
                         }
                     }

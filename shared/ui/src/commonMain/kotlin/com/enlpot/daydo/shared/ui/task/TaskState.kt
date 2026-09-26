@@ -45,6 +45,8 @@ data class TaskState(
     val is24Hour: Boolean = false,
     val startOfWeek: DayOfWeek = DayOfWeek.MONDAY,
     val hapticFeedback: Boolean = true,
+    /** 首页已完成任务折叠栏收起态（默认展开；当天内记忆） */
+    val homeCompletedCollapsed: Boolean = false,
     /** 当前查看统计的重复任务系列 ID */
     val statsSeriesId: Long? = null,
     /** 该系列的所有周期记录（含已完成与待做） */

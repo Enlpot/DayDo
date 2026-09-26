@@ -76,6 +76,8 @@ fun TaskCard(
     selectionMode: Boolean = false,
     selected: Boolean = false,
     hapticFeedback: Boolean = true,
+    /** 覆盖 wipe 进度：跨 section 重建的节点（如首页勾选后跳到完成区）由此入场播 wipe；null=常规驱动 */
+    wipeProgressOverride: Float? = null,
     onLongClick: (() -> Unit)? = null,
     today: LocalDate = LocalDate.now(),
 ) {
@@ -108,12 +110,13 @@ fun TaskCard(
             selectionMode && selected -> MaterialTheme.colorScheme.primaryContainer
             else -> MaterialTheme.colorScheme.surfaceContainerHighest
         }
-    val fillProgress by
+    val animatedFill by
         animateFloatAsState(
             targetValue = if (task.status) 1f else 0f,
             animationSpec = tween(durationMillis = 300),
             label = "completedWipe",
         )
+    val fillProgress = wipeProgressOverride ?: animatedFill
     val cardColors =
         CardDefaults.cardColors(containerColor = cardContainer, contentColor = cardContent)
 
