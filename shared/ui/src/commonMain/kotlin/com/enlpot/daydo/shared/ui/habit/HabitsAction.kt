@@ -30,6 +30,18 @@ sealed interface HabitsAction {
     /** toggle habit reordering */
     data class OnToggleEditState(val pref: Boolean) : HabitsAction
 
+    /** 多选：切换某个习惯的选中状态 */
+    data class OnToggleHabitSelected(val habitId: Long) : HabitsAction
+
+    /** 多选：全选当前可见习惯 */
+    data object OnHabitSelectAll : HabitsAction
+
+    /** 多选：清空选中集（不退出多选态） */
+    data object OnClearHabitSelection : HabitsAction
+
+    /** 多选：删除所选习惯（硬删除，逐个取消闹钟） */
+    data object OnDeleteSelectedHabits : HabitsAction
+
     /** reorder a single habit [from]: from Index [to]: to Index */
     data class OnTransientHabitReorder(val from: Int, val to: Int) : HabitsAction
 

@@ -141,7 +141,57 @@ class HabitViewModel(
 
                     is OnToggleCompactView -> datastore.setCompactView(action.pref)
 
-                    is OnToggleEditState -> _state.update { it.copy(editState = action.pref) }
+                    is OnToggleEditState ->
+                        _state.update {
+                            it.copy(
+                                editState = action.pref,
+                                selectedHabitIds =
+                                    if (action.pref) {
+                                        it.selectedHabitIds
+                                    } else {
+                                        emptySet()
+                                    },
+                            )
+                        }
+
+                    is OnToggleHabitSelected ->
+                        _state.update {
+                            val ids = it.selectedHabitIds
+                            it.copy(
+                                selectedHabitIds =
+                                    if (action.habitId in ids) {
+                                        ids - action.habitId
+                                    } else {
+                                        ids + action.habitId
+                                    }
+                            )
+                        }
+
+                    is OnHabitSelectAll ->
+                        _state.update {
+                            it.copy(
+                                selectedHabitIds =
+                                    it.habitsWithAnalytics.map { h -> h.habit.id }.toSet()
+                            )
+                        }
+
+                    is OnClearHabitSelection ->
+                        _state.update { it.copy(selectedHabitIds = emptySet()) }
+
+                    is OnDeleteSelectedHabits -> {
+                        val ids = _state.value.selectedHabitIds
+                        _state.value.habitsWithAnalytics
+                            .map { it.habit }
+                            .filter { it.id in ids }
+                            .forEach { habit ->
+                                analytics.trackEvent(
+                                    AnalyticsWrapper.Companion.AnalyticsEvent.HABIT_DELETED.name,
+                                    mapOf("has_reminder" to habit.reminder),
+                                )
+                                deleteHabit(habit)
+                            }
+                        _state.update { it.copy(selectedHabitIds = emptySet(), editState = false) }
+                    }
 
                     is OnTransientHabitReorder -> {
                         val currentList = _state.value.habitsWithAnalytics.toMutableList()

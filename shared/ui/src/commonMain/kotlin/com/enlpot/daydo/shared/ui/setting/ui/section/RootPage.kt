@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,7 +48,7 @@ import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
-import com.enlpot.daydo.shared.ui.components.LocalSheetExpanded
+import com.enlpot.daydo.shared.ui.components.expandFill
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
@@ -520,15 +519,7 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
                 HapticsContent(
                     state = state,
                     onAction = onAction,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .then(
-                                if (LocalSheetExpanded.current) {
-                                    Modifier.weight(1f)
-                                } else {
-                                    Modifier.heightIn(max = 480.dp)
-                                }
-                            ),
+                    modifier = Modifier.fillMaxWidth().then(expandFill()),
                     contentPadding =
                         PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
                 )
@@ -549,15 +540,7 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
                 LookAndFeelContent(
                     state = state,
                     onAction = onAction,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .then(
-                                if (LocalSheetExpanded.current) {
-                                    Modifier.weight(1f)
-                                } else {
-                                    Modifier.heightIn(max = 480.dp)
-                                }
-                            ),
+                    modifier = Modifier.fillMaxWidth().then(expandFill()),
                     contentPadding =
                         PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
                 )
@@ -578,15 +561,7 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
                 BackupContent(
                     state = state,
                     onAction = onAction,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .then(
-                                if (LocalSheetExpanded.current) {
-                                    Modifier.weight(1f)
-                                } else {
-                                    Modifier.heightIn(max = 480.dp)
-                                }
-                            ),
+                    modifier = Modifier.fillMaxWidth().then(expandFill()),
                     contentPadding =
                         PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
                 )

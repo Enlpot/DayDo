@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.habits.Habit
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
+import com.enlpot.daydo.shared.ui.PlatformBackHandler
 import com.enlpot.daydo.shared.ui.components.Empty
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.endItemShape
@@ -62,6 +63,11 @@ fun HabitsList(
     onNavigateToAnalytics: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // 多选/重排态用系统返回退出（清空选中集由 VM 集中处理）
+    PlatformBackHandler(enabled = state.editState) {
+        onAction(HabitsAction.OnToggleEditState(false))
+    }
+
     val windowSizeClass = LocalWindowSizeClass.current
     // 编辑弹窗状态：点击习惯卡片打开编辑详情
     var editHabit by remember { mutableStateOf<Habit?>(null) }
@@ -104,6 +110,7 @@ fun HabitsList(
                         editState = state.editState,
                         onNavigateToAnalytics = onNavigateToAnalytics,
                         is24Hr = state.is24Hr,
+                        selected = habitWithAnalytics.habit.id in state.selectedHabitIds,
                         hapticFeedback = state.hapticFeedback,
                         reorderHandle = {
                             Icon(

@@ -53,6 +53,7 @@ data class HabitState(
     val selectedDayCompletedHabits: Pair<LocalDate, List<String>>? = null,
 
     // datastore
+    val selectedHabitIds: Set<Long> = emptySet(),
     val compactHabitView: Boolean = false,
     val is24Hr: Boolean = true,
     val startingDay: DayOfWeek = DayOfWeek.MONDAY,

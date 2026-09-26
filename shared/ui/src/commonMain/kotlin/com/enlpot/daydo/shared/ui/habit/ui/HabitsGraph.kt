@@ -20,6 +20,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,11 +31,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButtonShapes
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -42,7 +45,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
@@ -52,6 +58,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.enlpot.daydo.shared.ui.LocalWindowSizeClass
+import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.PageFill
 import com.enlpot.daydo.shared.ui.habit.HabitState
 import com.enlpot.daydo.shared.ui.habit.HabitsAction
@@ -409,6 +416,30 @@ private fun HabitsTopAppBar(
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
+    var showHabitDeleteConfirm by rememberSaveable { mutableStateOf(false) }
+
+    if (showHabitDeleteConfirm) {
+        GritDialog(onDismissRequest = { showHabitDeleteConfirm = false }) {
+            Text(
+                text = stringResource(Res.string.delete),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(text = stringResource(Res.string.delete_habits))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { showHabitDeleteConfirm = false }) {
+                    Text(text = stringResource(Res.string.cancel))
+                }
+                TextButton(
+                    onClick = {
+                        onAction(HabitsAction.OnDeleteSelectedHabits)
+                        showHabitDeleteConfirm = false
+                    }
+                ) {
+                    Text(text = stringResource(Res.string.delete))
+                }
+            }
+        }
+    }
     LargeFlexibleTopAppBar(
         modifier = modifier,
         scrollBehavior = scrollBehavior,
@@ -416,62 +447,75 @@ private fun HabitsTopAppBar(
             TopAppBarDefaults.topAppBarColors(
                 scrolledContainerColor = MaterialTheme.colorScheme.surface
             ),
-        title = { Text(text = stringResource(Res.string.habits), fontFamily = flexFontEmphasis()) },
-        subtitle = {
-            Column {
+        title = {
+            if (state.editState) {
                 Text(
-                    text =
-                        "${state.completedHabitIds.size}/${state.habitsWithAnalytics.size} " +
-                            stringResource(Res.string.completed),
+                    text = stringResource(Res.string.selected_count, state.selectedHabitIds.size),
                     fontFamily = flexFontEmphasis(),
                 )
+            } else {
+                Text(text = stringResource(Res.string.habits), fontFamily = flexFontEmphasis())
+            }
+        },
+        subtitle = {
+            if (!state.editState) {
+                Column {
+                    Text(
+                        text =
+                            "${state.completedHabitIds.size}/${state.habitsWithAnalytics.size} " +
+                                stringResource(Res.string.completed),
+                        fontFamily = flexFontEmphasis(),
+                    )
+                }
             }
         },
         actions = {
-            AnimatedVisibility(
-                visible = state.habitsWithAnalytics.isNotEmpty(),
-                enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
-                exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
-            ) {
-                Row {
-                    FilledTonalIconToggleButton(
-                        checked = state.compactHabitView,
-                        shapes =
-                            IconToggleButtonShapes(
-                                shape = CircleShape,
-                                checkedShape = MaterialTheme.shapes.small,
-                                pressedShape = MaterialTheme.shapes.extraSmall,
-                            ),
-                        onCheckedChange = { onAction(HabitsAction.OnToggleCompactView(it)) },
-                    ) {
-                        Icon(
-                            painter =
-                                painterResource(
-                                    if (state.compactHabitView) {
-                                        Res.drawable.expand
-                                    } else {
-                                        Res.drawable.collapse
-                                    }
+            if (state.editState) {
+                // 多选态顶栏：全选 / 批量删除 / 关闭（与任务页一致）
+                TextButton(onClick = { onAction(HabitsAction.OnHabitSelectAll) }) {
+                    Text(text = stringResource(Res.string.select_all))
+                }
+                IconButton(onClick = { showHabitDeleteConfirm = true }) {
+                    Icon(
+                        painter = painterResource(Res.drawable.delete),
+                        contentDescription = stringResource(Res.string.delete),
+                    )
+                }
+                IconButton(onClick = { onAction(HabitsAction.OnToggleEditState(false)) }) {
+                    Icon(
+                        painter = painterResource(Res.drawable.close),
+                        contentDescription = stringResource(Res.string.close),
+                    )
+                }
+            } else {
+                AnimatedVisibility(
+                    visible = state.habitsWithAnalytics.isNotEmpty(),
+                    enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()),
+                    exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()),
+                ) {
+                    Row {
+                        FilledTonalIconToggleButton(
+                            checked = state.compactHabitView,
+                            shapes =
+                                IconToggleButtonShapes(
+                                    shape = CircleShape,
+                                    checkedShape = MaterialTheme.shapes.small,
+                                    pressedShape = MaterialTheme.shapes.extraSmall,
                                 ),
-                            contentDescription = stringResource(Res.string.compact_view),
-                        )
-                    }
-
-                    FilledTonalIconToggleButton(
-                        checked = state.editState,
-                        shapes =
-                            IconToggleButtonShapes(
-                                shape = CircleShape,
-                                checkedShape = MaterialTheme.shapes.small,
-                                pressedShape = MaterialTheme.shapes.extraSmall,
-                            ),
-                        onCheckedChange = { onAction(HabitsAction.OnToggleEditState(it)) },
-                        enabled = state.habitsWithAnalytics.isNotEmpty(),
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.reorder),
-                            contentDescription = stringResource(Res.string.edit),
-                        )
+                            onCheckedChange = { onAction(HabitsAction.OnToggleCompactView(it)) },
+                        ) {
+                            Icon(
+                                painter =
+                                    painterResource(
+                                        if (state.compactHabitView) {
+                                            Res.drawable.expand
+                                        } else {
+                                            Res.drawable.collapse
+                                        }
+                                    ),
+                                contentDescription = stringResource(Res.string.compact_view),
+                            )
+                        }
                     }
                 }
             }

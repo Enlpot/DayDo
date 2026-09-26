@@ -14,3 +14,6 @@ local.properties
 .workbuddy/
 debug.log
 /代码*.md
+
+# 审查报告归档
+.archive/
