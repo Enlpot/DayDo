@@ -79,6 +79,7 @@ import com.enlpot.daydo.shared.ui.task.ui.component.TaskCard
 import com.enlpot.daydo.shared.ui.task.ui.component.TaskUpsertSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -141,6 +142,16 @@ fun HomePage(
     fun exitMultiSelect() {
         multiSelect = false
         selectedTaskIds = emptySet()
+    }
+
+    // 左右滑动切 tab 时退出任务/习惯多选态
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }
+            .drop(1)
+            .collect {
+                exitMultiSelect()
+                onHabitAction(HabitsAction.OnToggleEditState(false))
+            }
     }
 
     PlatformBackHandler(enabled = multiSelect) { exitMultiSelect() }
@@ -435,7 +446,9 @@ private fun TodayTasksSection(
                     selectionMode = multiSelect,
                     selected = task.id in selectedTaskIds,
                     hapticFeedback = state.hapticFeedback,
-                    onLongClick = { onToggleSelect(task) },
+                    onLongClick = {
+                        if (multiSelect) onExitMultiSelect() else onToggleSelect(task)
+                    },
                     onCheck = {
                         if (multiSelect) onToggleSelect(task)
                         else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
@@ -459,7 +472,9 @@ private fun TodayTasksSection(
                     selectionMode = multiSelect,
                     selected = task.id in selectedTaskIds,
                     hapticFeedback = state.hapticFeedback,
-                    onLongClick = { onToggleSelect(task) },
+                    onLongClick = {
+                        if (multiSelect) onExitMultiSelect() else onToggleSelect(task)
+                    },
                     onCheck = {
                         if (multiSelect) onToggleSelect(task)
                         else onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))

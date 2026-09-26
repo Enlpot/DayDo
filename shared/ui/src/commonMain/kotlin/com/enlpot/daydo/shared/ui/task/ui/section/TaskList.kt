@@ -531,7 +531,9 @@ private fun TaskItemsSection(
                             selectionMode = multiSelect,
                             selected = task.id in selectedTaskIds,
                             hapticFeedback = state.hapticFeedback,
-                            onLongClick = { onToggleSelect(task) },
+                            onLongClick = {
+                                if (multiSelect) onExitMultiSelect() else onToggleSelect(task)
+                            },
                             onCheck = {
                                 if (multiSelect) onToggleSelect(task)
                                 else

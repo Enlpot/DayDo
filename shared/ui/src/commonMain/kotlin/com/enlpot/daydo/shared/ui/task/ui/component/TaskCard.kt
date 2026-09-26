@@ -19,11 +19,14 @@ package com.enlpot.daydo.shared.ui.task.ui.component
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,6 +44,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
@@ -86,16 +91,28 @@ fun TaskCard(
             animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
             label = "cardContent",
         )
+    // 完成态背景改由横向 wipe 铺色（见 Card 内 wipe 层），底色只承载普通/选中
     val cardContainer by
         animateColorAsState(
             targetValue =
                 when {
                     selectionMode && selected -> MaterialTheme.colorScheme.primaryContainer
-                    task.status -> MaterialTheme.colorScheme.surfaceContainerHighest
                     else -> MaterialTheme.colorScheme.secondaryContainer
                 },
             animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
             label = "cardContainer",
+        )
+    // wipe 铺色与底色同语义：选中色优先于完成色
+    val wipeColor =
+        when {
+            selectionMode && selected -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surfaceContainerHighest
+        }
+    val fillProgress by
+        animateFloatAsState(
+            targetValue = if (task.status) 1f else 0f,
+            animationSpec = tween(durationMillis = 300),
+            label = "completedWipe",
         )
     val cardColors =
         CardDefaults.cardColors(containerColor = cardContainer, contentColor = cardContent)
@@ -114,53 +131,115 @@ fun TaskCard(
         colors = cardColors,
         shape = shape,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            if (!dragState || selectionMode) {
-                Checkbox(
-                    checked = if (selectionMode) selected else task.status,
-                    modifier = Modifier.padding(vertical = 2.dp),
-                    onCheckedChange = {
-                        if (!selectionMode && hapticFeedback && !task.status) {
-                            haptic(HapticKind.COMPLETE)
-                        }
-                        onCheck()
-                    },
-                )
-            }
-
-            Column(
-                modifier =
-                    Modifier.weight(1f).clip(shape).padding(horizontal = 8.dp, vertical = 6.dp)
+        Box {
+            // 勾选完成：完成色从左向右横向铺满（绘制阶段驱动，性能优于 background）
+            Box(
+                Modifier.matchParentSize().drawBehind {
+                    drawRect(wipeColor, size = Size(size.width * fillProgress, size.height))
+                }
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Text(
-                    text = task.title,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                    textDecoration =
-                        if (task.status) {
-                            TextDecoration.LineThrough
-                        } else {
-                            TextDecoration.None
+                if (!dragState || selectionMode) {
+                    Checkbox(
+                        checked = if (selectionMode) selected else task.status,
+                        modifier = Modifier.padding(vertical = 2.dp),
+                        onCheckedChange = {
+                            if (!selectionMode && hapticFeedback && !task.status) {
+                                haptic(HapticKind.COMPLETE)
+                            }
+                            onCheck()
                         },
-                )
+                    )
+                }
 
-                when {
-                    task.recurrence != null -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.sync),
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            )
+                Column(
+                    modifier =
+                        Modifier.weight(1f).clip(shape).padding(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = task.title,
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                        textDecoration =
+                            if (task.status) {
+                                TextDecoration.LineThrough
+                            } else {
+                                TextDecoration.None
+                            },
+                    )
 
-                            if (task.dueDate != null) {
+                    when {
+                        task.recurrence != null -> {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.sync),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+
+                                if (task.dueDate != null) {
+                                    Text(
+                                        text = task.dueDate!!.toFormattedString(),
+                                        style =
+                                            MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Light,
+                                            ),
+                                        color =
+                                            if (task.dueDate!! < today && !task.status)
+                                                MaterialTheme.colorScheme.error
+                                            else Color.Unspecified,
+                                    )
+                                }
+                            }
+                        }
+
+                        task.reminder != null -> {
+                            // 提醒时间已过：图标与文字标红（逾期提醒）
+                            val reminderExpired = task.reminder!! < LocalDateTime.now()
+                            val expiredColor = MaterialTheme.colorScheme.error
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.alarm),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(12.dp),
+                                    tint = if (reminderExpired) expiredColor else Color.Unspecified,
+                                )
+
+                                Text(
+                                    text = task.reminder!!.toFormattedString(is24Hr),
+                                    style =
+                                        MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Light,
+                                        ),
+                                    color = if (reminderExpired) expiredColor else Color.Unspecified,
+                                )
+                            }
+                        }
+
+                        task.dueDate != null -> {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.schedule),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(12.dp),
+                                )
+
                                 Text(
                                     text = task.dueDate!!.toFormattedString(),
                                     style =
@@ -176,64 +255,11 @@ fun TaskCard(
                             }
                         }
                     }
-
-                    task.reminder != null -> {
-                        // 提醒时间已过：图标与文字标红（逾期提醒）
-                        val reminderExpired = task.reminder!! < LocalDateTime.now()
-                        val expiredColor = MaterialTheme.colorScheme.error
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.alarm),
-                                contentDescription = null,
-                                modifier = Modifier.size(12.dp),
-                                tint = if (reminderExpired) expiredColor else Color.Unspecified,
-                            )
-
-                            Text(
-                                text = task.reminder!!.toFormattedString(is24Hr),
-                                style =
-                                    MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Light,
-                                    ),
-                                color = if (reminderExpired) expiredColor else Color.Unspecified,
-                            )
-                        }
-                    }
-
-                    task.dueDate != null -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.schedule),
-                                contentDescription = null,
-                                modifier = Modifier.size(12.dp),
-                            )
-
-                            Text(
-                                text = task.dueDate!!.toFormattedString(),
-                                style =
-                                    MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Light,
-                                    ),
-                                color =
-                                    if (task.dueDate!! < today && !task.status)
-                                        MaterialTheme.colorScheme.error
-                                    else Color.Unspecified,
-                            )
-                        }
-                    }
                 }
-            }
 
-            AnimatedVisibility(visible = dragState, enter = fadeIn(), exit = fadeOut()) {
-                reorderIcon()
+                AnimatedVisibility(visible = dragState, enter = fadeIn(), exit = fadeOut()) {
+                    reorderIcon()
+                }
             }
         }
     }
