@@ -52,14 +52,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.enlpot.daydo.core.settings.backup.ExportState
-import com.enlpot.daydo.core.settings.backup.RestoreState
 import com.enlpot.daydo.core.settings.webdav.WebDavState
 import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
+import com.enlpot.daydo.shared.ui.setting.isBackupBusy
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
@@ -157,7 +156,7 @@ fun BackupContent(
                             Button(
                                 onClick = { onAction(SettingsAction.OnExport) },
                                 // 导出完成后可再次导出（EXPORTED 不锁定按钮，C5）
-                                enabled = state.backupState.exportState != ExportState.EXPORTING,
+                                enabled = !state.isBackupBusy,
                             ) {
                                 when (state.backupState.exportState) {
                                     IDLE ->
@@ -205,7 +204,7 @@ fun BackupContent(
                             Button(
                                 onClick = { showRestoreConfirm = true },
                                 // 恢复完成后可再次恢复（RESTORED 不锁定按钮，C5）
-                                enabled = state.backupState.restoreState != RestoreState.RESTORING,
+                                enabled = !state.isBackupBusy,
                             ) {
                                 when (state.backupState.restoreState) {
                                     IDLE ->
@@ -350,7 +349,7 @@ fun BackupContent(
                                         SettingsAction.WebDavUpload(server, username, password)
                                     )
                                 },
-                                enabled = state.webdavUploadState != WebDavState.WORKING,
+                                enabled = !state.isBackupBusy,
                             ) {
                                 if (state.webdavUploadState == WebDavState.WORKING) {
                                     CircularProgressIndicator(modifier = Modifier.size(22.dp))
@@ -383,7 +382,7 @@ fun BackupContent(
                         trailingContent = {
                             OutlinedButton(
                                 onClick = { showDownloadConfirm = true },
-                                enabled = state.webdavDownloadState != WebDavState.WORKING,
+                                enabled = !state.isBackupBusy,
                             ) {
                                 if (state.webdavDownloadState == WebDavState.WORKING) {
                                     CircularProgressIndicator(modifier = Modifier.size(22.dp))

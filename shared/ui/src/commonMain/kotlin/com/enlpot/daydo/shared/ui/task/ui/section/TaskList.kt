@@ -422,6 +422,8 @@ private fun TaskItemsSection(
     ) { view ->
         val lazyListState = rememberLazyListState()
         var draggedTaskId by remember { mutableStateOf<Long?>(null) }
+        // 拖动前所见顺序（含被拖任务）：供 VM 判定"原地释放"，避免误触也写入排序键
+        var draggedOriginIds by remember { mutableStateOf<List<Long>>(emptyList()) }
         // 只初始化一次：拖动排序时 DB 回流不再重置列表（避免打断拖动）
         var reorderableTasks by
             remember(view) { mutableStateOf(state.displayTasks + state.displayCompletedTasks) }
@@ -496,6 +498,7 @@ private fun TaskItemsSection(
                                         Modifier.draggableHandle(
                                             onDragStarted = {
                                                 draggedTaskId = task.id
+                                                draggedOriginIds = reorderableTasks.map { it.id }
                                                 if (state.hapticFeedback) {
                                                     haptic(HapticKind.DRAG_START)
                                                 }
@@ -516,11 +519,13 @@ private fun TaskItemsSection(
                                                                 reorderableTasks
                                                                     .getOrNull(pos + 1)
                                                                     ?.id,
+                                                                draggedOriginIds,
                                                             )
                                                         )
                                                     }
                                                 }
                                                 draggedTaskId = null
+                                                draggedOriginIds = emptyList()
                                             },
                                         ),
                                 )

@@ -68,3 +68,14 @@ data class BackupState(
     val exportMessage: String = "",
     val restoreState: RestoreState = RestoreState.IDLE,
 )
+
+/**
+ * 备份/恢复类长事务是否进行中。导出、本地恢复、WebDAV 上传/下载四者共用同一互斥判据： 它们都会读库、或"清空本地库 + 写库"，并发执行会写出不一致的数据（甚至覆盖远端唯一备份）。 UI
+ * 用它统一禁用四个按钮，VM 用它拒绝并发入口。
+ */
+val SettingsState.isBackupBusy: Boolean
+    get() =
+        backupState.exportState == ExportState.EXPORTING ||
+            backupState.restoreState == RestoreState.RESTORING ||
+            webdavUploadState == WebDavState.WORKING ||
+            webdavDownloadState == WebDavState.WORKING

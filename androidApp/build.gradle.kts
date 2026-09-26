@@ -25,8 +25,8 @@ plugins {
 }
 
 val appName = "DayDo"
-val appVersionCode = 64
-val appVersionName = "1.6.7"
+val appVersionCode = 65
+val appVersionName = "1.6.8"
 
 val gitHash =
     try {
@@ -59,6 +59,12 @@ android {
     }
 
     val keystoreFileEnv = System.getenv("KEYSTORE_FILE")
+    val hasReleaseKeystore = keystoreFileEnv != null && File(keystoreFileEnv).exists()
+    // 声明了 KEYSTORE_FILE 但文件不存在 = secret 配置/路径失效，必须硬失败：
+    // 否则会静默产出 debug 签名的 "release" 包，一旦分发，后续正签包无法覆盖升级（用户须卸载重装）
+    if (keystoreFileEnv != null && !hasReleaseKeystore) {
+        error("KEYSTORE_FILE 指向的文件不存在，release 签名配置有误：$keystoreFileEnv")
+    }
     signingConfigs {
         create("release") {
             if (keystoreFileEnv != null && File(keystoreFileEnv).exists()) {
@@ -73,9 +79,12 @@ android {
         release {
             resValue("string", "app_name", appName)
             signingConfig =
-                if (keystoreFileEnv != null && File(keystoreFileEnv).exists())
+                if (hasReleaseKeystore) {
                     signingConfigs.getByName("release")
-                else signingConfigs.getByName("debug")
+                } else {
+                    logger.warn("release 未提供 KEYSTORE_FILE，回退 debug 签名（仅限本地联调，产物不可分发）")
+                    signingConfigs.getByName("debug")
+                }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

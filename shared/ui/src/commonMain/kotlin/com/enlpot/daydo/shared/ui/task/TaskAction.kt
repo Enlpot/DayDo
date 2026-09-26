@@ -38,8 +38,17 @@ sealed interface TaskAction {
     /** Permanently remove a task from the "Deleted" view */
     data class PurgeTask(val task: Task) : TaskAction
 
-    /** 拖动排序：只记录被拖任务的目标位置（仅普通任务生效，重复任务按典型完成时间自动排） */
-    data class ReorderTask(val taskId: Long, val aboveId: Long?, val belowId: Long?) : TaskAction
+    /**
+     * 拖动排序：记录被拖任务的目标位置（仅普通任务生效，重复任务按典型完成时间自动排）。 [originIds] = 用户**拖动前所见列表**的 id
+     * 顺序（含被拖任务本身），用于"原地释放"判定： VM 的 displayTasks 与用户所见列表（首页为今日子集、任务页含已完成）并不一致，
+     * 若按下标比对会几乎恒判为"位置已变"，使保护失效、误触也写入排序键。为空时退回 displayTasks。
+     */
+    data class ReorderTask(
+        val taskId: Long,
+        val aboveId: Long?,
+        val belowId: Long?,
+        val originIds: List<Long> = emptyList(),
+    ) : TaskAction
 
     data class ReorderCategories(val mapping: List<Pair<Int, Category>>) : TaskAction
 

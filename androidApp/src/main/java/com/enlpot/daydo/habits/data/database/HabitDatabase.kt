@@ -20,8 +20,8 @@ import androidx.room3.AutoMigration
 import androidx.room3.ColumnTypeConverters
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
-import androidx.room3.Transaction
 import androidx.room3.migration.Migration
+import androidx.room3.withWriteTransaction
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.enlpot.daydo.core.data.Converters
@@ -38,13 +38,17 @@ abstract class HabitDatabase : RoomDatabase() {
 
     abstract fun habitStatusDao(): HabitStatusDao
 
-    /** 恢复备份用：清空+写入在单个事务内完成，中途失败自动回滚，不会出现"清空后崩溃丢数据" */
-    @Transaction
+    /**
+     * 恢复备份用：清空+写入在同一**写事务**内完成，中途失败自动回滚，不会出现"清空后崩溃丢数据"。 不能只在方法上标 `@Transaction`（Room 只为 DAO
+     * 方法生成事务包装，标在 @Database 类上会被静默忽略）， 必须用数据库级 `withWriteTransaction` 显式包裹。
+     */
     open suspend fun replaceAll(habits: List<HabitEntity>, statuses: List<HabitStatusEntity>) {
-        habitDao().deleteAllHabits()
-        habitStatusDao().deleteAllHabitStatus()
-        habits.forEach { habitDao().upsertHabit(it) }
-        statuses.forEach { habitStatusDao().insertHabitStatus(it) }
+        withWriteTransaction {
+            habitDao().deleteAllHabits()
+            habitStatusDao().deleteAllHabitStatus()
+            habits.forEach { habitDao().upsertHabit(it) }
+            statuses.forEach { habitStatusDao().insertHabitStatus(it) }
+        }
     }
 
     companion object {

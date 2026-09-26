@@ -130,6 +130,8 @@ fun HabitsGraph(
                     backstack.add(HabitRoutes.HabitAnalytics(habitId))
                 }
                 onAction(HabitsAction.PrepareAnalytics(target.habit))
+                // 深链已消费：清除初始标记，否则每次进入习惯 tab 都会再次被拉进统计页
+                onInitialAnalyticsHandled()
             } else if (state.habitsWithAnalytics.isNotEmpty()) {
                 // 数据已加载但目标不存在（已删除）：无效深链标记已处理，结束空跑（P2-5）
                 onInitialAnalyticsHandled()
@@ -245,6 +247,8 @@ fun HabitsGraph(
             val target = state.habitsWithAnalytics.firstOrNull { it.habit.id == habitId }
             if (target != null) {
                 onAction(HabitsAction.PrepareAnalytics(target.habit))
+                // 深链已消费：清除初始标记（与窄屏一致），否则每次进入习惯 tab 都被拉进统计面板
+                onInitialAnalyticsHandled()
             } else if (state.habitsWithAnalytics.isNotEmpty()) {
                 // 数据已加载但目标不存在（已删除）：无效深链标记已处理，结束空跑（P2-5）
                 onInitialAnalyticsHandled()

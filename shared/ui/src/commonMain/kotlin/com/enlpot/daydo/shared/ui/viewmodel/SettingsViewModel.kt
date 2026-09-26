@@ -33,6 +33,7 @@ import com.enlpot.daydo.core.settings.webdav.WebDavState
 import com.enlpot.daydo.shared.ui.setting.BackupState
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
+import com.enlpot.daydo.shared.ui.setting.isBackupBusy
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -160,6 +161,8 @@ class SettingsViewModel(
                                 webdavDownloadMessage = "",
                             )
                         }
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e // 页面退出取消：不吞成"保存配置失败"（与同文件其它分支一致）
                     } catch (e: Exception) {
                         // 加密/存储异常不崩溃，提示用户（如 Keystore 不可用）
                         _state.update { it.copy(webdavConfigMessage = "保存配置失败：${e.message}") }
@@ -167,6 +170,8 @@ class SettingsViewModel(
                 }
 
                 is WebDavUpload -> {
+                    // 互斥：与下载恢复/本地恢复/导出共用"备份忙"标记（都会读库或清库写库）
+                    if (_state.value.isBackupBusy) return@launch
                     // P2-7：使用输入框当前值（未保存配置也能按当前输入操作）
                     val server = action.server
                     val username = action.username
@@ -199,6 +204,8 @@ class SettingsViewModel(
                 }
 
                 is WebDavDownload -> {
+                    // 互斥：与上传/本地恢复/导出共用"备份忙"标记，避免并发"清空本地库 + 写库"
+                    if (_state.value.isBackupBusy) return@launch
                     // P2-7：使用输入框当前值
                     val server = action.server
                     val username = action.username
@@ -234,6 +241,8 @@ class SettingsViewModel(
                 }
 
                 OnExport -> {
+                    // 互斥：导出读库期间不允许恢复/下载改写数据库，否则导出内容可能半新半旧
+                    if (_state.value.isBackupBusy) return@launch
                     _state.update {
                         it.copy(
                             backupState =
@@ -295,6 +304,8 @@ class SettingsViewModel(
                 }
 
                 OnRestore -> {
+                    // 互斥：与上传/下载恢复/导出共用"备份忙"标记
+                    if (_state.value.isBackupBusy) return@launch
                     _state.update {
                         it.copy(backupState = it.backupState.copy(restoreState = RESTORING))
                     }

@@ -46,6 +46,8 @@
                 <!-- 时区/时间变化后提醒时刻重排（P3） -->
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
                 <action android:name="android.intent.action.TIME_SET" />
+                <!-- 应用升级后系统的闹钟会被清空，须重排（BootReceiver 已处理该 action） -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 

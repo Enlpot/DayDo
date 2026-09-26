@@ -69,12 +69,16 @@ class MainActivity : FragmentActivity() {
                 LocalWindowSizeClass provides windowSizeClass,
                 LocalHapticPerformer provides
                     { kind ->
-                        performAndroidHaptic(
-                            this@MainActivity,
-                            kind,
-                            state.hapticStrength,
-                            state.hapticSound,
-                        )
+                        // 触感总开关在此统一拦截：调用点只需表达语义（COMPLETE/DRAG_*），
+                        // 避免每新增一个调用点就漏判一次（曾有页面漏判导致"关了触感仍震动/出声"）
+                        if (state.hapticFeedback) {
+                            performAndroidHaptic(
+                                this@MainActivity,
+                                kind,
+                                state.hapticStrength,
+                                state.hapticSound,
+                            )
+                        }
                     },
             ) {
                 var showContent by remember { mutableStateOf(false) }

@@ -23,9 +23,11 @@ import com.enlpot.daydo.core.interfaces.SettingsDatastore
 import com.enlpot.daydo.core.interfaces.ThemeDatastore
 import com.enlpot.daydo.shared.ui.app.MainAppState
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -85,6 +87,14 @@ class MainViewModel(
         observerJob?.cancel()
         observerJob =
             viewModelScope.launch {
+                // 兜底：关键设置流异常或极慢（>3s）时仍放行内容，避免永久停在 InitialLoading
+                launch {
+                    delay(3_000)
+                    startingSectionLoaded = true
+                    biometricLoaded = true
+                    markLoadedIfReady()
+                }
+
                 combine(
                         themeDatastore.getPaletteStyle(),
                         themeDatastore.getSeedColorFlow(),
@@ -103,6 +113,7 @@ class MainViewModel(
                             )
                         }
                     }
+                    .catch { /* 单条设置流异常不应连坐取消其它收集器 */ }
                     .launchIn(this)
 
                 themeDatastore
@@ -110,6 +121,7 @@ class MainViewModel(
                     .onEach { pref ->
                         _state.update { it.copy(theme = it.theme.copy(isAmoled = pref)) }
                     }
+                    .catch { /* 单条设置流异常不应连坐取消其它收集器 */ }
                     .launchIn(this)
 
                 settingsDatastore
@@ -119,24 +131,29 @@ class MainViewModel(
                         startingSectionLoaded = true
                         markLoadedIfReady()
                     }
+                    .catch { /* 单条设置流异常不应连坐取消其它收集器 */ }
                     .launchIn(this)
 
                 settingsDatastore
                     .getCornerRadiusPref()
                     .onEach { pref -> _state.update { it.copy(cornerRadius = pref) } }
+                    .catch { /* 单条设置流异常不应连坐取消其它收集器 */ }
                     .launchIn(this)
                 settingsDatastore
                     .getHapticFeedbackPref()
                     .onEach { pref -> _state.update { it.copy(hapticFeedback = pref) } }
+                    .catch { /* 单条设置流异常不应连坐取消其它收集器 */ }
                     .launchIn(this)
 
                 settingsDatastore
                     .getHapticStrengthPref()
                     .onEach { pref -> _state.update { it.copy(hapticStrength = pref) } }
+                    .catch { /* 单条设置流异常不应连坐取消其它收集器 */ }
                     .launchIn(this)
                 settingsDatastore
                     .getHapticSoundPref()
                     .onEach { pref -> _state.update { it.copy(hapticSound = pref) } }
+                    .catch { /* 单条设置流异常不应连坐取消其它收集器 */ }
                     .launchIn(this)
                 settingsDatastore
                     .getBiometricLockPref()
@@ -145,6 +162,7 @@ class MainViewModel(
                         biometricLoaded = true
                         markLoadedIfReady()
                     }
+                    .catch { /* 单条设置流异常不应连坐取消其它收集器 */ }
                     .launchIn(this)
             }
     }

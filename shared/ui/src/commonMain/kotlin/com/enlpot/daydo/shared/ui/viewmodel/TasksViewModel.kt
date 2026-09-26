@@ -152,10 +152,20 @@ class TasksViewModel(
                         val moved = _state.value.allTasks.firstOrNull { it.id == action.taskId }
                         if (moved != null && !moved.status) {
                             // 原地释放（拖起又放回原位）不写排序键（P3）：避免把任务"钉住"当日顺序，
-                            // 重复任务次日仍可回归典型完成时间排序
+                            // 重复任务次日仍可回归典型完成时间排序。
+                            // 判定必须用"用户拖动前所见列表"（originIds）：首页列表是今日子集、任务页列表
+                            // 含已完成任务，都与 displayTasks 不同，用 displayTasks 按下标比对会几乎恒判为
+                            // "位置已变"，使该保护失效、误触也写库；originIds 为空时退回 displayTasks 兼容旧调用
+                            val origin =
+                                if (action.originIds.isNotEmpty()) {
+                                    val byId = _state.value.allTasks.associateBy { it.id }
+                                    action.originIds.mapNotNull { byId[it] }
+                                } else {
+                                    _state.value.displayTasks
+                                }
                             if (
                                 isReorderSamePosition(
-                                    _state.value.displayTasks,
+                                    origin,
                                     action.taskId,
                                     action.aboveId,
                                     action.belowId,

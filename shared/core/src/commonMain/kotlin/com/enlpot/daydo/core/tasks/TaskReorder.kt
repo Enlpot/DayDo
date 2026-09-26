@@ -121,9 +121,11 @@ fun normalReorderKey(
         }
     val renumber =
         if (aboveKey != null && belowKey != null && aboveKey - belowKey <= 1) {
+            // 只重编号"普通任务"：重复任务的 sortKey 属 REPOS_POS_BASE 量纲，
+            // 若被 idx*2 覆盖会与普通任务的 epoch 量纲串扰，导致当天已拖好的重复任务跳到链首
             val active =
                 allTasks
-                    .filter { !it.status }
+                    .filter { !it.status && it.recurrence == null }
                     .sortedWith(compareBy { taskSortKeyOrCreated(it, tz) })
             val plan = active.mapIndexed { idx, t -> t.id to idx * 2L }
             val newAbove =

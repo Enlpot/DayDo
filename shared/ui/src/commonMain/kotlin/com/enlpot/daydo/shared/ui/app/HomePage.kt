@@ -74,6 +74,7 @@ import com.enlpot.daydo.shared.ui.HapticKind
 import com.enlpot.daydo.shared.ui.LocalHapticPerformer
 import com.enlpot.daydo.shared.ui.PlatformBackHandler
 import com.enlpot.daydo.shared.ui.components.Empty
+import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.PageFill
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
@@ -132,8 +133,9 @@ fun HomePage(
             }
         if (pagerState.currentPage != target) pagerState.scrollToPage(target)
     }
-    // 点击/滑动后同步逻辑 tab（当前页==习惯页则归习惯，其余归任务）
-    LaunchedEffect(pagerState) {
+    // 点击/滑动后同步逻辑 tab（当前页==习惯页则归习惯，其余归任务）。
+    // key 必须含 habitPageIndex：它随 hasOverdue 变化，否则 collect 闭包会冻结在首次组合的值
+    LaunchedEffect(pagerState, habitPageIndex) {
         snapshotFlow { pagerState.currentPage }
             .collect { page -> currentTab = if (page == habitPageIndex) 1 else 0 }
     }
@@ -146,6 +148,7 @@ fun HomePage(
     var selectedTaskIds by rememberSaveable { mutableStateOf(setOf<Long>()) }
     var editTask by remember { mutableStateOf<Task?>(null) }
     var showTaskAddSheet by rememberSaveable { mutableStateOf(false) }
+    var showHabitDeleteConfirm by rememberSaveable { mutableStateOf(false) }
 
     val currentListTasks =
         if (hasOverdue && pagerState.currentPage == 0) overdueTasks
@@ -166,17 +169,12 @@ fun HomePage(
             }
     }
 
-    // 左右滑动切 tab 时退出任务/习惯多选态
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }
-            .drop(1)
-            .collect {
-                exitMultiSelect()
-                onHabitAction(HabitsAction.OnToggleEditState(false))
-            }
+    // 返回键同时处理任务多选与习惯多选：此前只处理任务侧，
+    // 首页习惯多选既无顶栏出口、返回键也不生效，用户无法退出该状态
+    PlatformBackHandler(enabled = multiSelect || habitState.editState) {
+        exitMultiSelect()
+        onHabitAction(HabitsAction.OnToggleEditState(false))
     }
-
-    PlatformBackHandler(enabled = multiSelect) { exitMultiSelect() }
 
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarState)
@@ -195,17 +193,32 @@ fun HomePage(
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 ),
             title = {
-                if (multiSelect) {
-                    Text(
-                        text = stringResource(Res.string.selected_count, selectedTaskIds.size),
-                        fontFamily = flexFontEmphasis(),
-                    )
-                } else {
-                    Text(text = stringResource(Res.string.home), fontFamily = flexFontEmphasis())
+                when {
+                    multiSelect ->
+                        Text(
+                            text = stringResource(Res.string.selected_count, selectedTaskIds.size),
+                            fontFamily = flexFontEmphasis(),
+                        )
+
+                    habitState.editState ->
+                        Text(
+                            text =
+                                stringResource(
+                                    Res.string.selected_count,
+                                    habitState.selectedHabitIds.size,
+                                ),
+                            fontFamily = flexFontEmphasis(),
+                        )
+
+                    else ->
+                        Text(
+                            text = stringResource(Res.string.home),
+                            fontFamily = flexFontEmphasis(),
+                        )
                 }
             },
             subtitle = {
-                if (!multiSelect) {
+                if (!multiSelect && !habitState.editState) {
                     Text(
                         text =
                             if (hasOverdue && pagerState.currentPage == 0) {
@@ -240,6 +253,23 @@ fun HomePage(
                         )
                     }
                     IconButton(onClick = ::exitMultiSelect) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.close),
+                            contentDescription = stringResource(Res.string.close),
+                        )
+                    }
+                } else if (habitState.editState) {
+                    // 习惯多选出口（与习惯页顶栏一致）：全选 / 批量删除（带确认）/ 关闭
+                    TextButton(onClick = { onHabitAction(HabitsAction.OnHabitSelectAll) }) {
+                        Text(text = stringResource(Res.string.select_all))
+                    }
+                    IconButton(onClick = { showHabitDeleteConfirm = true }) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.delete),
+                            contentDescription = stringResource(Res.string.delete),
+                        )
+                    }
+                    IconButton(onClick = { onHabitAction(HabitsAction.OnToggleEditState(false)) }) {
                         Icon(
                             imageVector = vectorResource(Res.drawable.close),
                             contentDescription = stringResource(Res.string.close),
@@ -301,6 +331,7 @@ fun HomePage(
                         onToggleCompletedCollapsed = {
                             onTaskAction(TaskAction.OnToggleHomeCompletedCollapsed)
                         },
+                        reorderEnabled = false,
                     )
 
                 isTasksPage ->
@@ -337,6 +368,29 @@ fun HomePage(
         }
     }
 
+    if (showHabitDeleteConfirm) {
+        GritDialog(onDismissRequest = { showHabitDeleteConfirm = false }) {
+            Text(
+                text = stringResource(Res.string.delete),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(text = stringResource(Res.string.delete_habits))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = { showHabitDeleteConfirm = false }) {
+                    Text(text = stringResource(Res.string.cancel))
+                }
+                TextButton(
+                    onClick = {
+                        onHabitAction(HabitsAction.OnDeleteSelectedHabits)
+                        showHabitDeleteConfirm = false
+                    }
+                ) {
+                    Text(text = stringResource(Res.string.delete))
+                }
+            }
+        }
+    }
+
     // 新建入口：任务 tab 新建任务、习惯 tab 新建习惯
     FloatingActionButton(
         onClick = {
@@ -351,7 +405,7 @@ fun HomePage(
                 .padding(16.dp)
                 .size(48.dp)
                 .animateFloatingActionButton(
-                    visible = !multiSelect,
+                    visible = !multiSelect && !habitState.editState,
                     alignment = Alignment.BottomEnd,
                 ),
     ) {
@@ -435,17 +489,24 @@ private fun TodayTasksSection(
     onWipeDone: (Long) -> Unit,
     completedCollapsed: Boolean,
     onToggleCompletedCollapsed: () -> Unit,
+    /** false = 该列表按业务字段排序（如已过期页按 dueDate），与 sortKey 无关，不应提供拖拽 */
+    reorderEnabled: Boolean = true,
 ) {
     val haptic = LocalHapticPerformer.current
 
     val lazyListState = rememberLazyListState()
     var draggedTaskId by remember { mutableStateOf<Long?>(null) }
+    // 拖动前所见顺序（含被拖任务）：供 VM 判定"原地释放"，避免误触也写入排序键
+    var draggedOriginIds by remember { mutableStateOf<List<Long>>(emptyList()) }
     var reorderableTasks by remember(activeTasks) { mutableStateOf(activeTasks) }
     val reorderableListState =
         rememberReorderableLazyListState(lazyListState) { from, to ->
             reorderableTasks =
                 reorderableTasks.toMutableList().apply { add(to.index, removeAt(from.index)) }
         }
+
+    // 折叠态下完成项不渲染，onWipeDone 永不回调：清空待播 id，避免展开时补播陈旧入场动画
+    LaunchedEffect(completedCollapsed) { if (completedCollapsed) wipingTaskIds.clear() }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -459,35 +520,43 @@ private fun TodayTasksSection(
                 TaskCard(
                     task = task,
                     dragState = multiSelect,
+                    // 已过期页按 dueDate 排序、与 sortKey 无关：不提供拖拽手柄，
+                    // 避免"拖不动却被写入永久排序键"（随后在 All/分类视图出现无法解释的顺序）
                     reorderIcon = {
-                        Icon(
-                            imageVector = vectorResource(Res.drawable.drag_indicator),
-                            contentDescription = stringResource(Res.string.drag),
-                            modifier =
-                                Modifier.draggableHandle(
-                                    onDragStarted = {
-                                        draggedTaskId = task.id
-                                        if (state.hapticFeedback) {
-                                            haptic(HapticKind.DRAG_START)
-                                        }
-                                    },
-                                    onDragStopped = {
-                                        draggedTaskId?.let { id ->
-                                            val pos = reorderableTasks.indexOfFirst { it.id == id }
-                                            if (pos >= 0) {
-                                                onAction(
-                                                    TaskAction.ReorderTask(
-                                                        id,
-                                                        reorderableTasks.getOrNull(pos - 1)?.id,
-                                                        reorderableTasks.getOrNull(pos + 1)?.id,
-                                                    )
-                                                )
+                        if (reorderEnabled) {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.drag_indicator),
+                                contentDescription = stringResource(Res.string.drag),
+                                modifier =
+                                    Modifier.draggableHandle(
+                                        onDragStarted = {
+                                            draggedTaskId = task.id
+                                            draggedOriginIds = reorderableTasks.map { it.id }
+                                            if (state.hapticFeedback) {
+                                                haptic(HapticKind.DRAG_START)
                                             }
-                                        }
-                                        draggedTaskId = null
-                                    },
-                                ),
-                        )
+                                        },
+                                        onDragStopped = {
+                                            draggedTaskId?.let { id ->
+                                                val pos =
+                                                    reorderableTasks.indexOfFirst { it.id == id }
+                                                if (pos >= 0) {
+                                                    onAction(
+                                                        TaskAction.ReorderTask(
+                                                            id,
+                                                            reorderableTasks.getOrNull(pos - 1)?.id,
+                                                            reorderableTasks.getOrNull(pos + 1)?.id,
+                                                            draggedOriginIds,
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                            draggedTaskId = null
+                                            draggedOriginIds = emptyList()
+                                        },
+                                    ),
+                            )
+                        }
                     },
                     is24Hr = state.is24Hour,
                     shape = cardShape,
@@ -502,7 +571,10 @@ private fun TodayTasksSection(
                         if (multiSelect) {
                             onToggleSelect(task)
                         } else {
-                            if (!task.status) wipingTaskIds.add(task.id)
+                            // 去重：重复 add 会让同一 id 堆积，而 onWipeDone 只移除一次
+                            if (!task.status && task.id !in wipingTaskIds) {
+                                wipingTaskIds.add(task.id)
+                            }
                             onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
                         }
                     },
@@ -572,7 +644,10 @@ private fun TodayTasksSection(
                             if (multiSelect) {
                                 onToggleSelect(task)
                             } else {
-                                if (!task.status) wipingTaskIds.add(task.id)
+                                // 去重：重复 add 会让同一 id 堆积，而 onWipeDone 只移除一次
+                                if (!task.status && task.id !in wipingTaskIds) {
+                                    wipingTaskIds.add(task.id)
+                                }
                                 onAction(TaskAction.UpsertTask(task.copy(status = !task.status)))
                             }
                         },
@@ -620,6 +695,7 @@ private fun TodayHabitsSection(
                 analyticsEnabled = true,
                 startingDay = state.startingDay,
                 reorderHandle = {},
+                hapticFeedback = state.hapticFeedback,
                 is24Hr = state.is24Hr,
                 shape = cardShape,
                 modifier = Modifier.fillMaxWidth().clip(cardShape),

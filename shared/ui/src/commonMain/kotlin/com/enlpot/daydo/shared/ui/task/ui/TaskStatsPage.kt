@@ -282,12 +282,15 @@ private fun CalendarCard(stats: SeriesStats, today: LocalDate, startOfWeek: DayO
 @Composable
 private fun WeekdayCard(stats: SeriesStats, startOfWeek: DayOfWeek) {
     val allLabels = weekdayLabels()
-    val rotated =
-        allLabels.drop(startOfWeek.isoDayNumber - 1) + allLabels.take(startOfWeek.isoDayNumber - 1)
+    val offset = startOfWeek.isoDayNumber - 1
+    val rotated = allLabels.drop(offset) + allLabels.take(offset)
+    // 标签旋转后数据必须同步旋转：weekdayCounts 固定为 [周一..周日]，
+    // 而 BarChartCard 按下标配对 label/count，只旋标签会导致整图错位（周起始≠周一时）
+    val rotatedCounts = stats.weekdayCounts.let { it.drop(offset) + it.take(offset) }
     BarChartCard(
         title = stringResource(Res.string.weekday_distribution),
         labels = rotated,
-        counts = stats.weekdayCounts,
+        counts = rotatedCounts,
         emptyText = stringResource(Res.string.no_completion_record),
     )
 }
