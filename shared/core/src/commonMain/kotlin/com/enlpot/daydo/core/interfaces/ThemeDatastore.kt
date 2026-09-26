@@ -20,10 +20,7 @@ import com.enlpot.daydo.core.theme.AppTheme
 import com.enlpot.daydo.core.theme.PaletteStyle
 import kotlinx.coroutines.flow.Flow
 
-interface ThemeDatastore {
-    suspend fun resetAppTheme()
-
-    fun getAppThemeFlow(): Flow<AppTheme>
+interface ThemeDatastore {    fun getAppThemeFlow(): Flow<AppTheme>
 
     suspend fun setAppTheme(theme: AppTheme)
 

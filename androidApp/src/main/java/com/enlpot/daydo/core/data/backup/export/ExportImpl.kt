@@ -16,6 +16,7 @@
  */
 package com.enlpot.daydo.core.data.backup.export
 
+import com.enlpot.daydo.core.data.backup.BACKUP_FORMAT_VERSION
 import com.enlpot.daydo.core.data.backup.CategorySchema
 import com.enlpot.daydo.core.data.backup.HabitSchema
 import com.enlpot.daydo.core.data.backup.HabitStatusSchema
@@ -88,6 +89,7 @@ class ExportImpl(
     private suspend fun buildExportJson(): String = buildString {
         append("{\"tasksSchemaVersion\":").append(TaskDatabase.SCHEMA_VERSION)
             .append(",\"habitsSchemaVersion\":").append(HabitDatabase.SCHEMA_VERSION)
+            .append(",\"backupFormatVersion\":").append(BACKUP_FORMAT_VERSION)
         append(",\"habits\":[")
         habitsRepo.getHabits().forEachIndexed { index, habit ->
             if (index > 0) append(',')

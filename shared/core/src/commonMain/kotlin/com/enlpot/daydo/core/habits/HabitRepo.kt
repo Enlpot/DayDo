@@ -35,9 +35,6 @@ interface HabitRepo {
     fun getCompletedHabitIds(): Flow<List<Long>>
 
     fun getOverallAnalytics(): Flow<OverallAnalytics>
-
-    fun getHabitsWithStatus(): Flow<List<Pair<Habit, Boolean>>>
-
     suspend fun getStatusForHabit(id: Long): List<HabitStatus>
 
     suspend fun insertHabitStatus(habitStatus: HabitStatus)

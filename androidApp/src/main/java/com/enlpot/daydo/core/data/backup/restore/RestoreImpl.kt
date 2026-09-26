@@ -39,12 +39,19 @@ import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
 import io.github.vinceglb.filekit.readString
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.offsetAt
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
+
+// 惰性共享：避免每次恢复新建 Json 实例（编译器警告）
+private val restoreJson: Json by lazy { Json { ignoreUnknownKeys = true } }
 
 @Single(binds = [RestoreRepo::class])
 class RestoreImpl(
@@ -71,20 +78,37 @@ class RestoreImpl(
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     override suspend fun restoreFromJson(json: String): RestoreResult {
         return try {
             withContext(Dispatchers.IO) {
                 // 解码 + schema 校验 + 全量实体映射都在 IO 线程：几十万行的大备份避免卡住主线程（ANR）
-                val jsonDeserialized =
-                    Json { ignoreUnknownKeys = true }.decodeFromString<ExportSchema>(json)
+                val jsonDeserialized = restoreJson.decodeFromString<ExportSchema>(json)
 
+                // 版本门（P2-3）：备份格式语义未变即可恢复（迁移链覆盖范围内），
+                // 低于迁移链起点的早期备份字段结构不兼容，明确拒绝
                 if (
-                    jsonDeserialized.tasksSchemaVersion != TaskDatabase.SCHEMA_VERSION ||
-                        jsonDeserialized.habitsSchemaVersion != HabitDatabase.SCHEMA_VERSION
+                    jsonDeserialized.tasksSchemaVersion !in 5..TaskDatabase.SCHEMA_VERSION ||
+                        jsonDeserialized.habitsSchemaVersion !in 4..HabitDatabase.SCHEMA_VERSION
                 ) {
                     throw SchemaMismatchException()
                 }
-                val habits = jsonDeserialized.habits.map { it.toHabit() }
+                val habitsRaw = jsonDeserialized.habits
+                val habits =
+                    if (jsonDeserialized.backupFormatVersion >= 2) {
+                        habitsRaw.map { it.toHabit() }
+                    } else {
+                        // 旧格式（backupFormatVersion<2，含缺省=1）：habit time 是本机时区毫秒语义，
+                        // 按恢复时本机时区折算为 UTC 语义（同机/同时区精确；老备份跨时区恢复为启发式）
+                        val tz = TimeZone.currentSystemDefault()
+                        habitsRaw.map { raw ->
+                            val adjusted =
+                                raw.time +
+                                    tz.offsetAt(Instant.fromEpochMilliseconds(raw.time))
+                                        .totalSeconds * 1000L
+                            raw.copy(time = adjusted).toHabit()
+                        }
+                    }
                 val statuses = jsonDeserialized.habitStatus.map { it.toHabitStatus() }
                 val categories = jsonDeserialized.categories.map { it.toCategory() }
                 val tasks = jsonDeserialized.tasks.map { it.toTask() }

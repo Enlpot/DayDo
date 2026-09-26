@@ -41,9 +41,6 @@ interface TasksDao {
     @Query("SELECT * FROM task WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
     fun getDeletedTasksFlow(): Flow<List<TaskEntity>>
 
-    @Query("SELECT * FROM task WHERE deletedAt IS NOT NULL ORDER BY deletedAt DESC")
-    suspend fun getDeletedTasks(): List<TaskEntity>
-
     @Query("UPDATE task SET sortKey = :newKey WHERE id = :id")
     suspend fun updateTaskSortKeyById(id: Long, newKey: Long)
 

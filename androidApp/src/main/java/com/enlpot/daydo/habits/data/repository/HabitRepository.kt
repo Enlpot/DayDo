@@ -49,9 +49,15 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import org.koin.core.annotation.Single
 
 @Single(binds = [HabitRepo::class])
@@ -158,12 +164,18 @@ class HabitRepository(
             .flowOn(Dispatchers.Default)
     }
 
-    /** 每分钟检查一次日期，仅当天变化时向下游 emit，驱动跨午夜自动刷新 */
+    /** 对齐次日 00:00 触发一次（P2-2）：替代每分钟空转，仅日期变化时向下游 emit，驱动跨午夜自动刷新 */
     private fun dateTicker(): Flow<LocalDate> =
         flow {
             while (true) {
                 emit(LocalDate.now())
-                delay(60_000)
+                val tz = TimeZone.currentSystemDefault()
+                val nowMs = LocalDateTime.now().toInstant(tz).toEpochMilliseconds()
+                val nextMidnight =
+                    LocalDateTime(LocalDate.now().plus(1, DateTimeUnit.DAY), LocalTime(0, 0))
+                val nextMs = nextMidnight.toInstant(tz).toEpochMilliseconds()
+                // 兜底至少等 1 秒，避免极端情况下 sleep 0 导致忙循环
+                delay((nextMs - nowMs).coerceAtLeast(1_000L))
             }
         }.distinctUntilChanged()
 
@@ -202,22 +214,6 @@ class HabitRepository(
                 )
             }
             .flowOn(Dispatchers.Default)
-    }
-
-    override fun getHabitsWithStatus(): Flow<List<Pair<Habit, Boolean>>> {
-        return habits
-            .combine(habitStatuses) { habitsFlow, statusFlow ->
-                habitsFlow to statusFlow
-            }
-            .combine(dateTicker()) { pair, today ->
-                val (habitsFlow, statusFlow) = pair
-                habitsFlow.map { habit ->
-                    val dates = statusFlow.filter { it.habitId == habit.id }.map { it.date }
-
-                    // today 由 dateTicker 驱动：跨午夜自动刷新今日完成状态
-                    habit to dates.any { it == today }
-                }
-            }
     }
 
     override suspend fun getStatusForHabit(id: Long): List<HabitStatus> {

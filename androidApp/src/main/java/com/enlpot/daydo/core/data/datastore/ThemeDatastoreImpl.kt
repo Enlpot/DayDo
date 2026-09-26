@@ -41,15 +41,6 @@ class ThemeDatastoreImpl(private val datastore: DataStore<Preferences>) : ThemeD
         private val materialYouKey = booleanPreferencesKey("material_you")
     }
 
-    override suspend fun resetAppTheme() {
-        datastore.edit { settings ->
-            settings[seedColorKey] = Color.White.toArgb()
-            settings[amoledKey] = false
-            settings[paletteKey] = PaletteStyle.TONALSPOT.name
-            settings[materialYouKey] = false
-        }
-    }
-
     override fun getAppThemeFlow(): Flow<AppTheme> =
         datastore.data.map { prefs ->
             val appTheme = prefs[appThemeKey] ?: AppTheme.SYSTEM.name

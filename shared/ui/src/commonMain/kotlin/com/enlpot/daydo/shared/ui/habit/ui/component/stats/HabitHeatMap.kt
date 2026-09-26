@@ -158,10 +158,6 @@ fun HabitHeatMap(
                                         shape = MaterialTheme.shapes.extraSmall,
                                         color =
                                             when (count) {
-                                                0 ->
-                                                    MaterialTheme.colorScheme
-                                                        .surfaceContainerHighest
-
                                                 null ->
                                                     MaterialTheme.colorScheme.surfaceContainerLowest
 

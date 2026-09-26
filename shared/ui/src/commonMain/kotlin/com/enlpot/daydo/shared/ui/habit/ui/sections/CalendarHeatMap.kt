@@ -270,8 +270,6 @@ private fun YearlyMap(
                             shape = RoundedCornerShape(corners),
                             color =
                                 when (count) {
-                                    0 -> MaterialTheme.colorScheme.surfaceContainerHighest
-
                                     null -> MaterialTheme.colorScheme.surfaceContainerLowest
 
                                     else ->
@@ -334,8 +332,6 @@ private fun MonthlyMap(
                             shape = RoundedCornerShape(corners),
                             color =
                                 when (count) {
-                                    0 -> MaterialTheme.colorScheme.surfaceContainerHighest
-
                                     null -> MaterialTheme.colorScheme.surfaceContainerLowest
 
                                     else ->
@@ -350,7 +346,6 @@ private fun MonthlyMap(
             ) {
                 val textColor =
                     when (count) {
-                        0 -> MaterialTheme.colorScheme.onSurface
                         null -> MaterialTheme.colorScheme.onSurfaceVariant
                         else -> {
                             val alpha = (count.toFloat() / maxHeatCount).coerceIn(0.15f, 1f)
