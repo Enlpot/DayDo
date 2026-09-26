@@ -250,12 +250,6 @@ fun RootPage(
                                 contentDescription = stringResource(Res.string.navigation),
                             )
                         },
-                        leadingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.palette),
-                                contentDescription = stringResource(Res.string.navigation),
-                            )
-                        },
                         colors = listItemColors(),
                     )
 
@@ -276,12 +270,6 @@ fun RootPage(
                                 contentDescription = stringResource(Res.string.navigation),
                             )
                         },
-                        leadingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.download),
-                                contentDescription = stringResource(Res.string.backup_and_sync),
-                            )
-                        },
                     )
 
                     ListItem(
@@ -297,12 +285,6 @@ fun RootPage(
                             Icon(
                                 imageVector = vectorResource(Res.drawable.arrow_forward),
                                 contentDescription = stringResource(Res.string.navigation),
-                            )
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = vectorResource(Res.drawable.check_list),
-                                contentDescription = stringResource(Res.string.open_source_license),
                             )
                         },
                     )

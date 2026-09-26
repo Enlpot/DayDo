@@ -28,6 +28,7 @@ import com.enlpot.daydo.core.settings.backup.RestoreFailedException
 import com.enlpot.daydo.core.settings.backup.RestoreRepo
 import com.enlpot.daydo.core.settings.backup.RestoreResult
 import com.enlpot.daydo.core.settings.backup.SchemaMismatchException
+import com.enlpot.daydo.core.settings.backup.validateRestoreIntegrity
 import com.enlpot.daydo.habits.data.database.HabitDatabase
 import com.enlpot.daydo.habits.data.toHabitEntity
 import com.enlpot.daydo.habits.data.toHabitStatusEntity
@@ -120,12 +121,16 @@ class RestoreImpl(
                 val tasks = jsonDeserialized.tasks.map { it.toTask() }
 
                 // 引用完整性预校验：分类/习惯 ID 悬空则拒绝恢复（不写任何库），
-                // 避免两库先后提交导致"新习惯 + 旧任务"的半恢复状态
+                // 避免两库先后提交导致"新习惯 + 旧任务"的半恢复状态（纯函数见 shared/core RestoreIntegrity）
                 val categoryIds = categories.map { it.id }.toSet()
                 val habitIds = habits.map { it.id }.toSet()
                 if (
-                    tasks.any { it.categoryId != null && it.categoryId !in categoryIds } ||
-                        statuses.any { it.habitId !in habitIds }
+                    !validateRestoreIntegrity(
+                        taskCategoryIds = tasks.map { it.categoryId },
+                        knownCategoryIds = categoryIds,
+                        statusHabitIds = statuses.map { it.habitId },
+                        knownHabitIds = habitIds,
+                    )
                 ) {
                     return@withContext RestoreResult.Failure(
                         RestoreFailedException.InconsistentData
