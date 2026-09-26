@@ -29,4 +29,5 @@ data class Habit(
     val days: Set<DayOfWeek>,
     val index: Int,
     val reminder: Boolean,
+    val emoji: String = "✨",
 )

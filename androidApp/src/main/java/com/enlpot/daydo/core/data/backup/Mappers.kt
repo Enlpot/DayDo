@@ -38,6 +38,7 @@ fun Habit.toHabitSchema(): HabitSchema {
         time = time.toInstant(TimeZone.UTC).toEpochMilliseconds(),
         days = Converters.dayOfWeekToString(days),
         reminder = reminder,
+        emoji = emoji,
     )
 }
 
@@ -51,6 +52,7 @@ fun HabitSchema.toHabit(): Habit {
         time = Instant.fromEpochMilliseconds(time).toLocalDateTime(TimeZone.UTC),
         days = Converters.dayOfWeekFromString(days),
         reminder = reminder,
+        emoji = emoji,
     )
 }
 

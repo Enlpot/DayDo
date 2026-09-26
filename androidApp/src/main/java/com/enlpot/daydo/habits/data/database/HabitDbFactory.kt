@@ -31,6 +31,7 @@ class HabitDbFactory(private val context: Context) {
                 HabitDatabase.migrate_3_4,
                 HabitDatabase.migrate_5_6,
                 HabitDatabase.migrate_6_7,
+                HabitDatabase.migrate_7_8,
             )
     }
 }

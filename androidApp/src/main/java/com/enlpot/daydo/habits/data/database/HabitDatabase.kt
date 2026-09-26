@@ -48,7 +48,7 @@ abstract class HabitDatabase : RoomDatabase() {
     }
 
     companion object {
-        const val SCHEMA_VERSION = 7
+        const val SCHEMA_VERSION = 8
         const val DB_NAME = "habit_database"
 
         val migrate_3_4 =
@@ -72,6 +72,16 @@ abstract class HabitDatabase : RoomDatabase() {
                     connection.execSQL(
                         "CREATE UNIQUE INDEX IF NOT EXISTS index_habit_status_habitId_date " +
                             "ON habit_status (habitId, date)"
+                    )
+                }
+            }
+
+        // v7→v8：habit_index 增加 emoji 列（习惯图标，默认✨）
+        val migrate_7_8 =
+            object : Migration(7, 8) {
+                override suspend fun migrate(connection: SQLiteConnection) {
+                    connection.execSQL(
+                        "ALTER TABLE habit_index ADD COLUMN emoji TEXT NOT NULL DEFAULT '✨'"
                     )
                 }
             }

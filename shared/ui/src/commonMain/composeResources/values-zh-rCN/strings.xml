@@ -4,6 +4,7 @@
     <string name="done">完成</string>
     <string name="add_task">添加任务</string>
     <string name="add_habit">新建习惯</string>
+    <string name="select_icon">选择图标</string>
     <string name="update_description">编辑描述</string>
     <string name="delete">删除</string>
     <string name="delete_warning">确定删除该习惯？所有进度将永久丢失</string>

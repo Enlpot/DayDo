@@ -28,7 +28,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.habits.Habit
@@ -60,6 +63,8 @@ fun HabitsList(
     modifier: Modifier = Modifier,
 ) {
     val windowSizeClass = LocalWindowSizeClass.current
+    // 编辑弹窗状态：点击习惯卡片打开编辑详情
+    var editHabit by remember { mutableStateOf<Habit?>(null) }
     // 今日已完成习惯 ID 转 Set：contains O(1)，避免列表每项对全量 List 线性扫描
     val completedIds = remember(state.completedHabitIds) { state.completedHabitIds.toSet() }
     val reorderableListState =
@@ -94,6 +99,7 @@ fun HabitsList(
                         habitWithAnalytics = habitWithAnalytics,
                         completed = completed,
                         action = onAction,
+                        onOpenDetails = { editHabit = habitWithAnalytics.habit },
                         startingDay = state.startingDay,
                         editState = state.editState,
                         onNavigateToAnalytics = onNavigateToAnalytics,
@@ -144,6 +150,21 @@ fun HabitsList(
             onDismissRequest = { onAction(HabitsAction.DismissAddHabitDialog) },
             onUpsertHabit = { onAction(HabitsAction.AddHabit(it)) },
             is24Hr = state.is24Hr,
+        )
+    }
+
+    // 编辑习惯弹窗（点击卡片打开）
+    val currentEditHabit = editHabit
+    if (currentEditHabit != null) {
+        HabitUpsertSheet(
+            habit = currentEditHabit,
+            onDismissRequest = { editHabit = null },
+            onUpsertHabit = {
+                onAction(HabitsAction.UpdateHabit(it))
+                editHabit = null
+            },
+            is24Hr = state.is24Hr,
+            isEditSheet = true,
         )
     }
 }

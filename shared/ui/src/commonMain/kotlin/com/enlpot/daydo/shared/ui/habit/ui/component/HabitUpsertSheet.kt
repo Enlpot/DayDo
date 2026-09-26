@@ -17,11 +17,12 @@
 package com.enlpot.daydo.shared.ui.habit.ui.component
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -41,14 +42,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -92,6 +92,31 @@ import org.jetbrains.compose.resources.vectorResource
 
 private const val TITLE_STRING_LIMIT = 50
 private const val DESCRIPTION_STRING_LIMIT = 200
+
+/** 内置简约习惯图标集合（创建/编辑习惯时可选择） */
+private val HABIT_EMOJIS =
+    listOf(
+        "✨",
+        "💪",
+        "🏃",
+        "📖",
+        "🧘",
+        "💧",
+        "🥗",
+        "😴",
+        "🎯",
+        "🎸",
+        "✍️",
+        "🧹",
+        "💰",
+        "🚭",
+        "🌅",
+        "💊",
+        "🦷",
+        "📵",
+        "🤝",
+        "🌱",
+    )
 
 @Composable
 expect fun HabitUpsertSheet(
@@ -147,23 +172,6 @@ fun HabitUpsertSheetContent(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier =
-                    Modifier.size(50.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = MaterialShapes.Pill.toShape(),
-                        ),
-            ) {
-                Icon(
-                    imageVector =
-                        vectorResource(if (isEditSheet) Res.drawable.edit else Res.drawable.add),
-                    contentDescription = stringResource(Res.string.edit_habit),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
-
             Text(
                 text =
                     stringResource(
@@ -179,6 +187,44 @@ fun HabitUpsertSheetContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             contentPadding = PaddingValues(16.dp),
         ) {
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(Res.string.select_icon),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        HABIT_EMOJIS.forEach { emoji ->
+                            val selected = newHabit.emoji == emoji
+                            Surface(
+                                modifier =
+                                    Modifier.size(44.dp)
+                                        .clip(MaterialTheme.shapes.medium)
+                                        .clickable { updateHabit(newHabit.copy(emoji = emoji)) },
+                                color =
+                                    if (selected) {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceContainerHigh
+                                    },
+                                shape = MaterialTheme.shapes.medium,
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(text = emoji, style = MaterialTheme.typography.titleLarge)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 OutlinedTextField(
                     state = titleTextFieldState,

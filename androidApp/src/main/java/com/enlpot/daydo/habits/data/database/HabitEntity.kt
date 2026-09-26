@@ -31,4 +31,5 @@ data class HabitEntity(
     val days: Set<DayOfWeek>,
     val time: LocalDateTime,
     @ColumnInfo(name = "reminder", defaultValue = "1") val reminder: Boolean,
+    @ColumnInfo(name = "emoji", defaultValue = "'✨'") val emoji: String = "✨",
 )

@@ -30,6 +30,7 @@ fun HabitEntity.toHabit(): Habit {
         days = days,
         index = index,
         reminder = reminder,
+        emoji = emoji,
     )
 }
 
@@ -46,6 +47,7 @@ fun Habit.toHabitEntity(): HabitEntity {
         index = index,
         days = days,
         reminder = reminder,
+        emoji = emoji,
     )
 }
 

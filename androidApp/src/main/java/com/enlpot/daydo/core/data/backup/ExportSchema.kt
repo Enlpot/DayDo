@@ -47,6 +47,7 @@ data class HabitSchema(
     val time: Long,
     val days: String,
     val reminder: Boolean,
+    val emoji: String = "✨",
 )
 
 @Serializable data class HabitStatusSchema(val id: Long = 0, val habitId: Long, val date: Long)

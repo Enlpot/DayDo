@@ -16,7 +16,6 @@
  */
 package com.enlpot.daydo.shared.ui.habit.ui.component
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -78,6 +77,7 @@ fun HabitCard(
     completed: Boolean,
     action: (HabitsAction) -> Unit,
     onNavigateToAnalytics: (Long) -> Unit,
+    onOpenDetails: () -> Unit,
     editState: Boolean,
     compactView: Boolean,
     analyticsEnabled: Boolean,
@@ -132,11 +132,7 @@ fun HabitCard(
                 containerColor = cardBackground,
                 contentColor = cardContent,
             ),
-        onClick = {
-            if (canCompleteToday) {
-                action(HabitsAction.InsertStatus(habitWithAnalytics.habit, today))
-            }
-        },
+        onClick = onOpenDetails,
         shape = shape,
         modifier =
             modifier.animateContentSize(
@@ -155,13 +151,18 @@ fun HabitCard(
                     leadingIconColor = cardContent,
                 ),
             leadingContent = {
-                AnimatedContent(targetState = completed) {
-                    Icon(
-                        imageVector =
-                            vectorResource(
-                                if (!it) Res.drawable.circle_border else Res.drawable.check_circle
-                            ),
-                        contentDescription = null,
+                Box(
+                    modifier =
+                        Modifier.size(40.dp)
+                            .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                            .clickable(enabled = canCompleteToday) {
+                                action(HabitsAction.InsertStatus(habitWithAnalytics.habit, today))
+                            },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = habitWithAnalytics.habit.emoji,
+                        style = MaterialTheme.typography.titleLarge,
                     )
                 }
             },

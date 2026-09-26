@@ -480,6 +480,9 @@ private fun TodayHabitsSection(
     onAction: (HabitsAction) -> Unit,
     onOpenHabitAnalytics: (Habit) -> Unit,
 ) {
+    // 编辑习惯弹窗状态：点击习惯卡片打开编辑详情
+    var editHabit by remember { mutableStateOf<Habit?>(null) }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -496,6 +499,7 @@ private fun TodayHabitsSection(
                 completed = completed,
                 action = onAction,
                 onNavigateToAnalytics = { _ -> onOpenHabitAnalytics(habitWithAnalytics.habit) },
+                onOpenDetails = { editHabit = habitWithAnalytics.habit },
                 editState = false,
                 compactView = state.compactHabitView,
                 analyticsEnabled = true,
@@ -526,6 +530,21 @@ private fun TodayHabitsSection(
             onDismissRequest = { onAction(HabitsAction.DismissAddHabitDialog) },
             onUpsertHabit = { onAction(HabitsAction.AddHabit(it)) },
             is24Hr = state.is24Hr,
+        )
+    }
+
+    // 编辑习惯弹窗（点击习惯卡片打开）
+    val currentEditHabit = editHabit
+    if (currentEditHabit != null) {
+        HabitUpsertSheet(
+            habit = currentEditHabit,
+            onDismissRequest = { editHabit = null },
+            onUpsertHabit = {
+                onAction(HabitsAction.UpdateHabit(it))
+                editHabit = null
+            },
+            is24Hr = state.is24Hr,
+            isEditSheet = true,
         )
     }
 }
