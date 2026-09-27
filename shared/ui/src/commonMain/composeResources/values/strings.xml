@@ -234,4 +234,5 @@
     <string name="exact_alarm_denied">Not allowed — reminders may be late. Tap to grant</string>
     <string name="group_smart_categories">Smart categories</string>
     <string name="group_my_categories">User categories</string>
+    <string name="select_category">Choose category</string>
 </resources>

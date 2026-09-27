@@ -21,7 +21,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -47,8 +46,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.toShape
@@ -69,6 +66,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.tasks.Category
@@ -130,6 +128,7 @@ fun TaskUpsertSheetContent(
     var newTask by rememberSaveable(stateSaver = genericSaver<Task>()) { mutableStateOf(task) }
 
     var showReminderPicker by rememberSaveable { mutableStateOf(false) }
+    var showCategoryPicker by rememberSaveable { mutableStateOf(false) }
     var showRecurrencePicker by rememberSaveable { mutableStateOf(false) }
     var pendingReminderAfterDate by rememberSaveable { mutableStateOf(false) }
 
@@ -204,6 +203,30 @@ fun TaskUpsertSheetContent(
                         MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
                 )
 
+                // 选择分类：点击弹出分类选择弹窗（收集箱 + 用户分类），选后按钮显示所选分类
+                Spacer(modifier = Modifier.width(8.dp))
+                OutlinedButton(
+                    onClick = { showCategoryPicker = true },
+                    shapes =
+                        ButtonShapes(
+                            shape = MaterialTheme.shapes.small,
+                            pressedShape = MaterialTheme.shapes.extraSmall,
+                        ),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text =
+                            newTask.categoryId?.let { id -> categories.find { it.id == id }?.name }
+                                ?: stringResource(Res.string.smart_inbox),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                    Icon(
+                        imageVector = vectorResource(Res.drawable.arrow_forward),
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+
                 if (
                     isEditSheet &&
                         newTask.recurrence != null &&
@@ -270,21 +293,56 @@ fun TaskUpsertSheetContent(
             contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
             item {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    ToggleButton(
-                        checked = newTask.categoryId == null,
-                        onCheckedChange = { newTask = newTask.copy(categoryId = null) },
-                        colors = ToggleButtonDefaults.tonalToggleButtonColors(),
-                        content = { Text(text = stringResource(Res.string.smart_inbox)) },
-                    )
-                    categories.forEach { category ->
-                        ToggleButton(
-                            checked = category.id == newTask.categoryId,
-                            onCheckedChange = { newTask = newTask.copy(categoryId = category.id) },
-                            colors = ToggleButtonDefaults.tonalToggleButtonColors(),
-                            content = { Text(category.name) },
-                        )
+                val offset = newTask.reminderOffsetMinutes()
+                val reminderValue =
+                    when {
+                        !isValidDateTime && newTask.reminder != null ->
+                            stringResource(Res.string.invalid_date_time)
+                        newTask.reminder != null && offset != null -> reminderPresetLabel(offset)
+                        newTask.reminder != null -> newTask.reminder!!.toFormattedString(is24Hr)
+                        else -> stringResource(Res.string.none)
                     }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PropertyCell(
+                        label = stringResource(Res.string.time_label),
+                        value = newTask.dueDateTimeText(is24Hr),
+                        valueSet = newTask.dueDate != null || newTask.recurrence != null,
+                        onClick = { updateDateTimePickerVisibility(true) },
+                        modifier = Modifier.weight(1f),
+                    )
+                    PropertyCell(
+                        label = stringResource(Res.string.reminder),
+                        value = reminderValue,
+                        valueSet = newTask.reminder != null,
+                        isError = !isValidDateTime && newTask.reminder != null,
+                        onClick = {
+                            if (notificationPermission) {
+                                if (newTask.dueDateTime != null) {
+                                    showReminderPicker = true
+                                } else {
+                                    pendingReminderAfterDate = true
+                                    updateDateTimePickerVisibility(true)
+                                }
+                            } else {
+                                onPermissionRequest()
+                                if (newTask.dueDateTime == null) {
+                                    pendingReminderAfterDate = true
+                                    updateDateTimePickerVisibility(true)
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                    PropertyCell(
+                        label = stringResource(Res.string.repeat),
+                        value =
+                            newTask.recurrence?.toDisplayString()
+                                ?: stringResource(Res.string.no_repeat),
+                        valueSet = newTask.recurrence != null,
+                        onClick = { showRecurrencePicker = true },
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
 
@@ -344,136 +402,6 @@ fun TaskUpsertSheetContent(
                             imeAction = ImeAction.Default,
                         ),
                     modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            item {
-                ListItem(
-                    modifier =
-                        Modifier.clip(detachedItemShape()).clickable {
-                            // 日期/时间不需要通知权限：权限被拒也能设日期；提醒才需要权限
-                            updateDateTimePickerVisibility(true)
-                        },
-                    colors = listItemColors(),
-                    leadingContent = {
-                        Icon(
-                            imageVector = vectorResource(Res.drawable.schedule),
-                            contentDescription = null,
-                        )
-                    },
-                    headlineContent = { Text(text = stringResource(Res.string.time_label)) },
-                    supportingContent = {
-                        Text(
-                            text = newTask.dueDateTimeText(is24Hr),
-                            color =
-                                if (newTask.dueDate != null || newTask.recurrence != null)
-                                    MaterialTheme.colorScheme.onSurface
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                    trailingContent = {
-                        if (newTask.dueDate != null && newTask.recurrence == null) {
-                            IconButton(
-                                onClick = {
-                                    timeSelected = false
-                                    newTask =
-                                        newTask.copy(
-                                            dueDate = null,
-                                            dueTime = null,
-                                            reminder = null,
-                                        )
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = vectorResource(Res.drawable.close),
-                                    contentDescription = stringResource(Res.string.clear_time),
-                                )
-                            }
-                        }
-                    },
-                )
-            }
-
-            item {
-                val hasDue = newTask.dueDate != null
-                val offset = newTask.reminderOffsetMinutes()
-
-                ListItem(
-                    modifier =
-                        Modifier.clip(detachedItemShape()).clickable {
-                            if (notificationPermission) {
-                                if (newTask.dueDateTime != null) {
-                                    showReminderPicker = true
-                                } else {
-                                    pendingReminderAfterDate = true
-                                    updateDateTimePickerVisibility(true)
-                                }
-                            } else {
-                                onPermissionRequest()
-                                // 授权返回后继续提醒设置流程：先选日期，确认时自动弹提醒选择器（C7）
-                                if (newTask.dueDateTime == null) {
-                                    pendingReminderAfterDate = true
-                                    updateDateTimePickerVisibility(true)
-                                }
-                            }
-                        },
-                    colors = listItemColors(),
-                    leadingContent = {
-                        Icon(
-                            imageVector = vectorResource(Res.drawable.alarm),
-                            contentDescription = null,
-                        )
-                    },
-                    headlineContent = { Text(text = stringResource(Res.string.reminder)) },
-                    supportingContent = {
-                        Column {
-                            if (newTask.reminder != null) {
-                                Text(
-                                    text =
-                                        if (offset != null) reminderPresetLabel(offset)
-                                        else newTask.reminder!!.toFormattedString(is24Hr)
-                                )
-                                if (!isValidDateTime) {
-                                    Text(
-                                        text = stringResource(Res.string.invalid_date_time),
-                                        color = MaterialTheme.colorScheme.error,
-                                    )
-                                }
-                            } else if (!hasDue) {
-                                Text(
-                                    text = stringResource(Res.string.set_time_first),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                    },
-                )
-            }
-
-            item {
-                ListItem(
-                    modifier =
-                        Modifier.clip(detachedItemShape()).clickable {
-                            showRecurrencePicker = true
-                        },
-                    colors = listItemColors(),
-                    leadingContent = {
-                        Icon(
-                            imageVector = vectorResource(Res.drawable.check_list),
-                            contentDescription = null,
-                        )
-                    },
-                    headlineContent = { Text(text = stringResource(Res.string.repeat)) },
-                    supportingContent = {
-                        Text(
-                            text =
-                                newTask.recurrence?.toDisplayString()
-                                    ?: stringResource(Res.string.no_repeat),
-                            color =
-                                if (newTask.recurrence != null) MaterialTheme.colorScheme.onSurface
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
                 )
             }
 
@@ -544,6 +472,20 @@ fun TaskUpsertSheetContent(
                 }
             },
             dismissButton = {
+                if (newTask.dueDate != null) {
+                    IconButton(
+                        onClick = {
+                            timeSelected = false
+                            newTask = newTask.copy(dueDate = null, dueTime = null, reminder = null)
+                            updateDateTimePickerVisibility(false)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.close),
+                            contentDescription = stringResource(Res.string.clear_time),
+                        )
+                    }
+                }
                 IconButton(onClick = { showTimePicker = true }) {
                     Icon(
                         imageVector = vectorResource(Res.drawable.schedule),
@@ -562,6 +504,65 @@ fun TaskUpsertSheetContent(
                         timeSelected = true
                         showTimePicker = false
                     },
+                )
+            }
+        }
+    }
+
+    if (showCategoryPicker) {
+        GritBottomSheet(onDismissRequest = { showCategoryPicker = false }, padding = 12.dp) {
+            Text(
+                text = stringResource(Res.string.select_category),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+
+            Text(
+                text = stringResource(Res.string.group_smart_categories),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+            )
+            ListItem(
+                headlineContent = { Text(text = stringResource(Res.string.smart_inbox)) },
+                colors = listItemColors(),
+                trailingContent = {
+                    if (newTask.categoryId == null) {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.check),
+                            contentDescription = null,
+                        )
+                    }
+                },
+                modifier =
+                    Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).clickable {
+                        newTask = newTask.copy(categoryId = null)
+                        showCategoryPicker = false
+                    },
+            )
+
+            Text(
+                text = stringResource(Res.string.group_my_categories),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+            )
+            categories.forEach { category ->
+                ListItem(
+                    headlineContent = { Text(text = category.name) },
+                    colors = listItemColors(),
+                    trailingContent = {
+                        if (category.id == newTask.categoryId) {
+                            Icon(
+                                imageVector = vectorResource(Res.drawable.check),
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    modifier =
+                        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).clickable {
+                            newTask = newTask.copy(categoryId = category.id)
+                            showCategoryPicker = false
+                        },
                 )
             }
         }
@@ -725,5 +726,43 @@ private fun ReminderPickerSheet(
                 Text(text = stringResource(Res.string.no_reminder))
             }
         }
+    }
+}
+
+@Composable
+private fun PropertyCell(
+    label: String,
+    value: String,
+    valueSet: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isError: Boolean = false,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier =
+            modifier
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .clickable(onClick = onClick)
+                .padding(vertical = 10.dp, horizontal = 6.dp),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelLarge,
+            color =
+                when {
+                    isError -> MaterialTheme.colorScheme.error
+                    valueSet -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
