@@ -236,4 +236,5 @@
     <string name="group_smart_categories">智能分类</string>
     <string name="group_my_categories">用户分类</string>
     <string name="select_category">选择分类</string>
+    <string name="select_date_time">选择日期与时间</string>
 </resources>

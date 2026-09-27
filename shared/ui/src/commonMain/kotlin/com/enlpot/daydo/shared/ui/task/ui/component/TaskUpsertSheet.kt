@@ -36,7 +36,7 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -46,6 +46,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimeInput
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.toShape
@@ -77,7 +78,6 @@ import com.enlpot.daydo.core.tasks.reminderFor
 import com.enlpot.daydo.core.tasks.reminderOffsetMinutes
 import com.enlpot.daydo.core.toFormattedString
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
-import com.enlpot.daydo.shared.ui.components.GritTimePicker
 import com.enlpot.daydo.shared.ui.components.detachedItemShape
 import com.enlpot.daydo.shared.ui.components.expandFill
 import com.enlpot.daydo.shared.ui.components.genericSaver
@@ -332,6 +332,26 @@ fun TaskUpsertSheetContent(
                             overflow = TextOverflow.Ellipsis,
                         )
                     },
+                    trailingContent = {
+                        if (newTask.dueDate != null && newTask.recurrence == null) {
+                            IconButton(
+                                onClick = {
+                                    timeSelected = false
+                                    newTask =
+                                        newTask.copy(
+                                            dueDate = null,
+                                            dueTime = null,
+                                            reminder = null,
+                                        )
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.close),
+                                    contentDescription = stringResource(Res.string.clear_time),
+                                )
+                            }
+                        }
+                    },
                 )
             }
 
@@ -393,6 +413,16 @@ fun TaskUpsertSheetContent(
                             overflow = TextOverflow.Ellipsis,
                         )
                     },
+                    trailingContent = {
+                        if (newTask.reminder != null) {
+                            IconButton(onClick = { newTask = newTask.copy(reminder = null) }) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.close),
+                                    contentDescription = stringResource(Res.string.delete),
+                                )
+                            }
+                        }
+                    },
                 )
             }
 
@@ -429,6 +459,16 @@ fun TaskUpsertSheetContent(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
+                    },
+                    trailingContent = {
+                        if (newTask.recurrence != null) {
+                            IconButton(onClick = { newTask = newTask.copy(recurrence = null) }) {
+                                Icon(
+                                    imageVector = vectorResource(Res.drawable.close),
+                                    contentDescription = stringResource(Res.string.delete),
+                                )
+                            }
+                        }
                     },
                 )
             }
@@ -517,33 +557,79 @@ fun TaskUpsertSheetContent(
     }
 
     if (showDateTimePicker) {
-        // remember（非 saveable）：日期选择器每次打开都重置为时间折叠态（C6）
-        var showTimePicker by remember { mutableStateOf(false) }
-
-        DatePickerDialog(
+        // 单屏一体化：日历 + TimeInput 同屏，一次确认；清除 = 重置并关闭
+        GritBottomSheet(
             onDismissRequest = {
                 pendingReminderAfterDate = false
                 updateDateTimePickerVisibility(false)
             },
-            confirmButton = {
+            padding = 0.dp,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.select_date_time),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                IconButton(
+                    onClick = {
+                        timeSelected = false
+                        newTask = newTask.copy(dueDate = null, dueTime = null, reminder = null)
+                        updateDateTimePickerVisibility(false)
+                    }
+                ) {
+                    Icon(
+                        imageVector = vectorResource(Res.drawable.close),
+                        contentDescription = stringResource(Res.string.clear_time),
+                    )
+                }
+            }
+
+            DatePicker(state = datePickerState)
+
+            HorizontalDivider()
+
+            TimeInput(state = timePickerState)
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 TextButton(
+                    onClick = {
+                        timeSelected = false
+                        newTask = newTask.copy(dueDate = null, dueTime = null, reminder = null)
+                        updateDateTimePickerVisibility(false)
+                    }
+                ) {
+                    Text(stringResource(Res.string.clear_time))
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = { updateDateTimePickerVisibility(false) }) {
+                    Text(stringResource(Res.string.cancel))
+                }
+                TextButton(
+                    enabled = datePickerState.selectedDateMillis != null,
                     onClick = {
                         if (datePickerState.selectedDateMillis != null) {
                             val selectedDate =
                                 Instant.fromEpochMilliseconds(datePickerState.selectedDateMillis!!)
                                     .toLocalDateTime(TimeZone.UTC)
                                     .date
-                            val selectedTime =
-                                if (timeSelected) {
-                                    LocalTime(
-                                        hour = timePickerState.hour,
-                                        minute = timePickerState.minute,
-                                    )
-                                } else {
-                                    null
-                                }
 
-                            newTask = newTask.copy(dueDate = selectedDate, dueTime = selectedTime)
+                            newTask =
+                                newTask.copy(
+                                    dueDate = selectedDate,
+                                    dueTime =
+                                        LocalTime(
+                                            hour = timePickerState.hour,
+                                            minute = timePickerState.minute,
+                                        ),
+                                )
 
                             updateDateTimePickerVisibility(false)
 
@@ -553,45 +639,9 @@ fun TaskUpsertSheetContent(
                             }
                         }
                     },
-                    enabled = datePickerState.selectedDateMillis != null,
                 ) {
                     Text(stringResource(Res.string.done))
                 }
-            },
-            dismissButton = {
-                if (newTask.dueDate != null) {
-                    IconButton(
-                        onClick = {
-                            timeSelected = false
-                            newTask = newTask.copy(dueDate = null, dueTime = null, reminder = null)
-                            updateDateTimePickerVisibility(false)
-                        }
-                    ) {
-                        Icon(
-                            imageVector = vectorResource(Res.drawable.close),
-                            contentDescription = stringResource(Res.string.clear_time),
-                        )
-                    }
-                }
-                IconButton(onClick = { showTimePicker = true }) {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.schedule),
-                        contentDescription = stringResource(Res.string.select_time),
-                    )
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-
-            if (showTimePicker) {
-                GritTimePicker(
-                    onDismissRequest = { showTimePicker = false },
-                    state = timePickerState,
-                    onConfirm = {
-                        timeSelected = true
-                        showTimePicker = false
-                    },
-                )
             }
         }
     }
