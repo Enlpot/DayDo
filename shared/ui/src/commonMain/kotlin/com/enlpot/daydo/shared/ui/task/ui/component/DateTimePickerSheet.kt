@@ -30,11 +30,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,6 +69,7 @@ import com.kizitonwose.calendar.core.minusMonths
 import com.kizitonwose.calendar.core.now
 import com.kizitonwose.calendar.core.plusMonths
 import daydo.shared.ui.generated.resources.Res
+import daydo.shared.ui.generated.resources.check
 import daydo.shared.ui.generated.resources.select_date_time
 import daydo.shared.ui.generated.resources.select_month
 import daydo.shared.ui.generated.resources.select_year
@@ -77,6 +80,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.YearMonth
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
 
 private val WEEK_LABELS = listOf("一", "二", "三", "四", "五", "六", "日")
 
@@ -214,10 +218,11 @@ internal fun DateTimePickerSheet(
                             )
                         },
             ) {
-                Text(
-                    text = "✓",
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    style = MaterialTheme.typography.titleMedium,
+                Icon(
+                    imageVector = vectorResource(Res.drawable.check),
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
         }
@@ -371,6 +376,7 @@ internal fun DateTimePickerSheet(
             // ---- 月历 ----
             HorizontalCalendar(
                 state = calendarState,
+                modifier = Modifier.widthIn(max = 320.dp),
                 dayContent = { day ->
                     val inMonth = day.position == DayPosition.MonthDate
                     val isSelected = day.date == selectedDate
