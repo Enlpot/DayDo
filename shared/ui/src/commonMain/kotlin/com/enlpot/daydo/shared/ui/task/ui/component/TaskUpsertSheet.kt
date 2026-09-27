@@ -61,12 +61,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.now
@@ -294,6 +294,48 @@ fun TaskUpsertSheetContent(
             contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
             item {
+                val timeSet = newTask.dueDate != null || newTask.recurrence != null
+
+                ListItem(
+                    modifier =
+                        Modifier.clip(detachedItemShape()).clickable {
+                            updateDateTimePickerVisibility(true)
+                        },
+                    colors = listItemColors(),
+                    leadingContent = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.schedule),
+                            contentDescription = null,
+                            tint =
+                                if (timeSet) {
+                                    Color.Unspecified
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                        )
+                    },
+                    headlineContent = {
+                        Text(
+                            text =
+                                if (timeSet) {
+                                    newTask.dueDateTimeText(is24Hr)
+                                } else {
+                                    stringResource(Res.string.time_label)
+                                },
+                            color =
+                                if (timeSet) {
+                                    Color.Unspecified
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                )
+            }
+
+            item {
                 val offset = newTask.reminderOffsetMinutes()
                 val reminderValue =
                     when {
@@ -301,23 +343,13 @@ fun TaskUpsertSheetContent(
                             stringResource(Res.string.invalid_date_time)
                         newTask.reminder != null && offset != null -> reminderPresetLabel(offset)
                         newTask.reminder != null -> newTask.reminder!!.toFormattedString(is24Hr)
-                        else -> stringResource(Res.string.none)
+                        else -> stringResource(Res.string.reminder)
                     }
+                val reminderSet = newTask.reminder != null
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PropertyCell(
-                        label = stringResource(Res.string.time_label),
-                        value = newTask.dueDateTimeText(is24Hr),
-                        valueSet = newTask.dueDate != null || newTask.recurrence != null,
-                        onClick = { updateDateTimePickerVisibility(true) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    PropertyCell(
-                        label = stringResource(Res.string.reminder),
-                        value = reminderValue,
-                        valueSet = newTask.reminder != null,
-                        isError = !isValidDateTime && newTask.reminder != null,
-                        onClick = {
+                ListItem(
+                    modifier =
+                        Modifier.clip(detachedItemShape()).clickable {
                             if (notificationPermission) {
                                 if (newTask.dueDateTime != null) {
                                     showReminderPicker = true
@@ -327,24 +359,78 @@ fun TaskUpsertSheetContent(
                                 }
                             } else {
                                 onPermissionRequest()
+                                // 授权返回后继续提醒设置流程：先选日期，确认时自动弹提醒选择器（C7）
                                 if (newTask.dueDateTime == null) {
                                     pendingReminderAfterDate = true
                                     updateDateTimePickerVisibility(true)
                                 }
                             }
                         },
-                        modifier = Modifier.weight(1f),
-                    )
-                    PropertyCell(
-                        label = stringResource(Res.string.repeat),
-                        value =
-                            newTask.recurrence?.toDisplayString()
-                                ?: stringResource(Res.string.no_repeat),
-                        valueSet = newTask.recurrence != null,
-                        onClick = { showRecurrencePicker = true },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                    colors = listItemColors(),
+                    leadingContent = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.alarm),
+                            contentDescription = null,
+                            tint =
+                                if (reminderSet) {
+                                    Color.Unspecified
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                        )
+                    },
+                    headlineContent = {
+                        Text(
+                            text = reminderValue,
+                            color =
+                                when {
+                                    !isValidDateTime && newTask.reminder != null ->
+                                        MaterialTheme.colorScheme.error
+                                    reminderSet -> Color.Unspecified
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                )
+            }
+
+            item {
+                ListItem(
+                    modifier =
+                        Modifier.clip(detachedItemShape()).clickable {
+                            showRecurrencePicker = true
+                        },
+                    colors = listItemColors(),
+                    leadingContent = {
+                        Icon(
+                            imageVector = vectorResource(Res.drawable.sync),
+                            contentDescription = null,
+                            tint =
+                                if (newTask.recurrence != null) {
+                                    Color.Unspecified
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                        )
+                    },
+                    headlineContent = {
+                        Text(
+                            text =
+                                newTask.recurrence?.toDisplayString()
+                                    ?: stringResource(Res.string.repeat),
+                            color =
+                                if (newTask.recurrence != null) {
+                                    Color.Unspecified
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
+                )
             }
 
             item {
@@ -727,47 +813,5 @@ private fun ReminderPickerSheet(
                 Text(text = stringResource(Res.string.no_reminder))
             }
         }
-    }
-}
-
-@Composable
-private fun PropertyCell(
-    label: String,
-    value: String,
-    valueSet: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    isError: Boolean = false,
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier =
-            modifier
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .clickable(onClick = onClick)
-                .padding(vertical = 10.dp, horizontal = 6.dp),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.labelLarge,
-            color =
-                when {
-                    isError -> MaterialTheme.colorScheme.error
-                    valueSet -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 }
