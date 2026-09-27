@@ -32,6 +32,7 @@ import com.enlpot.daydo.core.settings.backup.RestoreRepo
 import com.enlpot.daydo.core.settings.webdav.WebDavRepo
 import com.enlpot.daydo.core.settings.webdav.WebDavResult
 import com.enlpot.daydo.core.settings.webdav.WebDavState
+import com.enlpot.daydo.core.tasks.TaskRepo
 import com.enlpot.daydo.shared.ui.setting.BackupState
 import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
@@ -56,6 +57,7 @@ class SettingsViewModel(
     @Provided private val webDavRepo: WebDavRepo,
     @Provided private val themeDatastore: ThemeDatastore,
     @Provided private val settingsDatastore: SettingsDatastore,
+    @Provided private val taskRepo: TaskRepo,
     @Provided private val biometricUtils: BiometricUtils,
     @Provided private val analytics: AnalyticsWrapper,
     @Provided private val appVersionProvider: AppVersionProvider,
@@ -401,7 +403,20 @@ class SettingsViewModel(
                         it.copy(canScheduleExactAlarms = alarmScheduler.canScheduleExactAlarms())
                     }
 
-                OpenExactAlarmSettings -> exactAlarmLauncher.open()
+                OpenExactAlarmSettings -> {
+                    val granted = alarmScheduler.canScheduleExactAlarms()
+                    if (granted) {
+                        // 已授权（可能用户刚从系统设置开启、UI 文案尚滞后）：只同步状态，不重复跳转
+                        _state.update { it.copy(canScheduleExactAlarms = true) }
+                    } else {
+                        exactAlarmLauncher.open()
+                    }
+                }
+
+                // 分类管理：用户分类改名 / 删除（与任务页共用同一 TaskRepo）
+                is UpsertCategory -> taskRepo.upsertCategory(action.category)
+
+                is DeleteCategory -> taskRepo.deleteCategory(action.category)
             }
         }
 
@@ -506,6 +521,12 @@ class SettingsViewModel(
                 settingsDatastore
                     .getBiometricLockPref()
                     .onEach { flow -> _state.update { it.copy(isBiometricLockOn = flow) } }
+                    .launchIn(this)
+
+                // 用户分类（「分类管理」里与智能分类一并展示）
+                taskRepo
+                    .getTasksFlow()
+                    .onEach { map -> _state.update { it.copy(categories = map.keys.toList()) } }
                     .launchIn(this)
             }
         }

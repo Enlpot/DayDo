@@ -54,6 +54,9 @@ import kotlinx.coroutines.launch
 /** 内容侧 overscroll 判定量（px）：超过才触发展开/收回，避免微小滚动误触发 */
 private val OverscrollThresholdPx = 8f
 
+/** 所有底部弹窗统一的「弹窗顶部 → 标题」间距 */
+private val TopGap = 12.dp
+
 /**
  * 统一底部弹窗。
  *
@@ -140,15 +143,21 @@ fun GritBottomSheet(
         sheetMaxWidth = 500.dp,
         modifier = modifier,
         sheetState = sheetState,
+        // 不显示顶部拖拽小白条（全部底部弹窗统一去掉）；弹窗表面的拖动仍由 material3
+        // 锚点拖拽原生处理（标题/空白区/内容 overscroll 皆可拖）
+        dragHandle = null,
     ) {
         Column(
             modifier =
-                Modifier.padding(padding)
+                // 顶部间距统一为 TopGap：padding 参数只作用于左右下三边，
+                // 这样各弹窗原有的横向内边距不受影响，仅"顶部 → 标题"的间距被统一
+                Modifier.padding(start = padding, end = padding, bottom = padding, top = TopGap)
                     // expandable：内容恒定全高，弹窗位置完全由锚点驱动；非 expandable：内容自适应，
-                    // 保留 animateContentSize 平滑内部布局变化
+                    // 保留 animateContentSize 平滑内部布局变化。height 扣除 TopGap 以保持弹窗总高不变
+                    // （否则全屏态会盖住状态栏）
                     .then(
                         if (expandable) {
-                            Modifier.height(fullHeight)
+                            Modifier.height(fullHeight - TopGap)
                         } else {
                             Modifier.animateContentSize()
                         }

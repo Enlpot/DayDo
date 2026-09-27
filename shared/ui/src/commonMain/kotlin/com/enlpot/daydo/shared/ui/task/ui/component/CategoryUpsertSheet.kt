@@ -18,6 +18,7 @@ package com.enlpot.daydo.shared.ui.task.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -27,6 +28,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,6 +61,8 @@ fun CategoryUpsertSheet(
     category: Category,
     onDismiss: () -> Unit,
     onUpsertCategory: (Category) -> Unit,
+    /** 编辑态可选的删除入口（二次确认由调用方负责） */
+    onDelete: (() -> Unit)? = null,
 ) {
     var newCategory by
         rememberSaveable(stateSaver = genericSaver<Category>()) { mutableStateOf(category) }
@@ -108,19 +112,42 @@ fun CategoryUpsertSheet(
                 modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             )
 
-            Button(
-                onClick = {
-                    onUpsertCategory(newCategory.copy(name = textFieldState.text.toString().trim()))
-                },
-                shapes =
-                    ButtonShapes(
-                        shape = MaterialTheme.shapes.extraLarge,
-                        pressedShape = MaterialTheme.shapes.small,
-                    ),
+            Row(
                 modifier = Modifier.padding(bottom = 32.dp).fillMaxWidth(),
-                enabled = textFieldState.text.isNotBlank() && textFieldState.text.length <= 20,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(text = stringResource(if (isEditSheet) Res.string.done else Res.string.save))
+                if (isEditSheet && onDelete != null) {
+                    OutlinedButton(
+                        onClick = onDelete,
+                        shapes =
+                            ButtonShapes(
+                                shape = MaterialTheme.shapes.extraLarge,
+                                pressedShape = MaterialTheme.shapes.small,
+                            ),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = stringResource(Res.string.delete))
+                    }
+                }
+
+                Button(
+                    onClick = {
+                        onUpsertCategory(
+                            newCategory.copy(name = textFieldState.text.toString().trim())
+                        )
+                    },
+                    shapes =
+                        ButtonShapes(
+                            shape = MaterialTheme.shapes.extraLarge,
+                            pressedShape = MaterialTheme.shapes.small,
+                        ),
+                    modifier = Modifier.weight(1f),
+                    enabled = textFieldState.text.isNotBlank() && textFieldState.text.length <= 20,
+                ) {
+                    Text(
+                        text = stringResource(if (isEditSheet) Res.string.done else Res.string.save)
+                    )
+                }
             }
         }
     }

@@ -31,7 +31,12 @@ import kotlinx.datetime.toInstant
  *
  * typicalBySeries 由调用方（ViewModel）按全量任务一次性预计算， 避免每个列表每次排序都重建 seriesId 全量 map 与重复统计完成时刻。
  */
-fun sortActiveTasks(tasks: List<Task>, typicalBySeries: Map<Long?, Int?>): List<Task> {
+fun sortActiveTasks(
+    tasks: List<Task>,
+    typicalBySeries: Map<Long?, Int?>,
+    // 判定"当天拖过"的基准日（生产 = 系统今天；测试注入固定日期，避免测试数据随真实日期跨日失效）
+    today: LocalDate = LocalDate.now(),
+): List<Task> {
     val normal = tasks.filter { it.recurrence == null }
     val recurring = tasks.filter { it.recurrence != null }
 
@@ -47,7 +52,7 @@ fun sortActiveTasks(tasks: List<Task>, typicalBySeries: Map<Long?, Int?>): List<
     // 合并逻辑：未拖过任务链的第 i 项"位置"= i*POS_BASE，拖过任务的 sortKey 即拖动瞬间的
     // 位置值（如插在链[2]与链[3]之间则约为 2.5*POS_BASE），遍历未拖过链时按 < 当前 i*POS_BASE
     // 把拖过任务插入，从而精确落在用户拖动的位置。
-    val todayEpoch = LocalDate.now().toEpochDays()
+    val todayEpoch = today.toEpochDays()
     val dragged =
         recurring.filter { it.sortKeyDate?.toEpochDays() == todayEpoch && it.sortKey != null }
     val untouched = recurring.filterNot { d -> dragged.any { it.id == d.id } }

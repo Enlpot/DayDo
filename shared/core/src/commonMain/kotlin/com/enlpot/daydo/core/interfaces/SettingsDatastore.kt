@@ -52,6 +52,11 @@ interface SettingsDatastore {
 
     suspend fun setHiddenSmartViews(views: Set<SmartCategory>)
 
+    /** 任务页智能分类 chip 的显示顺序（用户拖拽排序后持久化；缺省为枚举声明顺序） */
+    fun getSmartCategoryOrderFlow(): Flow<List<SmartCategory>>
+
+    suspend fun setSmartCategoryOrder(order: List<SmartCategory>)
+
     /** 首页已完成任务折叠态（当天内记忆，跨天重置为展开） */
     fun getHomeCompletedCollapsedPref(): Flow<Boolean>
 

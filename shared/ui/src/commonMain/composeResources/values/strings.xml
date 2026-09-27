@@ -89,8 +89,8 @@
     <string name="hour_24">24-hour</string>
     <string name="hour_12">12-hour</string>
     <string name="choose_time_format_desc">Choose how time is displayed</string>
-    <string name="smart_category">Smart categories</string>
-    <string name="smart_category_desc">Choose smart categories to show on the tasks page</string>
+    <string name="smart_category">Categories</string>
+    <string name="smart_category_desc">Smart categories and your own</string>
     <string name="default_start_page">Default start page</string>
     <string name="choose_start_page_desc">Choose the page shown when opening the app</string>
     <string name="start_week">Start of week</string>
@@ -104,7 +104,7 @@
     <string name="backup_and_sync_desc">Local file backup, restore and WebDAV cloud sync</string>
     <string name="open_source_license">Open Source License</string>
     <string name="gpl_desc">GNU GPL v3 license text</string>
-    <string name="hide_smart_category_desc">Uncheck to hide this category on the tasks page</string>
+    <string name="hide_smart_category_desc">Uncheck to hide this smart category</string>
     <string name="biometric_lock_desc">When enabled, fingerprint verification is required to enter</string>
     <string name="smart_all">All</string>
     <string name="smart_today">Today</string>
@@ -232,4 +232,6 @@
     <string name="weekly_completions_avg">Completions per week (Avg)</string>
     <string name="exact_alarm">Exact reminders</string>
     <string name="exact_alarm_denied">Not allowed — reminders may be late. Tap to grant</string>
+    <string name="group_smart_categories">Smart categories</string>
+    <string name="group_my_categories">User categories</string>
 </resources>

@@ -52,6 +52,9 @@ sealed interface TaskAction {
 
     data class ReorderCategories(val mapping: List<Pair<Int, Category>>) : TaskAction
 
+    /** 任务页智能分类 chip 长按拖拽排序（顺序持久化到 DataStore） */
+    data class ReorderSmartCategories(val order: List<SmartCategory>) : TaskAction
+
     data class UpsertTask(val task: Task) : TaskAction
 
     data class ToggleSmartViewVisibility(val category: SmartCategory) : TaskAction

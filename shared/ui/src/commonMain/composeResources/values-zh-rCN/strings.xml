@@ -90,8 +90,8 @@
     <string name="hour_24">24小时制</string>
     <string name="hour_12">12小时制</string>
     <string name="choose_time_format_desc">选择时间的显示方式</string>
-    <string name="smart_category">智能分类</string>
-    <string name="smart_category_desc">选择在任务页显示的智能分类</string>
+    <string name="smart_category">分类管理</string>
+    <string name="smart_category_desc">智能分类与我的分类一览</string>
     <string name="default_start_page">默认起始页面</string>
     <string name="choose_start_page_desc">选择打开 App 时显示的页面</string>
     <string name="start_week">周起始日</string>
@@ -105,7 +105,7 @@
     <string name="backup_and_sync_desc">本地文件备份、恢复与 WebDAV 云同步</string>
     <string name="open_source_license">开源许可</string>
     <string name="gpl_desc">GNU GPL v3 许可文本</string>
-    <string name="hide_smart_category_desc">取消勾选以在任务页隐藏该分类</string>
+    <string name="hide_smart_category_desc">取消勾选可在任务页隐藏该智能分类</string>
     <string name="biometric_lock_desc">开启后需验证指纹等才能进入</string>
     <string name="smart_all">所有</string>
     <string name="smart_today">今天</string>
@@ -233,4 +233,6 @@
     <string name="weekly_completions_avg">每周完成次数（平均）</string>
     <string name="exact_alarm">精确提醒</string>
     <string name="exact_alarm_denied">未允许，提醒可能晚到。点击去开启</string>
+    <string name="group_smart_categories">智能分类</string>
+    <string name="group_my_categories">用户分类</string>
 </resources>

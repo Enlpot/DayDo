@@ -38,10 +38,13 @@ data class TaskState(
     val tasks: Map<Category, List<Task>> = emptyMap(),
     val allTasks: List<Task> = emptyList(),
     val deletedTasks: List<Task> = emptyList(),
-    val currentView: TaskView = TaskView.Smart(SmartCategory.ALL),
+    // 冷启动默认进入「收集箱」（无分类且无日期的任务）；分类被删等兜底场景仍回退到「全部」
+    val currentView: TaskView = TaskView.Smart(SmartCategory.INBOX),
     val displayTasks: List<Task> = emptyList(),
     val displayCompletedTasks: List<Task> = emptyList(),
     val hiddenSmartViews: Set<SmartCategory> = DEFAULT_HIDDEN_SMART_VIEWS,
+    /** 任务页智能分类 chip 的显示顺序（用户长按拖拽排序，持久化于 DataStore） */
+    val smartCategoryOrder: List<SmartCategory> = SmartCategory.entries.toList(),
     val is24Hour: Boolean = false,
     val startOfWeek: DayOfWeek = DayOfWeek.MONDAY,
     val hapticFeedback: Boolean = true,

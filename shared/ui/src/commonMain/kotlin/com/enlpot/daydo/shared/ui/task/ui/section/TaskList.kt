@@ -349,35 +349,80 @@ private fun CategorySelector(
     onAddCategoryClick: () -> Unit,
     onEditCategoriesClick: () -> Unit,
 ) {
+    val listState = rememberLazyListState()
+    // 分类 chip 顺序：拖动时乐观重排，DB/DataStore 回流后重新同步
+    var orderedCategories by
+        remember(state.tasks.keys) { mutableStateOf(state.tasks.keys.toList()) }
+    // 智能分类 chip 顺序（仅当前可见项；隐藏项由存储层按原顺序补回）
+    var orderedSmart by
+        remember(state.smartCategoryOrder, state.hiddenSmartViews) {
+            mutableStateOf(state.smartCategoryOrder.filter { it !in state.hiddenSmartViews })
+        }
+    val reorderableListState =
+        rememberReorderableLazyListState(listState) { from, to ->
+            // 按 key 类型区分两段：智能分类 key = "smart_XXX"，用户分类 key = 分类 id。
+            // 跨段拖拽不处理（两段各自独立排序），尾部图标不参与
+            val fromKey = from.key
+            val toKey = to.key
+            when {
+                fromKey is Long && toKey is Long -> {
+                    val list = orderedCategories.toMutableList()
+                    val fromIndex = list.indexOfFirst { it.id == fromKey }
+                    val toIndex = list.indexOfFirst { it.id == toKey }
+                    if (fromIndex >= 0 && toIndex >= 0) {
+                        list.add(toIndex, list.removeAt(fromIndex))
+                        orderedCategories = list
+                        onAction(TaskAction.ReorderCategories(list.mapIndexed { i, c -> i to c }))
+                    }
+                }
+
+                fromKey is String && toKey is String -> {
+                    val list = orderedSmart.toMutableList()
+                    val fromIndex = list.indexOfFirst { "smart_${it.name}" == fromKey }
+                    val toIndex = list.indexOfFirst { "smart_${it.name}" == toKey }
+                    if (fromIndex >= 0 && toIndex >= 0) {
+                        list.add(toIndex, list.removeAt(fromIndex))
+                        orderedSmart = list
+                        onAction(TaskAction.ReorderSmartCategories(list))
+                    }
+                }
+            }
+        }
+
     LazyRow(
+        state = listState,
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         contentPadding = PaddingValues(vertical = 8.dp, horizontal = 16.dp),
     ) {
-        SmartCategory.entries
-            .filter { it !in state.hiddenSmartViews }
-            .forEach { smart ->
-                item(key = "smart_${smart.name}") {
-                    ToggleButton(
-                        checked =
-                            state.currentView is TaskView.Smart &&
-                                (state.currentView as TaskView.Smart).category == smart,
-                        onCheckedChange = { onAction(TaskAction.ChangeView(TaskView.Smart(smart))) },
-                    ) {
-                        Text(text = smart.label())
-                    }
+        items(orderedSmart, key = { "smart_${it.name}" }) { smart ->
+            // 长按智能分类 chip 同样可拖动排序（顺序持久化到 DataStore）
+            ReorderableItem(reorderableListState, key = "smart_${smart.name}") {
+                ToggleButton(
+                    modifier = Modifier.longPressDraggableHandle(),
+                    checked =
+                        state.currentView is TaskView.Smart &&
+                            (state.currentView as TaskView.Smart).category == smart,
+                    onCheckedChange = { onAction(TaskAction.ChangeView(TaskView.Smart(smart))) },
+                ) {
+                    Text(text = smart.label())
                 }
             }
+        }
 
-        items(state.tasks.keys.toList(), key = { it.id }) { category ->
-            ToggleButton(
-                checked =
-                    state.currentView is TaskView.Regular &&
-                        // 按 id 比较：分类重命名后当前 chip 不失选（P3）
-                        (state.currentView as TaskView.Regular).category.id == category.id,
-                onCheckedChange = { onAction(TaskAction.ChangeCategory(category)) },
-            ) {
-                Text(text = category.name)
+        items(orderedCategories, key = { it.id }) { category ->
+            // 长按分类 chip 拖动排序（与「编辑分类」弹窗内一致，落库 TaskAction.ReorderCategories）
+            ReorderableItem(reorderableListState, key = category.id) {
+                ToggleButton(
+                    modifier = Modifier.longPressDraggableHandle(),
+                    checked =
+                        state.currentView is TaskView.Regular &&
+                            // 按 id 比较：分类重命名后当前 chip 不失选（P3）
+                            (state.currentView as TaskView.Regular).category.id == category.id,
+                    onCheckedChange = { onAction(TaskAction.ChangeCategory(category)) },
+                ) {
+                    Text(text = category.name)
+                }
             }
         }
 

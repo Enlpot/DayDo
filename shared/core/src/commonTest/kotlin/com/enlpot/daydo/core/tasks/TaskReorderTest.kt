@@ -135,7 +135,7 @@ class TaskReorderTest {
         assertEquals(REPOS_POS_BASE + REPOS_POS_BASE / 2, plan.key)
         // 落库后排序：B 精确落在 C 与 D 之间
         val draggedB = b.copy(sortKey = plan.key, sortKeyDate = today)
-        val sorted = sortActiveTasks(listOf(a, draggedB, c, d, e), emptyMap())
+        val sorted = sortActiveTasks(listOf(a, draggedB, c, d, e), emptyMap(), today = today)
         assertEquals(listOf(a.id, c.id, b.id, d.id, e.id), sorted.map { it.id })
     }
 

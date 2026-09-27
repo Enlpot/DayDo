@@ -22,6 +22,7 @@ import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.settings.backup.ExportState
 import com.enlpot.daydo.core.settings.backup.RestoreState
 import com.enlpot.daydo.core.settings.webdav.WebDavState
+import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.theme.Theme
 import kotlinx.datetime.DayOfWeek
@@ -56,6 +57,8 @@ data class SettingsState(
     val isBiometricLockOn: Boolean? = null,
     val isBiometricLockAvailable: Boolean = false,
     val hiddenSmartViews: Set<SmartCategory> = emptySet(),
+    /** 用户分类列表（供设置页「分类管理」与智能分类一并展示；数据源与任务页一致） */
+    val categories: List<Category> = emptyList(),
     val cornerRadius: Int = 20,
     val hapticFeedback: Boolean = true,
     val hapticStrength: Int = 50,

@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -219,6 +220,12 @@ class TasksViewModel(
                         }
                         postDelay = true
                         // 拖动排序分类不再切换当前视图
+                    }
+
+                    is ReorderSmartCategories -> {
+                        // 智能分类 chip 顺序：本地立即生效 + 持久化（不切视图）
+                        _state.update { it.copy(smartCategoryOrder = action.order) }
+                        datastore.setSmartCategoryOrder(action.order)
                     }
 
                     is DeleteCategory -> {
@@ -441,6 +448,12 @@ class TasksViewModel(
                             )
                         }
                     }
+                    .launchIn(this)
+
+                // 智能分类 chip 顺序单独订阅（combine 无 6 参重载，故与上面并行收集）
+                datastore
+                    .getSmartCategoryOrderFlow()
+                    .onEach { order -> _state.update { it.copy(smartCategoryOrder = order) } }
                     .launchIn(this)
             }
     }

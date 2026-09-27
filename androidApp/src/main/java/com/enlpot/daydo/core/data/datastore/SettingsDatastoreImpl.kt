@@ -46,6 +46,7 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
         private val biometricLockKey = booleanPreferencesKey("biometric")
         private val compactHabitView = booleanPreferencesKey("compact_habit_view")
         private val hiddenSmartViewsKey = stringPreferencesKey("hidden_smart_views")
+        private val smartCategoryOrderKey = stringPreferencesKey("smart_category_order")
         private val cornerRadiusKey = intPreferencesKey("corner_radius")
         private val hapticFeedbackKey = booleanPreferencesKey("haptic_feedback")
         private val homeCompletedCollapsedKey = booleanPreferencesKey("home_completed_collapsed")
@@ -146,6 +147,28 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
 
     override suspend fun setHiddenSmartViews(views: Set<SmartCategory>) {
         datastore.edit { prefs -> prefs[hiddenSmartViewsKey] = views.joinToString(",") { it.name } }
+    }
+
+    override fun getSmartCategoryOrderFlow(): Flow<List<SmartCategory>> =
+        datastore.data.map { prefs ->
+            val parsed =
+                prefs[smartCategoryOrderKey]
+                    .orEmpty()
+                    .split(",")
+                    .mapNotNull { runCatching { SmartCategory.valueOf(it) }.getOrNull() }
+                    .distinct()
+            if (parsed.isEmpty()) {
+                SmartCategory.entries.toList()
+            } else {
+                // 容错：新增的枚举值若不在已存顺序里，补到末尾（避免升级后新分类不可见）
+                parsed + SmartCategory.entries.filterNot { it in parsed }
+            }
+        }
+
+    override suspend fun setSmartCategoryOrder(order: List<SmartCategory>) {
+        datastore.edit { prefs ->
+            prefs[smartCategoryOrderKey] = order.joinToString(",") { it.name }
+        }
     }
 
     override fun getCornerRadiusPref(): Flow<Int> =

@@ -20,6 +20,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,23 +31,29 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
 import com.enlpot.daydo.core.settings.Sections
+import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.shared.ui.GritPreviewWrapper
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
+import com.enlpot.daydo.shared.ui.components.GritDialog
 import com.enlpot.daydo.shared.ui.components.LocalCardCornerRadius
 import com.enlpot.daydo.shared.ui.components.expandFill
 import com.enlpot.daydo.shared.ui.components.listItemColors
@@ -54,6 +61,7 @@ import com.enlpot.daydo.shared.ui.setting.SettingsAction
 import com.enlpot.daydo.shared.ui.setting.SettingsState
 import com.enlpot.daydo.shared.ui.setting.ui.component.LicenseBottomSheet
 import com.enlpot.daydo.shared.ui.task.label
+import com.enlpot.daydo.shared.ui.task.ui.component.CategoryUpsertSheet
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
 import kotlinx.datetime.DayOfWeek
@@ -63,6 +71,13 @@ import org.jetbrains.compose.resources.vectorResource
 /** Root settings page all roads start from here */
 @Composable
 fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
+    // 点击「精确提醒」会跳到系统设置页，返回时本页并未重新组合（entry 未重建）。
+    // 监听窗口焦点恢复来重查权限状态，否则开启后本页仍显示"去开启"（状态不同步）
+    val windowFocused = LocalWindowInfo.current.isWindowFocused
+    LaunchedEffect(windowFocused) {
+        if (windowFocused) onAction(SettingsAction.RefreshExactAlarmStatus)
+    }
+
     var showSmartViewsDialog by rememberSaveable { mutableStateOf(false) }
     var showLookAndFeelDialog by rememberSaveable { mutableStateOf(false) }
     var showBackupDialog by rememberSaveable { mutableStateOf(false) }
@@ -72,6 +87,9 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
     var show24HrDialog by rememberSaveable { mutableStateOf(false) }
     var showBiometricDialog by rememberSaveable { mutableStateOf(false) }
     var showLicenseDialog by rememberSaveable { mutableStateOf(false) }
+    // 分类管理：正在编辑 / 待确认删除的用户分类
+    var editingCategory by remember { mutableStateOf<Category?>(null) }
+    var deletingCategory by remember { mutableStateOf<Category?>(null) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).fillMaxSize()) {
@@ -334,6 +352,12 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
                     text = stringResource(Res.string.hide_smart_category_desc),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Text(
+                    text = stringResource(Res.string.group_smart_categories),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     SmartCategory.entries.forEach { smart ->
                         val visible = smart !in state.hiddenSmartViews
@@ -355,6 +379,77 @@ fun RootPage(state: SettingsState, onAction: (SettingsAction) -> Unit) {
                                 }
                             },
                         )
+                    }
+                }
+
+                // 我的分类：与智能分类并列展示（只读；重命名/删除在任务页分类栏的「编辑」里，
+                // 排序可在任务页分类栏长按拖动）
+                if (state.categories.isNotEmpty()) {
+                    Text(
+                        text = stringResource(Res.string.group_my_categories),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        state.categories.forEach { category ->
+                            ListItem(
+                                headlineContent = { Text(text = category.name) },
+                                colors = listItemColors(),
+                                trailingContent = {
+                                    Icon(
+                                        imageVector = vectorResource(Res.drawable.arrow_forward),
+                                        contentDescription = null,
+                                    )
+                                },
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .clip(RoundedCornerShape(LocalCardCornerRadius.current.dp))
+                                        .clickable { editingCategory = category },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 分类管理：用户分类改名 / 删除（复用任务页的分类编辑弹窗）
+        val categoryToEdit = editingCategory
+        if (categoryToEdit != null) {
+            CategoryUpsertSheet(
+                isEditSheet = true,
+                category = categoryToEdit,
+                onDismiss = { editingCategory = null },
+                onUpsertCategory = {
+                    onAction(SettingsAction.UpsertCategory(it))
+                    editingCategory = null
+                },
+                onDelete = {
+                    deletingCategory = categoryToEdit
+                    editingCategory = null
+                },
+            )
+        }
+
+        val categoryToDelete = deletingCategory
+        if (categoryToDelete != null) {
+            GritDialog(onDismissRequest = { deletingCategory = null }) {
+                Text(
+                    text = stringResource(Res.string.delete),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+                Text(text = stringResource(Res.string.delete_category))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { deletingCategory = null }) {
+                        Text(text = stringResource(Res.string.cancel))
+                    }
+                    TextButton(
+                        onClick = {
+                            onAction(SettingsAction.DeleteCategory(categoryToDelete))
+                            deletingCategory = null
+                        }
+                    ) {
+                        Text(text = stringResource(Res.string.delete))
                     }
                 }
             }

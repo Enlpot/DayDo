@@ -19,6 +19,7 @@ package com.enlpot.daydo.shared.ui.setting
 import androidx.compose.ui.graphics.Color
 import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
+import com.enlpot.daydo.core.tasks.Category
 import com.enlpot.daydo.core.tasks.SmartCategory
 import com.enlpot.daydo.core.theme.AppTheme
 import com.enlpot.daydo.core.theme.PaletteStyle
@@ -75,4 +76,10 @@ sealed interface SettingsAction {
 
     /** 打开系统「闹钟与提醒」设置页，引导用户授予精确闹钟权限 */
     data object OpenExactAlarmSettings : SettingsAction
+
+    /** 分类管理：新增或重命名用户分类 */
+    data class UpsertCategory(val category: Category) : SettingsAction
+
+    /** 分类管理：删除用户分类（该分类下的任务一并删除，与任务页删除行为一致） */
+    data class DeleteCategory(val category: Category) : SettingsAction
 }
