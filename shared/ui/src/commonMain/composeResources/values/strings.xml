@@ -236,4 +236,8 @@
     <string name="group_my_categories">User categories</string>
     <string name="select_category">Choose category</string>
     <string name="select_date_time">Choose date &amp; time</string>
+    <string name="select_year">Select year</string>
+    <string name="select_month">Select month</string>
+    <string name="am">AM</string>
+    <string name="pm">PM</string>
 </resources>

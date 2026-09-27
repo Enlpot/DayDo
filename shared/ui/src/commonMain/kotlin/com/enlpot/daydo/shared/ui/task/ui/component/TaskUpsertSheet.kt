@@ -35,8 +35,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ButtonShapes
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -46,7 +44,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimeInput
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.toShape
@@ -85,14 +82,12 @@ import com.enlpot.daydo.shared.ui.components.listItemColors
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 
@@ -557,93 +552,28 @@ fun TaskUpsertSheetContent(
     }
 
     if (showDateTimePicker) {
-        // 单屏一体化：日历 + TimeInput 同屏，一次确认；清除 = 重置并关闭
-        GritBottomSheet(
-            onDismissRequest = {
+        DateTimePickerSheet(
+            initialDate = newTask.dueDate,
+            initialTime = newTask.dueTime ?: LocalTime(9, 0),
+            is24Hr = is24Hr,
+            onDismiss = {
                 pendingReminderAfterDate = false
                 updateDateTimePickerVisibility(false)
             },
-            padding = 0.dp,
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(Res.string.select_date_time),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                IconButton(
-                    onClick = {
-                        timeSelected = false
-                        newTask = newTask.copy(dueDate = null, dueTime = null, reminder = null)
-                        updateDateTimePickerVisibility(false)
-                    }
-                ) {
-                    Icon(
-                        imageVector = vectorResource(Res.drawable.close),
-                        contentDescription = stringResource(Res.string.clear_time),
-                    )
+            onConfirm = { date, time ->
+                newTask = newTask.copy(dueDate = date, dueTime = time)
+                updateDateTimePickerVisibility(false)
+                if (pendingReminderAfterDate) {
+                    pendingReminderAfterDate = false
+                    showReminderPicker = true
                 }
-            }
-
-            DatePicker(state = datePickerState)
-
-            HorizontalDivider()
-
-            TimeInput(state = timePickerState)
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TextButton(
-                    onClick = {
-                        timeSelected = false
-                        newTask = newTask.copy(dueDate = null, dueTime = null, reminder = null)
-                        updateDateTimePickerVisibility(false)
-                    }
-                ) {
-                    Text(stringResource(Res.string.clear_time))
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = { updateDateTimePickerVisibility(false) }) {
-                    Text(stringResource(Res.string.cancel))
-                }
-                TextButton(
-                    enabled = datePickerState.selectedDateMillis != null,
-                    onClick = {
-                        if (datePickerState.selectedDateMillis != null) {
-                            val selectedDate =
-                                Instant.fromEpochMilliseconds(datePickerState.selectedDateMillis!!)
-                                    .toLocalDateTime(TimeZone.UTC)
-                                    .date
-
-                            newTask =
-                                newTask.copy(
-                                    dueDate = selectedDate,
-                                    dueTime =
-                                        LocalTime(
-                                            hour = timePickerState.hour,
-                                            minute = timePickerState.minute,
-                                        ),
-                                )
-
-                            updateDateTimePickerVisibility(false)
-
-                            if (pendingReminderAfterDate) {
-                                pendingReminderAfterDate = false
-                                showReminderPicker = true
-                            }
-                        }
-                    },
-                ) {
-                    Text(stringResource(Res.string.done))
-                }
-            }
-        }
+            },
+            onClear = {
+                timeSelected = false
+                newTask = newTask.copy(dueDate = null, dueTime = null, reminder = null)
+                updateDateTimePickerVisibility(false)
+            },
+        )
     }
 
     if (showCategoryPicker) {

@@ -237,4 +237,8 @@
     <string name="group_my_categories">用户分类</string>
     <string name="select_category">选择分类</string>
     <string name="select_date_time">选择日期与时间</string>
+    <string name="select_year">选择年份</string>
+    <string name="select_month">选择月份</string>
+    <string name="am">上午</string>
+    <string name="pm">下午</string>
 </resources>
