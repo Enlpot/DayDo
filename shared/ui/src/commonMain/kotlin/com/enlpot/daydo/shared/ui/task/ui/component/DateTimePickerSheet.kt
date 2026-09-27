@@ -58,6 +58,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.enlpot.daydo.shared.ui.components.GritBottomSheet
 import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
@@ -66,9 +67,6 @@ import com.kizitonwose.calendar.core.minusMonths
 import com.kizitonwose.calendar.core.now
 import com.kizitonwose.calendar.core.plusMonths
 import daydo.shared.ui.generated.resources.Res
-import daydo.shared.ui.generated.resources.cancel
-import daydo.shared.ui.generated.resources.clear_time
-import daydo.shared.ui.generated.resources.done
 import daydo.shared.ui.generated.resources.select_date_time
 import daydo.shared.ui.generated.resources.select_month
 import daydo.shared.ui.generated.resources.select_year
@@ -112,6 +110,7 @@ internal fun DateTimePickerSheet(
     val visibleMonth by remember { derivedStateOf { calendarState.firstVisibleMonth.yearMonth } }
 
     // ---- 时间输入状态 ----
+    var focusedField by remember { mutableStateOf<String?>(null) }
     val hour12 = run {
         val h = initialTime.hour % 12
         if (h == 0) 12 else h
@@ -190,17 +189,34 @@ internal fun DateTimePickerSheet(
                 text = stringResource(Res.string.select_date_time),
                 style = MaterialTheme.typography.titleMedium,
             )
+            Spacer(modifier = Modifier.weight(1f))
             Box(
-                modifier =
-                    Modifier.size(28.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                        .clickable(onClick = onClear),
                 contentAlignment = Alignment.Center,
+                modifier =
+                    Modifier.size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .clickable {
+                            val h = (hourText.ifEmpty { "0" }).toInt()
+                            val hour24 =
+                                if (is24Hr) {
+                                    h
+                                } else {
+                                    when {
+                                        isPm && h != 12 -> h + 12
+                                        !isPm && h == 12 -> 0
+                                        else -> h
+                                    }
+                                }
+                            onConfirm(
+                                selectedDate,
+                                LocalTime(hour24, (minuteText.ifEmpty { "0" }).toInt()),
+                            )
+                        },
             ) {
                 Text(
-                    text = "×",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = "✓",
+                    color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -375,7 +391,7 @@ internal fun DateTimePickerSheet(
                     ) {
                         Text(
                             text = day.date.dayOfMonth.toString(),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             color =
                                 when {
                                     isSelected -> MaterialTheme.colorScheme.onPrimary
@@ -429,17 +445,25 @@ internal fun DateTimePickerSheet(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
+                        fontSize = 17.sp,
                     ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                cursorBrush = SolidColor(Color.Transparent),
                 keyboardOptions =
                     KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                 modifier =
                     Modifier.width(44.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                        .background(
+                            if (focusedField == "hour") {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHighest
+                            }
+                        )
                         .padding(4.dp)
                         .focusRequester(hourFocusRequester)
                         .onFocusChanged {
+                            focusedField = if (it.isFocused) "hour" else null
                             if (!it.isFocused) {
                                 when {
                                     hourText.isEmpty() -> hourText = "00"
@@ -463,17 +487,25 @@ internal fun DateTimePickerSheet(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
+                        fontSize = 17.sp,
                     ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                cursorBrush = SolidColor(Color.Transparent),
                 keyboardOptions =
                     KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                 modifier =
                     Modifier.width(44.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                        .background(
+                            if (focusedField == "minute") {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHighest
+                            }
+                        )
                         .padding(4.dp)
                         .focusRequester(minuteFocusRequester)
                         .onFocusChanged {
+                            focusedField = if (it.isFocused) "minute" else null
                             if (!it.isFocused) {
                                 when {
                                     minuteText.isEmpty() -> minuteText = "00"
@@ -485,50 +517,6 @@ internal fun DateTimePickerSheet(
             )
         }
 
-        // ---- 按钮行 ----
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = stringResource(Res.string.clear_time),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.clickable(onClick = onClear),
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = stringResource(Res.string.cancel),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.clickable(onClick = onDismiss),
-            )
-            Text(
-                text = stringResource(Res.string.done),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier =
-                    Modifier.clip(MaterialTheme.shapes.small)
-                        .clickable {
-                            val h = (hourText.ifEmpty { "0" }).toInt()
-                            val hour24 =
-                                if (is24Hr) {
-                                    h
-                                } else {
-                                    when {
-                                        isPm && h != 12 -> h + 12
-                                        !isPm && h == 12 -> 0
-                                        else -> h
-                                    }
-                                }
-                            onConfirm(
-                                selectedDate,
-                                LocalTime(hour24, (minuteText.ifEmpty { "0" }).toInt()),
-                            )
-                        }
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-            )
-        }
+        // 按钮行已移除：完成按钮位于标题行右上角
     }
 }
