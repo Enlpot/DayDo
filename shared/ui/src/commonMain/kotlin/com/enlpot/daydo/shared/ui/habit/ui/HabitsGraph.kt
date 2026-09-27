@@ -187,7 +187,7 @@ fun HabitsGraph(
                         }
                     }
 
-                    entry<HabitRoutes.HabitAnalytics>(metadata = horizontalTransitionMetadata()) {
+                    entry<HabitRoutes.HabitAnalytics>(metadata = verticalTransitionMetadata()) {
                         AnalyticsPage(
                             state = state,
                             onAction = onAction,
