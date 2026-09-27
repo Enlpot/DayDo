@@ -31,10 +31,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonShapes
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -222,6 +222,45 @@ fun TaskUpsertSheetContent(
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
+
+                // 确认按钮（对勾）在弹窗右上角，与标题中心对齐；
+                // 可点 = primary 实心圆，不可点 = 半透明灰圆，两态一眼可辨
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier =
+                        Modifier.size(40.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (canSubmit) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHighest.copy(
+                                        alpha = 0.55f
+                                    )
+                                }
+                            )
+                            .clickable(enabled = canSubmit) {
+                                onUpsert(
+                                    newTask.copy(
+                                        title = textFieldState.text.toString(),
+                                        content = contentState.text.toString(),
+                                    )
+                                )
+                                onDismissRequest()
+                            },
+                ) {
+                    Icon(
+                        imageVector = vectorResource(Res.drawable.check),
+                        contentDescription = stringResource(Res.string.save),
+                        modifier = Modifier.size(20.dp),
+                        tint =
+                            if (canSubmit) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                            },
+                    )
+                }
             }
         }
 
@@ -438,52 +477,23 @@ fun TaskUpsertSheetContent(
                 )
             }
 
-            item {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
+            if (isEditSheet) {
+                // 编辑态：底部仅保留删除（保存/新增已移至弹窗右上角）
+                item {
                     Row(
-                        modifier = Modifier.padding(bottom = 32.dp),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        if (isEditSheet) {
-                            OutlinedButton(
-                                onClick = onDelete,
-                                shapes =
-                                    ButtonShapes(
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                        pressedShape = MaterialTheme.shapes.small,
-                                    ),
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                Text(stringResource(Res.string.delete))
-                            }
-                        }
-
-                        Button(
-                            onClick = {
-                                onUpsert(
-                                    newTask.copy(
-                                        title = textFieldState.text.toString(),
-                                        content = contentState.text.toString(),
-                                    )
-                                )
-                                onDismissRequest()
-                            },
+                        OutlinedButton(
+                            onClick = onDelete,
                             shapes =
                                 ButtonShapes(
                                     shape = MaterialTheme.shapes.extraLarge,
                                     pressedShape = MaterialTheme.shapes.small,
                                 ),
                             modifier = Modifier.weight(1f),
-                            enabled = canSubmit,
                         ) {
-                            Text(
-                                stringResource(
-                                    if (isEditSheet) Res.string.save else Res.string.add_task
-                                )
-                            )
+                            Text(stringResource(Res.string.delete))
                         }
                     }
                 }

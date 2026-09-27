@@ -17,6 +17,7 @@
 package com.enlpot.daydo.shared.ui.habit.ui.component
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,10 +36,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -175,6 +176,45 @@ fun HabitUpsertSheetContent(
                     style =
                         MaterialTheme.typography.headlineSmall.copy(fontFamily = flexFontEmphasis()),
                 )
+
+                // 确认按钮（对勾）在弹窗右上角，与标题中心对齐；未满足提交条件时置灰不可点
+                Spacer(modifier = Modifier.weight(1f))
+                val canSubmitHabit =
+                    titleTextFieldState.text.length <= TITLE_STRING_LIMIT &&
+                        titleTextFieldState.text.isNotBlank()
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier =
+                        Modifier.size(40.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (canSubmitHabit) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHighest.copy(
+                                        alpha = 0.55f
+                                    )
+                                }
+                            )
+                            .clickable(enabled = canSubmitHabit) {
+                                onUpsertHabit(
+                                    newHabit.copy(title = titleTextFieldState.text.toString())
+                                )
+                                onDismissRequest()
+                            },
+                ) {
+                    Icon(
+                        imageVector = vectorResource(Res.drawable.check),
+                        contentDescription = stringResource(Res.string.save),
+                        modifier = Modifier.size(20.dp),
+                        tint =
+                            if (canSubmitHabit) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f)
+                            },
+                    )
+                }
             }
         }
 
@@ -331,30 +371,6 @@ fun HabitUpsertSheetContent(
                             )
                         }
                     }
-                }
-            }
-
-            item {
-                Button(
-                    onClick = {
-                        onUpsertHabit(newHabit.copy(title = titleTextFieldState.text.toString()))
-                        onDismissRequest()
-                    },
-                    modifier = Modifier.padding(bottom = 32.dp).fillMaxWidth(),
-                    enabled =
-                        titleTextFieldState.text.length <= TITLE_STRING_LIMIT &&
-                            titleTextFieldState.text.isNotBlank(),
-                ) {
-                    Text(
-                        text =
-                            stringResource(
-                                if (isEditSheet) {
-                                    Res.string.save
-                                } else {
-                                    Res.string.add_habit
-                                }
-                            )
-                    )
                 }
             }
         }
