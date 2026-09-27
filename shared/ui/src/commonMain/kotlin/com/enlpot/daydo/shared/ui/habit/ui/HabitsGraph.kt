@@ -72,6 +72,8 @@ import com.enlpot.daydo.shared.ui.navigation.horizontalTransitionMetadata
 import com.enlpot.daydo.shared.ui.navigation.verticalTransitionMetadata
 import com.enlpot.daydo.shared.ui.theme.flexFontEmphasis
 import daydo.shared.ui.generated.resources.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -145,6 +147,25 @@ fun HabitsGraph(
             entryProvider =
                 entryProvider {
                     entry<HabitRoutes.HabitList> {
+                        // 冷启动预热：统计页重组件（图表/日历库）的类加载挪到后台线程，
+                        // 避免首次点统计按钮时类加载与导航转场争抢主线程导致动画卡顿
+                        LaunchedEffect(Unit) {
+                            withContext(Dispatchers.Default) {
+                                listOf(
+                                        "com.enlpot.daydo.shared.ui.habit.ui.sections.AnalyticsPageKt",
+                                        "com.enlpot.daydo.shared.ui.habit.ui.component.stats.CalendarMapKt",
+                                        "com.enlpot.daydo.shared.ui.habit.ui.component.stats.HabitHeatMapKt",
+                                        "com.enlpot.daydo.shared.ui.habit.ui.component.stats.StartStatsKt",
+                                        "com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeekDayBreakdownKt",
+                                        "com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeeklyActivityKt",
+                                        "com.enlpot.daydo.shared.ui.habit.ui.component.stats.WeeklyBooleanHeatMapKt",
+                                        "com.kizitonwose.calendar.compose.CalendarState",
+                                        "com.kizitonwose.calendar.compose.heatmapcalendar.HeatMapCalendarState",
+                                    )
+                                    .forEach { runCatching { Class.forName(it) } }
+                            }
+                        }
+
                         Column(
                             modifier = Modifier.background(MaterialTheme.colorScheme.background)
                         ) {
@@ -187,7 +208,9 @@ fun HabitsGraph(
                         }
                     }
 
-                    entry<HabitRoutes.HabitAnalytics>(metadata = verticalTransitionMetadata()) {
+                    entry<HabitRoutes.HabitAnalytics>(
+                        metadata = verticalTransitionMetadata(durationMillis = 4000)
+                    ) {
                         AnalyticsPage(
                             state = state,
                             onAction = onAction,

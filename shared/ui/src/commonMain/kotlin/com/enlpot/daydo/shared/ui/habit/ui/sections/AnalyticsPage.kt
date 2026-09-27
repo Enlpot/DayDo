@@ -50,10 +50,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.toShape
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -116,6 +118,15 @@ fun AnalyticsPage(
 
     var editDialog by remember { mutableStateOf(false) }
     var deleteDialog by remember { mutableStateOf(false) }
+
+    // 冷启动首次进入统计页时，热力图/月历两个重组件（12 个月网格 + 13 个月数据）
+    // 会与导航转场争抢首帧，导致动画几乎不可见。首帧只组合轻量概览，
+    // 下一帧再补齐两个日历组件——转场进行中内容渐进出现，观感更顺
+    var showCalendarItems by remember { mutableStateOf(false) }
+    LaunchedEffect(currentHabit.habit.id) {
+        withFrameNanos {}
+        showCalendarItems = true
+    }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Column(modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection).fillMaxSize()) {
@@ -199,27 +210,33 @@ fun AnalyticsPage(
                 )
             }
 
-            item {
-                WeeklyBooleanHeatMap(
-                    heatMapState = heatMapState,
-                    statuses = currentHabit.statuses,
-                    startDate = currentHabit.habit.time.date,
-                    days = currentHabit.habit.days,
-                    onDateClick = { onAction(HabitsAction.InsertStatus(currentHabit.habit, it)) },
-                )
-            }
+            if (showCalendarItems) {
+                item {
+                    WeeklyBooleanHeatMap(
+                        heatMapState = heatMapState,
+                        statuses = currentHabit.statuses,
+                        startDate = currentHabit.habit.time.date,
+                        days = currentHabit.habit.days,
+                        onDateClick = {
+                            onAction(HabitsAction.InsertStatus(currentHabit.habit, it))
+                        },
+                    )
+                }
 
-            item {
-                CalendarMap(
-                    calendarState = calendarState,
-                    statuses = currentHabit.statuses,
-                    startDate = currentHabit.habit.time.date,
-                    days = currentHabit.habit.days,
-                    onNavigateToCalendar = onNavigateToCalendar,
-                    onDateClick = {
-                        onAction(HabitsAction.InsertStatus(habit = currentHabit.habit, date = it))
-                    },
-                )
+                item {
+                    CalendarMap(
+                        calendarState = calendarState,
+                        statuses = currentHabit.statuses,
+                        startDate = currentHabit.habit.time.date,
+                        days = currentHabit.habit.days,
+                        onNavigateToCalendar = onNavigateToCalendar,
+                        onDateClick = {
+                            onAction(
+                                HabitsAction.InsertStatus(habit = currentHabit.habit, date = it)
+                            )
+                        },
+                    )
+                }
             }
 
             item {

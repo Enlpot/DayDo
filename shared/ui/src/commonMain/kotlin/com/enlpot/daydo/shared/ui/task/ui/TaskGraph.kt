@@ -31,7 +31,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import com.enlpot.daydo.shared.ui.PlatformBackHandler
 import com.enlpot.daydo.shared.ui.components.PageFill
-import com.enlpot.daydo.shared.ui.navigation.horizontalTransitionMetadata
+import com.enlpot.daydo.shared.ui.navigation.verticalTransitionMetadata
 import com.enlpot.daydo.shared.ui.task.TaskAction
 import com.enlpot.daydo.shared.ui.task.TaskState
 import kotlinx.serialization.Serializable
@@ -99,7 +99,7 @@ fun TaskGraph(
                         )
                     }
 
-                    entry<TaskRoutes.Stats>(metadata = horizontalTransitionMetadata()) {
+                    entry<TaskRoutes.Stats>(metadata = verticalTransitionMetadata()) {
                         // 优先读路由携带的 seriesId（进程恢复时 VM 状态为空，不能依赖 statsSeriesId）
                         val seriesId =
                             (backStack.lastOrNull() as? TaskRoutes.Stats)?.seriesId
