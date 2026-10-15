@@ -17,11 +17,16 @@
 package com.enlpot.daydo.app
 
 import android.app.Application
+import android.util.Log
 import com.enlpot.daydo.analytics.AnalyticsInitializer
+import com.enlpot.daydo.core.data.backup.restore.RestoreImpl
 import com.enlpot.daydo.core.data.notification.GritNotificationManager
 import com.enlpot.daydo.di.GritModules
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.GlobalContext
 import org.koin.plugin.module.dsl.startKoin
 
 class GritApplication : Application() {
@@ -36,6 +41,20 @@ class GritApplication : Application() {
             androidContext(this@GritApplication)
         }
 
+        // 恢复操作被系统杀进程中断时，必须在 receiver/UI 读取数据库前回滚到原快照。
+        try {
+            runBlocking(Dispatchers.IO) {
+                GlobalContext.get().get<RestoreImpl>().recoverInterruptedRestore()
+            }
+        } catch (failure: Exception) {
+            Log.e(TAG, "无法恢复中断的数据库恢复操作", failure)
+            throw IllegalStateException("DayDo 数据恢复未完成，已保留恢复日志", failure)
+        }
+
         AnalyticsInitializer().setup(this)
+    }
+
+    private companion object {
+        const val TAG = "GritApplication"
     }
 }

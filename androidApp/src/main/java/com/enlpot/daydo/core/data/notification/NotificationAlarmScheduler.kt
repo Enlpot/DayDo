@@ -41,6 +41,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
 
     companion object {
         private const val TAG = "NotificationAlarmScheduler"
+        private const val SCHEDULED_ALARMS_KEY = "scheduled_alarm_keys"
 
         // 无精确闹钟权限时的降级窗口（毫秒）
         private const val EXACT_ALARM_WINDOW_MS = 10 * 60 * 1000L
@@ -48,8 +49,12 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    // 已注册闹钟的 PendingIntent 集合：AlarmManager.cancelAll() 仅 API 34+ 可用，
-    // 低版本靠集合逐个取消，恢复/清理时不残留旧闹钟
+    private val alarmPreferences =
+        context.getSharedPreferences("daydo_scheduled_alarms", Context.MODE_PRIVATE)
+
+    private val alarmLock = Any()
+
+    // 当前进程内集合用于快速清理；持久化 key 集合覆盖进程重启后的 API 29–33 闹钟。
     private val scheduledIntents = mutableSetOf<PendingIntent>()
 
     /**
@@ -109,7 +114,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             scheduleTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
             pendingIntent,
         )
-        synchronized(scheduledIntents) { scheduledIntents.add(pendingIntent) }
+        rememberScheduledAlarm("habit:${habit.id}", pendingIntent)
 
         Log.d(TAG, "Scheduled: Habit '$habit' at $scheduleTime")
     }
@@ -144,7 +149,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             scheduleTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
             pendingIntent,
         )
-        synchronized(scheduledIntents) { scheduledIntents.add(pendingIntent) }
+        rememberScheduledAlarm("task:${task.id}", pendingIntent)
 
         Log.d(TAG, "Scheduled: Task '$task' at $scheduleTime")
     }
@@ -164,7 +169,7 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             )
 
         alarmManager.cancel(pendingIntent)
-        synchronized(scheduledIntents) { scheduledIntents.remove(pendingIntent) }
+        forgetScheduledAlarm("habit:${habit.id}", pendingIntent)
         Log.d(TAG, "Cancelled: Habit '${habit.title}'")
     }
 
@@ -183,20 +188,81 @@ class NotificationAlarmScheduler(private val context: Context) : AlarmScheduler 
             )
 
         alarmManager.cancel(pendingIntent)
-        synchronized(scheduledIntents) { scheduledIntents.remove(pendingIntent) }
+        forgetScheduledAlarm("task:${task.id}", pendingIntent)
         Log.d(TAG, "Cancelled: Task '${task.title}'")
     }
 
     override fun cancelAll() {
-        // 系统级 cancelAll：进程被杀后注册集合丢失，仅遍历集合清不干净旧闹钟。
-        // AlarmManager.cancelAll() 仅 API 34+（UPSIDE_DOWN_CAKE）可用，minSdk 29 低版本
-        // 必须靠集合逐个取消，否则 NoSuchMethodError 崩溃（P0-1）
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            alarmManager.cancelAll()
-        }
-        synchronized(scheduledIntents) {
+        // API 34+ 使用系统级清理；低版本根据持久化 key 重建 PendingIntent，
+        // 因此进程重启后也能取消本应用此前登记的闹钟。
+        synchronized(alarmLock) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                alarmManager.cancelAll()
+            }
+            val trackedKeys =
+                alarmPreferences
+                    .getStringSet(SCHEDULED_ALARMS_KEY, mutableSetOf())
+                    .orEmpty()
+                    .toSet()
+            trackedKeys.forEach { key ->
+                pendingIntentForKey(key)?.let(alarmManager::cancel)
+            }
             scheduledIntents.forEach { alarmManager.cancel(it) }
             scheduledIntents.clear()
+            alarmPreferences.edit().remove(SCHEDULED_ALARMS_KEY).commit()
         }
     }
+
+    private fun rememberScheduledAlarm(
+        key: String,
+        pendingIntent: PendingIntent,
+    ) {
+        synchronized(alarmLock) {
+            scheduledIntents.add(pendingIntent)
+            val keys =
+                alarmPreferences
+                    .getStringSet(SCHEDULED_ALARMS_KEY, mutableSetOf())
+                    .orEmpty()
+                    .toMutableSet()
+            keys.add(key)
+            alarmPreferences.edit().putStringSet(SCHEDULED_ALARMS_KEY, keys).commit()
+        }
+    }
+
+    private fun forgetScheduledAlarm(
+        key: String,
+        pendingIntent: PendingIntent,
+    ) {
+        synchronized(alarmLock) {
+            scheduledIntents.remove(pendingIntent)
+            val keys =
+                alarmPreferences
+                    .getStringSet(SCHEDULED_ALARMS_KEY, mutableSetOf())
+                    .orEmpty()
+                    .toMutableSet()
+            if (keys.remove(key)) {
+                alarmPreferences.edit().putStringSet(SCHEDULED_ALARMS_KEY, keys).commit()
+            }
+        }
+    }
+
+    private fun pendingIntentForKey(key: String): PendingIntent? {
+        val separator = key.indexOf(':')
+        if (separator <= 0 || separator == key.lastIndex) return null
+        val id = key.substring(separator + 1).toLongOrNull() ?: return null
+        val action =
+            when (key.substring(0, separator)) {
+                "habit" -> IntentActions.HABIT_NOTIFICATION.action
+                "task" -> IntentActions.TASK_NOTIFICATION.action
+                else -> return null
+            }
+        val intent = Intent(context, GritIntentReceiver::class.java).apply { this.action = action }
+        return PendingIntent.getBroadcast(
+            context,
+            id.toInt(),
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
 }

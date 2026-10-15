@@ -16,12 +16,23 @@
  */
 package com.enlpot.daydo.core.data.backup.restore
 
+import android.content.Context
+import android.util.AtomicFile
 import android.util.Log
+import com.enlpot.daydo.core.data.backup.BACKUP_FORMAT_VERSION
+import com.enlpot.daydo.core.data.backup.CategorySchema
 import com.enlpot.daydo.core.data.backup.ExportSchema
+import com.enlpot.daydo.core.data.backup.HabitSchema
+import com.enlpot.daydo.core.data.backup.HabitStatusSchema
+import com.enlpot.daydo.core.data.backup.TaskSchema
 import com.enlpot.daydo.core.data.backup.toCategory
+import com.enlpot.daydo.core.data.backup.toCategorySchema
 import com.enlpot.daydo.core.data.backup.toHabit
+import com.enlpot.daydo.core.data.backup.toHabitSchema
 import com.enlpot.daydo.core.data.backup.toHabitStatus
+import com.enlpot.daydo.core.data.backup.toHabitStatusSchema
 import com.enlpot.daydo.core.data.backup.toTask
+import com.enlpot.daydo.core.data.backup.toTaskSchema
 import com.enlpot.daydo.core.interfaces.AlarmScheduler
 import com.enlpot.daydo.core.now
 import com.enlpot.daydo.core.settings.backup.RestoreFailedException
@@ -29,25 +40,36 @@ import com.enlpot.daydo.core.settings.backup.RestoreRepo
 import com.enlpot.daydo.core.settings.backup.RestoreResult
 import com.enlpot.daydo.core.settings.backup.SchemaMismatchException
 import com.enlpot.daydo.core.settings.backup.validateRestoreIntegrity
+import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.habits.data.database.HabitDatabase
+import com.enlpot.daydo.habits.data.toHabit
 import com.enlpot.daydo.habits.data.toHabitEntity
+import com.enlpot.daydo.habits.data.toHabitStatus
 import com.enlpot.daydo.habits.data.toHabitStatusEntity
 import com.enlpot.daydo.tasks.data.database.TaskDatabase
+import com.enlpot.daydo.tasks.data.toCategory
 import com.enlpot.daydo.tasks.data.toCategoryEntity
+import com.enlpot.daydo.tasks.data.toTask
 import com.enlpot.daydo.tasks.data.toTaskEntity
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
 import io.github.vinceglb.filekit.readString
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.offsetAt
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
@@ -56,10 +78,15 @@ private val restoreJson: Json by lazy { Json { ignoreUnknownKeys = true } }
 
 @Single(binds = [RestoreRepo::class])
 class RestoreImpl(
+    context: Context,
     private val alarmScheduler: AlarmScheduler,
     private val taskDatabase: TaskDatabase,
     private val habitDatabase: HabitDatabase,
 ) : RestoreRepo {
+    private val appContext = context.applicationContext
+    private val restoreJournalFile = File(appContext.filesDir, RESTORE_JOURNAL_FILE)
+    private val restoreJournal = AtomicFile(restoreJournalFile)
+
     override suspend fun restoreData(): RestoreResult {
         return try {
             val file =
@@ -83,7 +110,33 @@ class RestoreImpl(
     }
 
     @OptIn(ExperimentalTime::class)
-    override suspend fun restoreFromJson(json: String): RestoreResult {
+    override suspend fun restoreFromJson(json: String): RestoreResult =
+        restoreFromJsonInternal(json, persistRollbackJournal = true)
+
+    /** 应用启动时恢复被进程中断的双库替换，必须在 UI/receiver 读取数据库前调用。 */
+    suspend fun recoverInterruptedRestore() {
+        if (
+            !restoreJournalFile.exists() &&
+                !File(appContext.filesDir, "$RESTORE_JOURNAL_FILE.bak").exists()
+        ) {
+            return
+        }
+        val originalSnapshot =
+            withContext(Dispatchers.IO) {
+                restoreJournal.openRead().bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
+            }
+        when (restoreFromJsonInternal(originalSnapshot, persistRollbackJournal = false)) {
+            RestoreResult.Success -> restoreJournal.delete()
+            is RestoreResult.Failure ->
+                throw IllegalStateException("无法恢复中断的备份操作，已保留恢复日志以便重试")
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private suspend fun restoreFromJsonInternal(
+        json: String,
+        persistRollbackJournal: Boolean,
+    ): RestoreResult {
         return try {
             withContext(Dispatchers.IO) {
                 // 解码 + schema 校验 + 全量实体映射都在 IO 线程：几十万行的大备份避免卡住主线程（ANR）
@@ -137,31 +190,72 @@ class RestoreImpl(
                     )
                 }
 
-                // 恢复 = 回到备份状态：清空本地旧数据 + 写入备份内容，
-                // 各自库内 @Transaction 完成（中途失败自动回滚，不会"清空后崩溃丢数据"）
-                habitDatabase.replaceAll(
-                    habits.map { it.toHabitEntity() },
-                    statuses.map { it.toHabitStatusEntity() },
-                )
-                taskDatabase.replaceAll(
-                    tasks.map { it.toTaskEntity() },
-                    categories.map { it.toCategoryEntity() },
-                )
-
-                // 两库写入全部成功后再取消旧闹钟并重建调度：
-                // 写库中途失败时本地数据回滚/保持原状，已挂闹钟不被动过
-                alarmScheduler.cancelAll()
-                // 重建提醒调度：习惯全部调度；任务仅未完成且提醒时间未过的补调度
-                habits.forEach { alarmScheduler.schedule(it) }
-                tasks
-                    // 软删（回收站）任务不重建闹钟：避免已删任务到点弹幽灵通知
-                    .filter { !it.status && it.deletedAt == null }
-                    .forEach { task ->
-                        val reminder = task.reminder
-                        if (reminder != null && reminder >= LocalDateTime.now()) {
-                            alarmScheduler.schedule(task)
-                        }
+                // 两个数据库文件无法共享 Room 事务。先保留当前状态，再以补偿事务保证
+                // 任一数据库写入或闹钟重建失败时，尽力恢复两库及其原有提醒。
+                val previousHabits = habitDatabase.habitDao().getAllHabits()
+                val previousStatuses = habitDatabase.habitStatusDao().getHabitStatuses()
+                val previousCategories = taskDatabase.categoryDao().getCategories()
+                val previousTasks = buildList {
+                    var offset = 0
+                    while (true) {
+                        val page = taskDatabase.taskDao().getTasksPage(offset, RESTORE_PAGE_SIZE)
+                        if (page.isEmpty()) break
+                        addAll(page)
+                        offset += page.size
                     }
+                }
+
+                if (persistRollbackJournal) {
+                    writeRollbackJournal(
+                        ExportSchema(
+                            tasksSchemaVersion = TaskDatabase.SCHEMA_VERSION,
+                            habitsSchemaVersion = HabitDatabase.SCHEMA_VERSION,
+                            backupFormatVersion = BACKUP_FORMAT_VERSION,
+                            habits = previousHabits.map { it.toHabit().toHabitSchema() },
+                            habitStatus =
+                                previousStatuses.map { it.toHabitStatus().toHabitStatusSchema() },
+                            tasks = previousTasks.map { it.toTask().toTaskSchema() },
+                            categories = previousCategories.map { it.toCategory().toCategorySchema() },
+                        )
+                    )
+                }
+
+                try {
+                    // API 29–33 的 cancelAll 依赖持久化 alarm key；逐条取消当前数据库项目
+                    // 也清理旧版本尚未登记到持久化集合中的 PendingIntent。
+                    alarmScheduler.cancelAll()
+                    previousHabits.forEach { alarmScheduler.cancel(it.toHabit()) }
+                    previousTasks.forEach { alarmScheduler.cancel(it.toTask()) }
+
+                    habitDatabase.replaceAll(
+                        habits.map { it.toHabitEntity() },
+                        statuses.map { it.toHabitStatusEntity() },
+                    )
+                    taskDatabase.replaceAll(
+                        tasks.map { it.toTaskEntity() },
+                        categories.map { it.toCategoryEntity() },
+                    )
+
+                    // 重建提醒：习惯按规则调度；任务只调度未完成、未删除且尚未过期的提醒。
+                    habits.forEach { alarmScheduler.schedule(it) }
+                    scheduleTaskReminders(tasks)
+                    if (persistRollbackJournal) restoreJournal.delete()
+                } catch (failure: Throwable) {
+                    try {
+                        // 即使调用方取消，也要在非取消上下文中尽力完成回滚。
+                        withContext(NonCancellable + Dispatchers.IO) {
+                            alarmScheduler.cancelAll()
+                            habitDatabase.replaceAll(previousHabits, previousStatuses)
+                            taskDatabase.replaceAll(previousTasks, previousCategories)
+                            previousHabits.map { it.toHabit() }.forEach(alarmScheduler::schedule)
+                            scheduleTaskReminders(previousTasks.map { it.toTask() })
+                            if (persistRollbackJournal) restoreJournal.delete()
+                        }
+                    } catch (rollbackFailure: Throwable) {
+                        failure.addSuppressed(rollbackFailure)
+                    }
+                    throw failure
+                }
                 // withContext 块值即函数返回值：预校验失败经 return@withContext 返回 Failure（P1-1）
                 RestoreResult.Success
             }
@@ -179,5 +273,35 @@ class RestoreImpl(
             Log.e("RestoreRepo", "Restore failed mid-way, data may be partially updated: ", e)
             RestoreResult.Failure(RestoreFailedException.PartialRestore)
         }
+    }
+
+    private fun scheduleTaskReminders(tasks: List<Task>) {
+        val now = LocalDateTime.now()
+        tasks
+            .filter { !it.status && it.deletedAt == null }
+            .forEach { task ->
+                val reminder = task.reminder
+                if (reminder != null && reminder >= now) alarmScheduler.schedule(task)
+            }
+    }
+
+    private fun writeRollbackJournal(snapshot: ExportSchema) {
+        val json = restoreJson.encodeToString(snapshot)
+        var stream: FileOutputStream? = null
+        try {
+            val output = restoreJournal.startWrite()
+            stream = output
+            output.write(json.toByteArray(StandardCharsets.UTF_8))
+            restoreJournal.finishWrite(output)
+            stream = null
+        } catch (failure: Throwable) {
+            stream?.let { restoreJournal.failWrite(it) }
+            throw IOException("无法保存恢复前快照，已取消恢复", failure)
+        }
+    }
+
+    private companion object {
+        const val RESTORE_PAGE_SIZE = 2_000
+        const val RESTORE_JOURNAL_FILE = "restore_rollback.json"
     }
 }
