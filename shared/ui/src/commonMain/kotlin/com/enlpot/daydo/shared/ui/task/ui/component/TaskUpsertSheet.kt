@@ -180,7 +180,7 @@ fun TaskUpsertSheetContent(
         modifier = modifier.imePadding(),
         padding = 0.dp,
         onDismissRequest = onDismissRequest,
-        expandable = true,
+        fullScreen = true,
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),

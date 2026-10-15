@@ -133,17 +133,20 @@ fun HabitUpsertSheetContent(
             initialSelection = TextRange(newHabit.title.length),
         )
 
+    // 自动聚焦标题并弹出键盘；若用户在延时期间已打开时间/图标选择器，则不再抢焦点与输入法
     LaunchedEffect(Unit) {
         delay(400.milliseconds)
-        focusRequester.requestFocus()
-        keyboardController?.show()
+        if (!timePickerDialog && !iconPickerDialog) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
     }
 
     GritBottomSheet(
         onDismissRequest = onDismissRequest,
         padding = 0.dp,
         modifier = modifier.imePadding(),
-        expandable = true,
+        fullScreen = true,
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),

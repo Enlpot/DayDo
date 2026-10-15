@@ -57,11 +57,17 @@ private val OverscrollThresholdPx = 8f
 /** 所有底部弹窗统一的「弹窗顶部 → 标题」间距 */
 private val TopGap = 12.dp
 
+/** 全屏弹窗内容底部到屏幕下沿的统一留白 */
+private val BottomSpace = 50.dp
+
 /**
  * 统一底部弹窗。
  *
  * @param expandable 两段式全屏展开：弹窗内容恒为全高，打开时停在半屏（PartiallyExpanded）； 内容滚到底后继续上滑，或直接拖动弹窗表面 →
- *   展开至全屏；全屏时内容在顶部下拉 / 拖动弹窗表面 / 返回键 → 收回半屏；半屏继续下拉 / 返回 → 关闭。 仅内容可滚动的弹窗开启；内容不足一屏的弹窗与 Dialog 类不受影响。
+ *   展开至全屏；全屏时内容在顶部下拉 / 拖动弹窗表面 / 返回键 → 收回半屏；半屏继续下拉 / 返回 → 关闭。
+ * @param fullScreen 打开即全屏：内容恒为全高，只有隐藏/全屏两个锚点，没有半屏态，下拉或返回键直接关闭。 任务、习惯这类需要一屏展示全部字段的弹窗用此项。
+ *
+ * expandable 与 fullScreen 二者取一，均使内容恒为全高，且内容底部统一留 [BottomSpace] 避免挤到手势条； 内容不足一屏的弹窗与 Dialog 类两者都不开。
  */
 @Composable
 fun GritBottomSheet(
@@ -69,11 +75,15 @@ fun GritBottomSheet(
     modifier: Modifier = Modifier,
     padding: Dp = 32.dp,
     expandable: Boolean = false,
+    fullScreen: Boolean = false,
     content: @Composable (ColumnScope.() -> Unit),
 ) {
     val scope = rememberCoroutineScope()
 
-    // expandable 弹窗启用 PartiallyExpanded 中间锚点（半屏普通态）；非 expandable 维持两态
+    // 内容恒为全高的两种模式：expandable（两段式，打开停半屏）与 fullScreen（打开即全屏）
+    val fullHeightLayout = expandable || fullScreen
+
+    // expandable 启用 PartiallyExpanded 中间锚点（打开停半屏）；fullScreen 与非 expandable 都只有隐藏/全屏两态
     val sheetState =
         rememberBottomSheetState(
             initialValue = SheetValue.Hidden,
@@ -149,15 +159,20 @@ fun GritBottomSheet(
     ) {
         Column(
             modifier =
-                // 顶部间距统一为 TopGap：padding 参数只作用于左右下三边，
-                // 这样各弹窗原有的横向内边距不受影响，仅"顶部 → 标题"的间距被统一
-                Modifier.padding(start = padding, end = padding, bottom = padding, top = TopGap)
-                    // expandable：内容恒定全高，弹窗位置完全由锚点驱动；非 expandable：内容自适应，
-                    // 保留 animateContentSize 平滑内部布局变化。height 扣除 TopGap 以保持弹窗总高不变
-                    // （否则全屏态会盖住状态栏）
+                // 顶部间距统一为 TopGap；左右沿用各弹窗传入的 padding；
+                // 底部：全高模式统一留 BottomSpace，自适应模式沿用 padding
+                Modifier.padding(
+                        start = padding,
+                        end = padding,
+                        bottom = if (fullHeightLayout) BottomSpace else padding,
+                        top = TopGap,
+                    )
+                    // 全高模式：内容恒定全高，弹窗位置完全由锚点驱动；自适应模式保留
+                    // animateContentSize 平滑内部布局变化。height 同时扣除 TopGap 与 BottomSpace，
+                    // 以保持弹窗总高不变（否则全屏态会盖住状态栏）
                     .then(
-                        if (expandable) {
-                            Modifier.height(fullHeight - TopGap)
+                        if (fullHeightLayout) {
+                            Modifier.height(fullHeight - TopGap - BottomSpace)
                         } else {
                             Modifier.animateContentSize()
                         }

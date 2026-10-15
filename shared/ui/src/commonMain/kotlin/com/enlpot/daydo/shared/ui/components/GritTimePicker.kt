@@ -16,8 +16,6 @@
  */
 package com.enlpot.daydo.shared.ui.components
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -47,7 +45,9 @@ fun GritTimePicker(
     var timeInput by remember { mutableStateOf(false) }
 
     TimePickerDialog(
-        modifier = modifier.animateContentSize(animationSpec = tween(0)),
+        // 不再套 animateContentSize(tween(0))：表盘/键盘切换时它会让弹窗按上一模式的旧尺寸
+        // 多测一帧，输入框的触摸区域与视觉在这一帧里错位，表现为偶发点不进、打不上字
+        modifier = modifier,
         onDismissRequest = onDismissRequest,
         title = { Text(text = stringResource(Res.string.select_time)) },
         confirmButton = {
