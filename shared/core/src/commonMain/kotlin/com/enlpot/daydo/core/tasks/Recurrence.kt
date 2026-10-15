@@ -57,6 +57,10 @@ fun Recurrence.nextDateAfter(from: LocalDate, base: LocalDate): LocalDate {
     }
 }
 
+/** Compute the first occurrence on or after [date], anchored on [base]. */
+fun Recurrence.nextDateOnOrAfter(date: LocalDate, base: LocalDate): LocalDate =
+    nextDateAfter(LocalDate.fromEpochDays(date.toEpochDays() - 1), base)
+
 private fun Recurrence.EveryNDays.nextEveryNDays(from: LocalDate, base: LocalDate): LocalDate {
     val interval = interval.toLong().coerceAtLeast(1)
     // 锚定 base：返回 from 之后的下一个周期日（与 Monthly/Yearly 入口对齐一致，

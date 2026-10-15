@@ -198,7 +198,19 @@ fun BackupContent(
                         },
                         headlineContent = { Text(text = stringResource(Res.string.restore)) },
                         supportingContent = {
-                            Text(text = stringResource(Res.string.restore_desc))
+                            Text(
+                                text =
+                                    when {
+                                        state.backupState.restoreFailure ==
+                                            com.enlpot.daydo.core.settings.backup.RestoreFailedException.UnsupportedVersion ->
+                                            stringResource(Res.string.restore_newer_version)
+
+                                        state.backupState.restoreState == FAILURE ->
+                                            stringResource(Res.string.restore_failed)
+
+                                        else -> stringResource(Res.string.restore_desc)
+                                    }
+                            )
                         },
                         trailingContent = {
                             Button(

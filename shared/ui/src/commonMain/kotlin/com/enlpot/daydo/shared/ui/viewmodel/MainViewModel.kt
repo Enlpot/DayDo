@@ -46,7 +46,7 @@ class MainViewModel(
 ) : ViewModel() {
     var observerJob: Job? = null
 
-    // 关键设置流到达标志（isBiometricLockOn/startingSection）：DataStore 流异常或迟到时不永久 Loading
+    // 生物识别锁必须等真实值到达；起始页设置可用默认值兜底。
     private var biometricLoaded = false
     private var startingSectionLoaded = false
 
@@ -76,7 +76,7 @@ class MainViewModel(
         viewModelScope.launch { settingsDatastore.setBiometricPref(value) }
     }
 
-    /** 两个关键设置流均到达后置 loaded，MainActivity 据此放行内容（不再依赖 isBiometricLockOn != null 当就绪门） */
+    /** 生物识别锁值确认且起始页已加载/兜底后才放行主界面。 */
     private fun markLoadedIfReady() {
         if (biometricLoaded && startingSectionLoaded) {
             _state.update { it.copy(isLoaded = true) }
@@ -87,11 +87,10 @@ class MainViewModel(
         observerJob?.cancel()
         observerJob =
             viewModelScope.launch {
-                // 兜底：关键设置流异常或极慢（>3s）时仍放行内容，避免永久停在 InitialLoading
+                // 起始页配置读取慢时用默认首页兜底；生物识别锁不做超时放行，必须等真实值。
                 launch {
                     delay(3_000)
                     startingSectionLoaded = true
-                    biometricLoaded = true
                     markLoadedIfReady()
                 }
 

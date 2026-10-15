@@ -28,6 +28,7 @@ import com.enlpot.daydo.core.data.backup.toHabitStatusSchema
 import com.enlpot.daydo.core.data.backup.toTaskSchema
 import com.enlpot.daydo.core.habits.HabitRepo
 import com.enlpot.daydo.core.settings.backup.RestoreRepo
+import com.enlpot.daydo.core.settings.backup.RestoreFailedException
 import com.enlpot.daydo.core.settings.backup.RestoreResult
 import com.enlpot.daydo.core.settings.webdav.WebDavRepo
 import com.enlpot.daydo.core.settings.webdav.WebDavResult
@@ -39,6 +40,7 @@ import com.enlpot.daydo.tasks.data.database.TaskDatabase
 import com.enlpot.daydo.tasks.data.database.TasksDao
 import com.enlpot.daydo.tasks.data.toTask
 import java.net.HttpURLConnection
+import java.net.URI
 import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -199,6 +201,8 @@ class WebDavImpl(
                                 when (result.exceptionType) {
                                     is com.enlpot.daydo.core.settings.backup.RestoreFailedException.OldSchema ->
                                         "备份文件版本过旧，无法恢复"
+                                    is RestoreFailedException.UnsupportedVersion ->
+                                        "备份由较新版本创建，请先升级应用"
                                     is com.enlpot.daydo.core.settings.backup.RestoreFailedException.InvalidFile ->
                                         "备份文件无效"
                                     is com.enlpot.daydo.core.settings.backup.RestoreFailedException.InconsistentData ->
@@ -225,8 +229,21 @@ class WebDavImpl(
         method: String,
     ): HttpURLConnection {
         val base = server.trim().trimEnd('/')
+        val uri = URI(base)
+        require(
+            uri.isAbsolute &&
+                uri.scheme.equals("https", ignoreCase = true) &&
+                !uri.host.isNullOrBlank() &&
+                uri.rawUserInfo == null &&
+                uri.rawQuery == null &&
+                uri.rawFragment == null
+        ) {
+            "WebDAV 仅支持有效的 HTTPS 地址"
+        }
         val url = URL("$base/daydo_backup.json")
         val conn = url.openConnection() as HttpURLConnection
+        // 不跟随重定向，避免把 Basic Auth 凭据发送到重定向目标。
+        conn.instanceFollowRedirects = false
         conn.requestMethod = method
         conn.setRequestProperty(
             "Authorization",

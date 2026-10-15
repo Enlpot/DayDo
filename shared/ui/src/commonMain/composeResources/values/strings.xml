@@ -34,6 +34,8 @@
     <string name="export_desc">Choose directory to export data</string>
     <string name="restore">Restore</string>
     <string name="restore_desc">Restore tasks and habits from selected file</string>
+    <string name="restore_failed">Could not restore this backup</string>
+    <string name="restore_newer_version">This backup was created by a newer app version. Upgrade the app to restore it.</string>
     <string name="system">System</string>
     <string name="dark">Dark</string>
     <string name="light">Light</string>

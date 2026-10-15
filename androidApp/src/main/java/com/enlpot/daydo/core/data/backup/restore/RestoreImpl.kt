@@ -142,6 +142,12 @@ class RestoreImpl(
                 // 解码 + schema 校验 + 全量实体映射都在 IO 线程：几十万行的大备份避免卡住主线程（ANR）
                 val jsonDeserialized = restoreJson.decodeFromString<ExportSchema>(json)
 
+                if (jsonDeserialized.backupFormatVersion !in 1..BACKUP_FORMAT_VERSION) {
+                    return@withContext RestoreResult.Failure(
+                        RestoreFailedException.UnsupportedVersion
+                    )
+                }
+
                 // 版本门（P2-1）：接受迁移链覆盖范围内备份；下限 = UTC 语义起点（v1.4.16，
                 // task 11 / habit 7）。更早备份（task<=10 / habit<=6）的 habit.time/task.reminder
                 // 是本机时区毫秒语义，字段结构虽兼容但时间语义不兼容——明确拒绝而非静默偏移。

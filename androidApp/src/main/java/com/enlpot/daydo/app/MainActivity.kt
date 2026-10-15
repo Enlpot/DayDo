@@ -87,8 +87,10 @@ class MainActivity : FragmentActivity() {
                     // 关键设置流就绪前不展示：避免生物识别锁/起始页流迟到时永久 InitialLoading（P2-16）
                     if (!state.isLoaded) return@LaunchedEffect
                     when {
-                        state.isBiometricLockOn != true || state.isAppUnlocked -> showContent = true
+                        state.isAppUnlocked || state.isBiometricLockOn == false -> showContent = true
                         else -> {
+                            // 锁定状态变为开启/未知时，先遮住已有内容再启动认证，避免重认证期间短暂泄露。
+                            showContent = false
                             showBiometricPrompt(
                                 onSuccess = {
                                     mainViewModel.setAppUnlocked(true)

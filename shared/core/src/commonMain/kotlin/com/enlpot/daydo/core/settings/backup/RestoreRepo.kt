@@ -40,6 +40,9 @@ sealed interface RestoreFailedException {
 
     data object OldSchema : RestoreFailedException
 
+    /** 备份格式语义版本高于当前应用支持范围，要求升级后再恢复 */
+    data object UnsupportedVersion : RestoreFailedException
+
     /** 引用完整性预校验失败（分类/习惯 ID 悬空），恢复未写入任何库 */
     data object InconsistentData : RestoreFailedException
 

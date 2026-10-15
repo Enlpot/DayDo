@@ -33,6 +33,8 @@
     <string name="export_desc">选择数据导出的目录</string>
     <string name="restore">恢复数据</string>
     <string name="restore_desc">从选定文件恢复任务和习惯</string>
+    <string name="restore_failed">无法恢复此备份</string>
+    <string name="restore_newer_version">此备份由较新版本创建，请先升级应用后再恢复</string>
     <string name="restore_confirm">将从文件恢复并覆盖本地全部数据，确定继续？</string>
     <string name="system">系统默认</string>
     <string name="dark">深色</string>

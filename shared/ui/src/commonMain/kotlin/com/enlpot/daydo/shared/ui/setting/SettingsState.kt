@@ -20,6 +20,7 @@ import androidx.compose.runtime.Stable
 import com.enlpot.daydo.core.settings.HapticSound
 import com.enlpot.daydo.core.settings.Sections
 import com.enlpot.daydo.core.settings.backup.ExportState
+import com.enlpot.daydo.core.settings.backup.RestoreFailedException
 import com.enlpot.daydo.core.settings.backup.RestoreState
 import com.enlpot.daydo.core.settings.webdav.WebDavState
 import com.enlpot.daydo.core.tasks.Category
@@ -73,6 +74,7 @@ data class BackupState(
     val exportState: ExportState = ExportState.IDLE,
     val exportMessage: String = "",
     val restoreState: RestoreState = RestoreState.IDLE,
+    val restoreFailure: RestoreFailedException? = null,
 )
 
 /**

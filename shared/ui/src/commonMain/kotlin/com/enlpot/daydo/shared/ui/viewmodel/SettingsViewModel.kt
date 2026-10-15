@@ -29,6 +29,7 @@ import com.enlpot.daydo.core.interfaces.ThemeDatastore
 import com.enlpot.daydo.core.settings.backup.ExportRepo
 import com.enlpot.daydo.core.settings.backup.ExportResult
 import com.enlpot.daydo.core.settings.backup.RestoreRepo
+import com.enlpot.daydo.core.settings.backup.RestoreResult
 import com.enlpot.daydo.core.settings.webdav.WebDavRepo
 import com.enlpot.daydo.core.settings.webdav.WebDavResult
 import com.enlpot.daydo.core.settings.webdav.WebDavState
@@ -317,7 +318,13 @@ class SettingsViewModel(
                     // 互斥：与上传/下载恢复/导出共用"备份忙"标记
                     if (_state.value.isBackupBusy) return@launch
                     _state.update {
-                        it.copy(backupState = it.backupState.copy(restoreState = RESTORING))
+                            it.copy(
+                                backupState =
+                                    it.backupState.copy(
+                                        restoreState = RESTORING,
+                                        restoreFailure = null,
+                                    )
+                            )
                     }
 
                     try {
@@ -333,9 +340,11 @@ class SettingsViewModel(
                                     it.backupState.copy(
                                         restoreState =
                                             when (result) {
-                                                is Failure -> FAILURE
-                                                Success -> RESTORED
-                                            }
+                                                is RestoreResult.Failure -> FAILURE
+                                                RestoreResult.Success -> RESTORED
+                                            },
+                                        restoreFailure =
+                                            (result as? RestoreResult.Failure)?.exceptionType,
                                     )
                             )
                         }
@@ -345,7 +354,13 @@ class SettingsViewModel(
                     } catch (t: Throwable) {
                         // 恢复异常：回到失败态，避免永久卡在"恢复中"导致按钮不可用
                         _state.update {
-                            it.copy(backupState = it.backupState.copy(restoreState = FAILURE))
+                            it.copy(
+                                backupState =
+                                    it.backupState.copy(
+                                        restoreState = FAILURE,
+                                        restoreFailure = null,
+                                    )
+                            )
                         }
                     }
                 }

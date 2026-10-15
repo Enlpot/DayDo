@@ -35,9 +35,9 @@ data class CompletionOutcome(
  * 完成任务（含重复任务链派生）。
  *
  * UI（TasksViewModel）与通知栏「标记完成」接收器**共用**本实现：通知栏路径曾直接 `upsertTask(status = true)` 落库，绕过了补
- * seriesId、回填错过周期、生成下一次实例、 调度下一次闹钟这几步，导致"从通知完成重复任务后，重复链静默终止"（与 UI 行为不一致）。
+ * seriesId、跳过已错过周期、生成下一次实例、调度下一次闹钟这几步，导致"从通知完成重复任务后，重复链静默终止"（与 UI 行为不一致）。
  *
- * @param today 用于判定"补做到今天为止"，可注入以便测试
+ * @param today 用于跳过已经错过的周期，可注入以便测试
  * @param now 写入 completedAt / createdAt 的时间戳，可注入以便测试
  */
 suspend fun completeTask(
@@ -69,7 +69,7 @@ suspend fun completeTask(
         )
     )
 
-    // 重复任务：回填错过的周期 + 生成下一次，并调度闹钟
+    // 重复任务：只生成今天（若原实例已过期）或之后的下一次，不补建已错过周期。
     val recurrence = seriesTask.recurrence
     if (recurrence != null) {
         val base = seriesTask.dueDate ?: today
@@ -82,43 +82,29 @@ suspend fun completeTask(
                 ?.mapNotNull { it.dueDate }
                 ?.toSet() ?: emptySet()
 
-        val tasksToCreate = mutableListOf<Task>()
-        var cursor = recurrence.nextDateAfter(base, base)
-        var guard = 0
-        // 补做：base 之后到今天（含）之间错过的所有周期（已有实例的跳过）
-        while (cursor <= today && guard < 60) {
-            if (cursor !in existingDueDates) {
-                tasksToCreate +=
-                    seriesTask.copy(
-                        id = 0L,
-                        status = false,
-                        deletedAt = null,
-                        dueDate = cursor,
-                        reminder = null,
-                        createdAt = now,
-                    )
+        // 完成的是过期实例时，从今天（含）寻找下一个周期；完成今天/未来实例时，严格从该实例之后找。
+        // 因而 10/15 的实例在 12/25 完成时只会生成 12/25 或其后的一个实例，不会补建 10/16..12/24。
+        val nextDate =
+            if (base < today) {
+                recurrence.nextDateOnOrAfter(today, base)
+            } else {
+                recurrence.nextDateAfter(base, base)
             }
-            cursor = recurrence.nextDateAfter(cursor, base)
-            guard++
-        }
-        // 未来下一次：大于今天的第一周期（该日期已有实例则不再创建）
-        if (guard < 60 && cursor !in existingDueDates) {
-            tasksToCreate +=
+
+        if (nextDate !in existingDueDates) {
+            val nextTask =
                 seriesTask.copy(
                     id = 0L,
                     status = false,
                     deletedAt = null,
-                    dueDate = cursor,
+                    dueDate = nextDate,
                     reminder =
                         reminderFor(
-                            LocalDateTime(cursor, seriesTask.dueTime ?: LocalTime(0, 0)),
+                            LocalDateTime(nextDate, seriesTask.dueTime ?: LocalTime(0, 0)),
                             offset,
                         ),
                     createdAt = now,
                 )
-        }
-
-        tasksToCreate.forEach { nextTask ->
             val newId = repo.upsertTask(nextTask)
             scheduler.schedule(nextTask.copy(id = newId))
         }
