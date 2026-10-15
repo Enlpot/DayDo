@@ -175,7 +175,9 @@ class HabitRepository(
                         LocalDateTime(today.plus(1, DateTimeUnit.DAY), LocalTime(0, 0))
                     val nextMs = nextMidnight.toInstant(tz).toEpochMilliseconds()
                     // 兜底至少等 1 秒，避免极端情况下 sleep 0 导致忙循环
-                    delay((nextMs - nowMs).coerceAtLeast(1_000L))
+                    // Re-check periodically so timezone/date changes while the app stays alive
+                    // take effect promptly instead of waiting until the old timezone's midnight.
+                    delay((nextMs - nowMs).coerceAtLeast(1_000L).coerceAtMost(60_000L))
                 }
             }
             .distinctUntilChanged()

@@ -22,6 +22,7 @@ import com.enlpot.daydo.core.tasks.Task
 import com.enlpot.daydo.core.tasks.TaskRepo
 import com.enlpot.daydo.tasks.data.database.CategoryDao
 import com.enlpot.daydo.tasks.data.database.TasksDao
+import com.enlpot.daydo.tasks.data.database.TaskDatabase
 import com.enlpot.daydo.tasks.data.toCategory
 import com.enlpot.daydo.tasks.data.toCategoryEntity
 import com.enlpot.daydo.tasks.data.toTask
@@ -41,6 +42,7 @@ import org.koin.core.annotation.Single
 @Single(binds = [TaskRepo::class])
 class TasksRepository(
     private val tasksDao: TasksDao,
+    private val taskDatabase: TaskDatabase,
     private val categoryDao: CategoryDao,
     private val notificationManager: GritNotificationManager,
 ) : TaskRepo {
@@ -116,6 +118,9 @@ class TasksRepository(
             task.id
         }
     }
+
+    override suspend fun insertRecurringTaskIfAbsent(task: Task): Long? =
+        taskDatabase.insertRecurringTaskIfAbsent(task.toTaskEntity())
 
     override suspend fun softDeleteTask(task: Task) {
         tasksDao.softDeleteTask(task.id, System.currentTimeMillis())

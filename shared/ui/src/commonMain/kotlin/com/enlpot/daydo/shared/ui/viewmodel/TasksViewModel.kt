@@ -363,6 +363,31 @@ class TasksViewModel(
                 } else {
                     task
                 }
+
+            // 撤销某期完成时，只删除由这次完成立即派生且未被用户修改的下一期。
+            // 以 completedAt/createdAt 对应生成关系；比较可编辑字段，避免误删用户调整过的任务。
+            val completedSeriesId = task.seriesId
+            val completedAt = task.completedAt
+            if (completedSeriesId != null && completedAt != null) {
+                val generated =
+                    repo.getTasksBySeries(completedSeriesId).firstOrNull { candidate ->
+                        candidate.id != task.id &&
+                            !candidate.status &&
+                            candidate.completedAt == null &&
+                            candidate.createdAt == completedAt &&
+                            candidate.dueDate != task.dueDate &&
+                            candidate.title == task.title &&
+                            candidate.content == task.content &&
+                            candidate.categoryId == task.categoryId &&
+                            candidate.recurrence == task.recurrence &&
+                            candidate.dueTime == task.dueTime &&
+                            candidate.index == task.index
+                    }
+                if (generated != null) {
+                    scheduler.cancel(generated)
+                    repo.purgeTask(generated)
+                }
+            }
             val newId = repo.upsertTask(baseTask)
 
             scheduler.schedule(baseTask.copy(id = newId))

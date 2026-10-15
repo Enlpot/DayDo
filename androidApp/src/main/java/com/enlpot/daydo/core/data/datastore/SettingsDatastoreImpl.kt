@@ -219,17 +219,17 @@ class SettingsDatastoreImpl(private val datastore: DataStore<Preferences>) : Set
     override fun getWebDavPassword(): Flow<String> =
         datastore.data.map { prefs ->
             val stored = prefs[webDavPasswordKey] ?: ""
-            // 形如 "Base64(iv):Base64(密文)" 的密文才尝试解密；解密失败返回空串，
-            // 不把密文当凭据发送/显示（P3）。旧明文密码（即使含冒号）不会被误判为密文而静默清空。
-            if (looksLikeEncrypted(stored)) {
-                WebDavCipher.decrypt(stored) ?: ""
-            } else {
-                stored
+            when {
+                stored.startsWith(WebDavCipher.VERSION_PREFIX) -> WebDavCipher.decrypt(stored) ?: ""
+                // The legacy format overlaps with valid plaintext; preserve unreadable values so
+                // a legacy password is not silently lost. All newly saved ciphertext is versioned.
+                looksLikeLegacyEncrypted(stored) -> WebDavCipher.decrypt(stored) ?: stored
+                else -> stored
             }
         }
 
-    /** 恰好一个冒号分隔，且两段均 Base64 合法才视为密文 */
-    private fun looksLikeEncrypted(stored: String): Boolean {
+    /** Recognize the old unversioned ciphertext format during migration. */
+    private fun looksLikeLegacyEncrypted(stored: String): Boolean {
         if (stored.isEmpty() || stored.startsWith(":") || stored.endsWith(":")) return false
         val parts = stored.split(":")
         if (parts.size != 2) return false

@@ -20,6 +20,7 @@ import android.content.Context
 import android.util.AtomicFile
 import android.util.Log
 import com.enlpot.daydo.core.data.backup.BACKUP_FORMAT_VERSION
+import com.enlpot.daydo.core.data.Converters
 import com.enlpot.daydo.core.data.backup.CategorySchema
 import com.enlpot.daydo.core.data.backup.ExportSchema
 import com.enlpot.daydo.core.data.backup.HabitSchema
@@ -177,6 +178,15 @@ class RestoreImpl(
                     }
                 val statuses = jsonDeserialized.habitStatus.map { it.toHabitStatus() }
                 val categories = jsonDeserialized.categories.map { it.toCategory() }
+                if (
+                    jsonDeserialized.tasks.any { raw ->
+                        val recurrence = raw.recurrence
+                        !recurrence.isNullOrBlank() &&
+                            Converters.recurrenceFromString(recurrence) == null
+                    }
+                ) {
+                    return@withContext RestoreResult.Failure(RestoreFailedException.InvalidFile)
+                }
                 val tasks = jsonDeserialized.tasks.map { it.toTask() }
 
                 // 引用完整性预校验：分类/习惯 ID 悬空则拒绝恢复（不写任何库），

@@ -16,51 +16,33 @@
  */
 package com.enlpot.daydo.core.data.webdav
 
+import android.content.Context
 import android.util.Base64
-import com.enlpot.daydo.core.data.backup.BACKUP_FORMAT_VERSION
-import com.enlpot.daydo.core.data.backup.CategorySchema
-import com.enlpot.daydo.core.data.backup.HabitSchema
-import com.enlpot.daydo.core.data.backup.HabitStatusSchema
-import com.enlpot.daydo.core.data.backup.TaskSchema
-import com.enlpot.daydo.core.data.backup.toCategorySchema
-import com.enlpot.daydo.core.data.backup.toHabitSchema
-import com.enlpot.daydo.core.data.backup.toHabitStatusSchema
-import com.enlpot.daydo.core.data.backup.toTaskSchema
-import com.enlpot.daydo.core.habits.HabitRepo
+import com.enlpot.daydo.core.data.backup.BackupJsonWriter
 import com.enlpot.daydo.core.settings.backup.RestoreRepo
 import com.enlpot.daydo.core.settings.backup.RestoreFailedException
 import com.enlpot.daydo.core.settings.backup.RestoreResult
 import com.enlpot.daydo.core.settings.webdav.WebDavRepo
 import com.enlpot.daydo.core.settings.webdav.WebDavResult
-import com.enlpot.daydo.core.tasks.TaskRepo
 import com.enlpot.daydo.habits.data.database.HabitDatabase
-import com.enlpot.daydo.habits.data.database.HabitStatusDao
-import com.enlpot.daydo.habits.data.toHabitStatus
 import com.enlpot.daydo.tasks.data.database.TaskDatabase
-import com.enlpot.daydo.tasks.data.database.TasksDao
-import com.enlpot.daydo.tasks.data.toTask
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
 @Single(binds = [WebDavRepo::class])
 class WebDavImpl(
-    private val taskRepo: TaskRepo,
-    private val habitsRepo: HabitRepo,
+    private val context: Context,
     private val restoreRepo: RestoreRepo,
-    private val taskDao: TasksDao,
-    private val habitStatusDao: HabitStatusDao,
+    private val taskDatabase: TaskDatabase,
+    private val habitDatabase: HabitDatabase,
 ) : WebDavRepo {
-    private companion object {
-        // 与本地导出一致：分页加载，避免数十万条记录全量驻留内存
-        const val PAGE_SIZE = 2_000
-    }
-
     override suspend fun upload(server: String, username: String, password: String): WebDavResult =
         withContext(Dispatchers.IO) {
             val conn =
@@ -72,94 +54,32 @@ class WebDavImpl(
                     return@withContext WebDavResult.Failure("连接失败：${e.message}")
                 }
             try {
-                // 流式拼接导出 JSON（与本地导出 ExportImpl 一致），分页读取避免全量驻留内存
-                val body =
-                    try {
-                        buildString {
-                            append("{\"tasksSchemaVersion\":")
-                                .append(TaskDatabase.SCHEMA_VERSION)
-                                .append(",\"habitsSchemaVersion\":")
-                                .append(HabitDatabase.SCHEMA_VERSION)
-                                .append(",\"backupFormatVersion\":")
-                                .append(BACKUP_FORMAT_VERSION)
-                            append(",\"habits\":[")
-                            habitsRepo.getHabits().forEachIndexed { index, habit ->
-                                if (index > 0) append(',')
-                                append(
-                                    Json.encodeToString(
-                                        HabitSchema.serializer(),
-                                        habit.toHabitSchema(),
-                                    )
-                                )
-                            }
-                            append("],\"habitStatus\":[")
-                            var first = true
-                            var offset = 0
-                            while (true) {
-                                val page = habitStatusDao.getStatusPage(offset, PAGE_SIZE)
-                                if (page.isEmpty()) break
-                                page.forEach { status ->
-                                    if (!first) append(',')
-                                    first = false
-                                    append(
-                                        Json.encodeToString(
-                                            HabitStatusSchema.serializer(),
-                                            status.toHabitStatus().toHabitStatusSchema(),
-                                        )
-                                    )
-                                }
-                                offset += page.size
-                            }
-                            append("],\"tasks\":[")
-                            first = true
-                            offset = 0
-                            while (true) {
-                                val page = taskDao.getTasksPage(offset, PAGE_SIZE)
-                                if (page.isEmpty()) break
-                                page.forEach { task ->
-                                    if (!first) append(',')
-                                    first = false
-                                    append(
-                                        Json.encodeToString(
-                                            TaskSchema.serializer(),
-                                            task.toTask().toTaskSchema(),
-                                        )
-                                    )
-                                }
-                                offset += page.size
-                            }
-                            append("],\"categories\":[")
-                            taskRepo.getCategories().forEachIndexed { index, category ->
-                                if (index > 0) append(',')
-                                append(
-                                    Json.encodeToString(
-                                        CategorySchema.serializer(),
-                                        category.toCategorySchema(),
-                                    )
-                                )
-                            }
-                            append("]}")
-                        }
-                    } catch (e: OutOfMemoryError) {
-                        // 大备份整串序列化 OOM：明确失败（P2-10）
-                        return@withContext WebDavResult.Failure("备份过大，内存不足，无法上传")
+                val backupFile = File.createTempFile("daydo-backup-", ".json", context.cacheDir)
+                try {
+                    FileOutputStream(backupFile).bufferedWriter(Charsets.UTF_8).use { writer ->
+                        BackupJsonWriter(taskDatabase, habitDatabase).writeTo(writer)
                     }
+                    conn.doOutput = true
+                    conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    conn.setFixedLengthStreamingMode(backupFile.length())
+                    conn.outputStream.use { output ->
+                        FileInputStream(backupFile).use { input -> input.copyTo(output) }
+                    }
+                    val code = conn.responseCode
 
-                conn.doOutput = true
-                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                // 字符流直写，避免 String → ByteArray 双份驻留（几十万行备份时省一份大内存）
-                conn.outputStream.writer(Charsets.UTF_8).use { it.write(body) }
-                val code = conn.responseCode
-
-                if (code in 200..299) {
-                    WebDavResult.Success
-                } else {
-                    // 关闭错误流，避免连接复用泄漏
-                    conn.errorStream?.close()
-                    WebDavResult.Failure("上传失败（HTTP $code）")
+                    if (code in 200..299) {
+                        WebDavResult.Success
+                    } else {
+                        conn.errorStream?.close()
+                        WebDavResult.Failure("上传失败（HTTP $code）")
+                    }
+                } finally {
+                    backupFile.delete()
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e // 协程取消不吞
+            } catch (e: OutOfMemoryError) {
+                WebDavResult.Failure("备份过大，内存不足，无法上传")
             } catch (e: Exception) {
                 WebDavResult.Failure("上传失败：${e.message}")
             } finally {

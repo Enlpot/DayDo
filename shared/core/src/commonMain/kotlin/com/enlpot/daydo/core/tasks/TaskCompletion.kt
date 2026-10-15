@@ -64,6 +64,7 @@ suspend fun completeTask(
     // 编辑已完成的存量任务不刷新 completedAt：否则过期任务编辑后会重新出现在首页已过期区、污染统计
     repo.upsertTask(
         seriesTask.copy(
+            status = true,
             reminder = null,
             completedAt = if (isNewlyCompleted) now else task.completedAt,
         )
@@ -105,8 +106,8 @@ suspend fun completeTask(
                         ),
                     createdAt = now,
                 )
-            val newId = repo.upsertTask(nextTask)
-            scheduler.schedule(nextTask.copy(id = newId))
+            val newId = repo.insertRecurringTaskIfAbsent(nextTask)
+            if (newId != null) scheduler.schedule(nextTask.copy(id = newId))
         }
     }
 

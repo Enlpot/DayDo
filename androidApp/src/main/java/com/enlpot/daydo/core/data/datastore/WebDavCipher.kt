@@ -27,9 +27,10 @@ import javax.crypto.spec.GCMParameterSpec
 
 /**
  * 用 Android Keystore 中的 AES 密钥对 WebDAV 密码做 GCM 加密。
- * 存储格式："Base64(iv):Base64(密文)"；无法解密的旧明文在读取时原样返回，保存时自动迁移为密文。
+ * 新存储格式："enc:v1:Base64(iv):Base64(密文)"；读取时仍兼容旧的无版本密文格式。
  */
 object WebDavCipher {
+    const val VERSION_PREFIX = "enc:v1:"
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
     private const val KEY_ALIAS = "daydo_webdav_key"
     private const val TRANSFORMATION = "AES/GCM/NoPadding"
@@ -66,7 +67,7 @@ object WebDavCipher {
                 cipher.init(Cipher.ENCRYPT_MODE, key)
                 val iv = cipher.iv
                 val cipherText = cipher.doFinal(plain.toByteArray(Charsets.UTF_8))
-                Base64.encodeToString(iv, Base64.NO_WRAP) +
+                VERSION_PREFIX + Base64.encodeToString(iv, Base64.NO_WRAP) +
                     ":" +
                     Base64.encodeToString(cipherText, Base64.NO_WRAP)
             }
@@ -76,7 +77,7 @@ object WebDavCipher {
     /** 解密；非加密格式（旧明文）或解密失败时返回 null */
     fun decrypt(encoded: String?): String? {
         if (encoded.isNullOrEmpty()) return null
-        val parts = encoded.split(":", limit = 2)
+        val parts = encoded.removePrefix(VERSION_PREFIX).split(":", limit = 2)
         if (parts.size != 2) return null
         val key = getOrCreateKey() ?: return null
         return runCatching {

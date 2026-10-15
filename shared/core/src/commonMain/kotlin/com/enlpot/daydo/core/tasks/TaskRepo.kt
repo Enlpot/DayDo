@@ -46,6 +46,9 @@ interface TaskRepo {
 
     suspend fun upsertTask(task: Task): Long
 
+    /** Insert a generated recurring instance only if the same series/date is still absent. */
+    suspend fun insertRecurringTaskIfAbsent(task: Task): Long?
+
     /** Soft-delete a task (moves it to the "Deleted" smart view) */
     suspend fun softDeleteTask(task: Task)
 

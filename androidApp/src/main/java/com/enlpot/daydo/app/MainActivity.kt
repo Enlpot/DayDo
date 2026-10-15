@@ -17,10 +17,12 @@
 package com.enlpot.daydo.app
 
 import android.os.Bundle
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.biometric.BiometricPrompt
+import androidx.biometric.BiometricManager
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.ComposeRuntimeFlags
 import androidx.compose.runtime.CompositionLocalProvider
@@ -117,7 +119,11 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    private fun showBiometricPrompt(onSuccess: () -> Unit, onError: (Int, CharSequence) -> Unit) {
+    private fun showBiometricPrompt(
+        onSuccess: () -> Unit,
+        onError: (Int, CharSequence) -> Unit,
+        deviceCredentialOnly: Boolean = false,
+    ) {
         val executor = ContextCompat.getMainExecutor(this)
         val biometricPrompt =
             BiometricPrompt(
@@ -142,7 +148,13 @@ class MainActivity : FragmentActivity() {
         val promptInfo =
             BiometricPrompt.PromptInfo.Builder()
                 .setTitle(getString(R.string.biometric_prompt_title))
-                .setAllowedAuthenticators(biometricUtils.getAuthenticators())
+                .setAllowedAuthenticators(
+                    if (deviceCredentialOnly && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                    } else {
+                        biometricUtils.getAuthenticators()
+                    }
+                )
                 .build()
 
         biometricPrompt.authenticate(promptInfo)
@@ -151,6 +163,7 @@ class MainActivity : FragmentActivity() {
     private fun handleBiometricError(
         errorCode: Int,
         errString: CharSequence,
+        triedDeviceCredential: Boolean = false,
         onComplete: () -> Unit,
     ) {
         when (errorCode) {
@@ -165,12 +178,32 @@ class MainActivity : FragmentActivity() {
             BiometricPrompt.ERROR_NO_BIOMETRICS,
             BiometricPrompt.ERROR_HW_NOT_PRESENT,
             BiometricPrompt.ERROR_HW_UNAVAILABLE -> {
-                mainViewModel.setAppUnlocked(true)
-                mainViewModel.setBiometricLock(false)
-
-                Toast.makeText(this, getString(R.string.biometric_auth_failed), Toast.LENGTH_LONG)
-                    .show()
-                onComplete()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !triedDeviceCredential) {
+                    showBiometricPrompt(
+                        onSuccess = {
+                            mainViewModel.setAppUnlocked(true)
+                            onComplete()
+                        },
+                        onError = { fallbackCode, fallbackMessage ->
+                            handleBiometricError(
+                                fallbackCode,
+                                fallbackMessage,
+                                triedDeviceCredential = true,
+                                onComplete = onComplete,
+                            )
+                        },
+                        deviceCredentialOnly = true,
+                    )
+                } else {
+                    Toast.makeText(
+                            this,
+                            getString(R.string.biometric_auth_failed),
+                            Toast.LENGTH_LONG,
+                        )
+                        .show()
+                    // Keep the lock enabled and the app content covered when no authenticator works.
+                    finish()
+                }
             }
 
             else -> {

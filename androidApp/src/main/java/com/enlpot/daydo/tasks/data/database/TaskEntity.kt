@@ -37,7 +37,7 @@ import kotlinx.datetime.LocalTime
                 onDelete = ForeignKey.CASCADE,
             )
         ],
-    indices = [Index(value = ["categoryId"])],
+    indices = [Index(value = ["categoryId"]), Index(value = ["seriesId", "dueDate"])],
 )
 data class TaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,

@@ -38,6 +38,7 @@ import com.enlpot.daydo.core.data.Converters
             AutoMigration(from = 7, to = 8),
             AutoMigration(from = 8, to = 9),
             AutoMigration(from = 11, to = 12),
+            AutoMigration(from = 12, to = 13),
         ],
 )
 @ColumnTypeConverters(Converters::class)
@@ -45,6 +46,19 @@ abstract class TaskDatabase : RoomDatabase() {
     abstract fun taskDao(): TasksDao
 
     abstract fun categoryDao(): CategoryDao
+
+    /** Serialize the series/date check and insert so independent completion paths cannot race. */
+    open suspend fun insertRecurringTaskIfAbsent(task: TaskEntity): Long? {
+        val seriesId = requireNotNull(task.seriesId)
+        val dueDate = requireNotNull(task.dueDate)
+        var insertedId: Long? = null
+        withWriteTransaction {
+            if (taskDao().getTaskBySeriesAndDate(seriesId, dueDate) == null) {
+                insertedId = taskDao().upsertTask(task)
+            }
+        }
+        return insertedId
+    }
 
     /**
      * 恢复备份用：清空+写入在同一**写事务**内完成，中途失败自动回滚，不会出现"清空后崩溃丢数据"。
@@ -65,7 +79,7 @@ abstract class TaskDatabase : RoomDatabase() {
 
     companion object {
         const val DB_NAME = "task_database"
-        const val SCHEMA_VERSION = 12
+        const val SCHEMA_VERSION = 13
         val MIGRATION_9_10 =
             object : Migration(9, 10) {
                 override suspend fun migrate(connection: SQLiteConnection) {

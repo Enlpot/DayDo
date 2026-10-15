@@ -60,6 +60,9 @@ interface TasksDao {
     @Query("SELECT * FROM task WHERE seriesId = :seriesId")
     suspend fun getTasksBySeries(seriesId: Long): List<TaskEntity>
 
+    @Query("SELECT * FROM task WHERE seriesId = :seriesId AND dueDate = :dueDate LIMIT 1")
+    suspend fun getTaskBySeriesAndDate(seriesId: Long, dueDate: kotlinx.datetime.LocalDate): TaskEntity?
+
     @Query("DELETE FROM task WHERE id = :id") suspend fun purgeTask(id: Long)
 
     @Query("UPDATE task SET categoryId = NULL WHERE categoryId = :categoryId")
